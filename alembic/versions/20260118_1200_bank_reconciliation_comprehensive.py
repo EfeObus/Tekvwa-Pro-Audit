@@ -19,6 +19,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # This migration supersedes the simpler bank_statements/bank_statement_transactions/
+    # bank_reconciliations tables created in 20260108_2030_add_bank_reconciliation_expense_claims.py
+    # with a comprehensive Nigerian-banking schema. Drop the earlier versions first so the
+    # CREATE TABLE IF NOT EXISTS statements below actually create the new schema instead of
+    # silently no-op'ing against the old, incompatible one.
+    op.execute("DROP TABLE IF EXISTS bank_reconciliations CASCADE")
+    op.execute("DROP TABLE IF EXISTS bank_statement_transactions CASCADE")
+    op.execute("DROP TABLE IF EXISTS bank_statements CASCADE")
+
     # Create enum types
     op.execute("""
         DO $$ BEGIN
@@ -198,8 +207,7 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS idx_bank_statements_date ON bank_statements(statement_date)")
     
     # Create bank_statement_transactions table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS bank_statement_transactions (
+    op.execute("""        CREATE TABLE IF NOT EXISTS bank_statement_transactions (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             bank_account_id UUID NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
             statement_id UUID REFERENCES bank_statements(id) ON DELETE SET NULL,
@@ -260,17 +268,22 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_bst_account ON bank_statement_transactions(bank_account_id);
-        CREATE INDEX IF NOT EXISTS idx_bst_date ON bank_statement_transactions(transaction_date);
-        CREATE INDEX IF NOT EXISTS idx_bst_matched ON bank_statement_transactions(is_matched);
-        CREATE INDEX IF NOT EXISTS idx_bst_match_group ON bank_statement_transactions(match_group_id);
-        CREATE INDEX IF NOT EXISTS idx_bst_duplicate_hash ON bank_statement_transactions(duplicate_hash);
-        CREATE INDEX IF NOT EXISTS idx_bst_emtl ON bank_statement_transactions(is_emtl) WHERE is_emtl = TRUE;
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_account ON bank_statement_transactions(bank_account_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_date ON bank_statement_transactions(transaction_date);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_matched ON bank_statement_transactions(is_matched);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_match_group ON bank_statement_transactions(match_group_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_duplicate_hash ON bank_statement_transactions(duplicate_hash);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bst_emtl ON bank_statement_transactions(is_emtl) WHERE is_emtl = TRUE;
     """)
     
     # Create bank_reconciliations table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS bank_reconciliations (
+    op.execute("""        CREATE TABLE IF NOT EXISTS bank_reconciliations (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             entity_id UUID NOT NULL REFERENCES business_entities(id) ON DELETE CASCADE,
             bank_account_id UUID NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
@@ -327,15 +340,18 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_bank_recon_entity ON bank_reconciliations(entity_id);
-        CREATE INDEX IF NOT EXISTS idx_bank_recon_account ON bank_reconciliations(bank_account_id);
-        CREATE INDEX IF NOT EXISTS idx_bank_recon_date ON bank_reconciliations(reconciliation_date);
-        CREATE INDEX IF NOT EXISTS idx_bank_recon_status ON bank_reconciliations(status);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bank_recon_entity ON bank_reconciliations(entity_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bank_recon_account ON bank_reconciliations(bank_account_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bank_recon_date ON bank_reconciliations(reconciliation_date);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_bank_recon_status ON bank_reconciliations(status);
     """)
     
     # Create reconciliation_adjustments table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS reconciliation_adjustments (
+    op.execute("""        CREATE TABLE IF NOT EXISTS reconciliation_adjustments (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             reconciliation_id UUID NOT NULL REFERENCES bank_reconciliations(id) ON DELETE CASCADE,
             bank_transaction_id UUID REFERENCES bank_statement_transactions(id) ON DELETE SET NULL,
@@ -376,13 +392,14 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_recon_adj_reconciliation ON reconciliation_adjustments(reconciliation_id);
-        CREATE INDEX IF NOT EXISTS idx_recon_adj_type ON reconciliation_adjustments(adjustment_type);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_recon_adj_reconciliation ON reconciliation_adjustments(reconciliation_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_recon_adj_type ON reconciliation_adjustments(adjustment_type);
     """)
     
     # Create unmatched_items table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS unmatched_items (
+    op.execute("""        CREATE TABLE IF NOT EXISTS unmatched_items (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             reconciliation_id UUID NOT NULL REFERENCES bank_reconciliations(id) ON DELETE CASCADE,
             
@@ -417,14 +434,16 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_unmatched_reconciliation ON unmatched_items(reconciliation_id);
-        CREATE INDEX IF NOT EXISTS idx_unmatched_item_type ON unmatched_items(item_type);
-        CREATE INDEX IF NOT EXISTS idx_unmatched_resolution ON unmatched_items(resolution);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_unmatched_reconciliation ON unmatched_items(reconciliation_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_unmatched_item_type ON unmatched_items(item_type);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_unmatched_resolution ON unmatched_items(resolution);
     """)
     
     # Create bank_charge_rules table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS bank_charge_rules (
+    op.execute("""        CREATE TABLE IF NOT EXISTS bank_charge_rules (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             entity_id UUID REFERENCES business_entities(id) ON DELETE CASCADE,
             bank_account_id UUID REFERENCES bank_accounts(id) ON DELETE CASCADE,
@@ -467,14 +486,16 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_charge_rules_entity ON bank_charge_rules(entity_id);
-        CREATE INDEX IF NOT EXISTS idx_charge_rules_account ON bank_charge_rules(bank_account_id);
-        CREATE INDEX IF NOT EXISTS idx_charge_rules_active ON bank_charge_rules(is_active);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_charge_rules_entity ON bank_charge_rules(entity_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_charge_rules_account ON bank_charge_rules(bank_account_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_charge_rules_active ON bank_charge_rules(is_active);
     """)
     
     # Create matching_rules table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS matching_rules (
+    op.execute("""        CREATE TABLE IF NOT EXISTS matching_rules (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             entity_id UUID NOT NULL REFERENCES business_entities(id) ON DELETE CASCADE,
             bank_account_id UUID REFERENCES bank_accounts(id) ON DELETE CASCADE,
@@ -515,14 +536,16 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_matching_rules_entity ON matching_rules(entity_id);
-        CREATE INDEX IF NOT EXISTS idx_matching_rules_account ON matching_rules(bank_account_id);
-        CREATE INDEX IF NOT EXISTS idx_matching_rules_active ON matching_rules(is_active);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_matching_rules_entity ON matching_rules(entity_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_matching_rules_account ON matching_rules(bank_account_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_matching_rules_active ON matching_rules(is_active);
     """)
     
     # Create bank_statement_imports table
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS bank_statement_imports (
+    op.execute("""        CREATE TABLE IF NOT EXISTS bank_statement_imports (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             entity_id UUID NOT NULL REFERENCES business_entities(id) ON DELETE CASCADE,
             bank_account_id UUID NOT NULL REFERENCES bank_accounts(id) ON DELETE CASCADE,
@@ -565,9 +588,12 @@ def upgrade() -> None:
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
         );
-        CREATE INDEX IF NOT EXISTS idx_stmt_imports_entity ON bank_statement_imports(entity_id);
-        CREATE INDEX IF NOT EXISTS idx_stmt_imports_account ON bank_statement_imports(bank_account_id);
-        CREATE INDEX IF NOT EXISTS idx_stmt_imports_status ON bank_statement_imports(status);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_stmt_imports_entity ON bank_statement_imports(entity_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_stmt_imports_account ON bank_statement_imports(bank_account_id);
+    """)
+    op.execute("""        CREATE INDEX IF NOT EXISTS idx_stmt_imports_status ON bank_statement_imports(status);
     """)
     
     # Insert default Nigerian bank charge rules

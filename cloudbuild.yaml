@@ -1,0 +1,110 @@
+#
+# TekVwarho ProAudit - Cloud Build pipeline
+#
+# Builds the container image, runs Alembic migrations via a Cloud Run Job
+# (so it has VPC access to Cloud SQL's private IP), then deploys the web
+# and worker Cloud Run services with the new image.
+#
+# All DB/Redis/secret values live in Secret Manager and are wired onto the
+# Cloud Run services/job via --set-secrets at deploy time (see
+# docs/GCP_DEPLOYMENT.md) - nothing sensitive is passed through this file.
+#
+# Trigger from Cloud Build on push to `main`:
+#   gcloud builds submit --config cloudbuild.yaml
+#
+substitutions:
+  _REGION: africa-south1
+  _REPO: proaudit-repo
+  _SERVICE: proaudit-web
+  _WORKER_SERVICE: proaudit-worker
+  _BEAT_SERVICE: proaudit-beat
+  _MIGRATE_JOB: proaudit-migrate
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+
+steps:
+  # 1. Build the production image (reuses the existing multi-stage Dockerfile)
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - "--target"
+      - "production"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:latest"
+      - "."
+
+  # 2. Push both tags
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      - "push"
+      - "--all-tags"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit"
+
+  # 3. Point the pre-existing migration job at the new image, then run it
+  #    to completion before any traffic serves the new schema expectations.
+  - name: "gcr.io/google-cloud-sdk/slim"
+    id: update-migrate-job
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "update"
+      - "${_MIGRATE_JOB}"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--region=${_REGION}"
+
+  - name: "gcr.io/google-cloud-sdk/slim"
+    id: run-migrations
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "jobs"
+      - "execute"
+      - "${_MIGRATE_JOB}"
+      - "--region=${_REGION}"
+      - "--wait"
+    waitFor: ["update-migrate-job"]
+
+  # 4. Deploy the web service
+  - name: "gcr.io/google-cloud-sdk/slim"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "deploy"
+      - "${_SERVICE}"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+    waitFor: ["run-migrations"]
+
+  # 5. Deploy the Celery worker pool (same image, different startup command).
+  #    Worker/beat never listen on a port, so they run as Cloud Run worker pools,
+  #    not ordinary services (which require an HTTP/TCP startup probe on $PORT).
+  - name: "gcr.io/google-cloud-sdk/slim"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "worker-pools"
+      - "deploy"
+      - "${_WORKER_SERVICE}"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--region=${_REGION}"
+    waitFor: ["run-migrations"]
+
+  # 6. Deploy the Celery beat worker pool (same image, different startup command)
+  - name: "gcr.io/google-cloud-sdk/slim"
+    entrypoint: "gcloud"
+    args:
+      - "run"
+      - "worker-pools"
+      - "deploy"
+      - "${_BEAT_SERVICE}"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--region=${_REGION}"
+    waitFor: ["run-migrations"]
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -70,6 +70,9 @@ Pillow>=10.2.0
 azure-ai-documentintelligence>=1.0.0b1
 azure-core>=1.30.0
 
+# Google Cloud Storage (production file storage on GCP)
+google-cloud-storage>=2.16.0
+
 # Async file operations
 aiofiles>=23.0.0
 

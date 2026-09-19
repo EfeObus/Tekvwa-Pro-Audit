@@ -22,17 +22,9 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add refund tracking columns
-    op.add_column(
-        'payment_transactions',
-        sa.Column('refunded_at', sa.DateTime(timezone=True), nullable=True,
-                  comment='When refund was processed')
-    )
-    op.add_column(
-        'payment_transactions',
-        sa.Column('refund_amount_kobo', sa.BigInteger, nullable=True,
-                  comment='Refund amount in kobo')
-    )
+    # Note: refunded_at and refund_amount_kobo are already defined on payment_transactions
+    # in 20260122_1920_add_payment_transactions.py - only the remaining refund/invoice
+    # tracking columns are actually new here.
     op.add_column(
         'payment_transactions',
         sa.Column('refund_reference', sa.String(100), nullable=True,
@@ -81,5 +73,3 @@ def downgrade() -> None:
     op.drop_column('payment_transactions', 'paystack_invoice_id')
     op.drop_column('payment_transactions', 'refund_reason')
     op.drop_column('payment_transactions', 'refund_reference')
-    op.drop_column('payment_transactions', 'refund_amount_kobo')
-    op.drop_column('payment_transactions', 'refunded_at')

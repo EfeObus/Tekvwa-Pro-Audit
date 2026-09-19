@@ -150,16 +150,11 @@ def upgrade() -> None:
     # AUDIT_LOGS TABLE - NTAA 2025 Enhanced Logging
     # ===========================================
     
-    # Update AuditAction enum with new values
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'NRS_CREDIT_NOTE'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'WREN_VERIFY'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'WREN_REJECT'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'CATEGORY_CHANGE'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'IMPERSONATION_START'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'IMPERSONATION_END'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'IMPERSONATION_GRANT'")
-    op.execute("ALTER TYPE auditaction ADD VALUE IF NOT EXISTS 'IMPERSONATION_REVOKE'")
-    
+    # NOTE: audit_logs.action is sa.String(50), not a native Postgres enum -
+    # there is no 'auditaction' DB type to alter. New AuditAction values (NRS_CREDIT_NOTE,
+    # WREN_VERIFY, etc.) are enforced at the application layer only
+    # (app/models/audit_consolidated.py) and need no schema change here.
+
     # Add NTAA 2025 compliance fields
     if not column_exists('audit_logs', 'organization_id'):
         op.add_column('audit_logs', sa.Column('organization_id', postgresql.UUID(as_uuid=True), nullable=True))

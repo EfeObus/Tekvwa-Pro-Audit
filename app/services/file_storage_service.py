@@ -4,7 +4,8 @@ TekVwarho ProAudit - File Storage Service
 File storage service for document management.
 
 Supports:
-- Azure Blob Storage (production)
+- Google Cloud Storage (production, GCP)
+- Azure Blob Storage (legacy production, kept for read compatibility during migration)
 - Local file storage (development)
 
 File Types:
@@ -28,6 +29,7 @@ from app.config import settings
 class StorageProvider(str, Enum):
     """Storage provider types."""
     AZURE_BLOB = "azure"
+    GCS = "gcs"
     LOCAL = "local"
 
 
@@ -52,15 +54,19 @@ class FileStorageService:
     def __init__(self):
         self.azure_connection_string = getattr(settings, 'azure_storage_connection_string', None)
         self.azure_container = getattr(settings, 'azure_storage_container', 'documents')
+        self.gcs_bucket_name = getattr(settings, 'gcs_bucket_name', None)
+        self.gcs_project_id = getattr(settings, 'gcs_project_id', None)
         self.local_storage_path = Path("uploads")
         self.provider = self._determine_provider()
-        
+
         # Ensure local storage directory exists
         if self.provider == StorageProvider.LOCAL:
             self.local_storage_path.mkdir(parents=True, exist_ok=True)
-    
+
     def _determine_provider(self) -> StorageProvider:
         """Determine which storage provider to use."""
+        if self.gcs_bucket_name:
+            return StorageProvider.GCS
         if self.azure_connection_string:
             return StorageProvider.AZURE_BLOB
         return StorageProvider.LOCAL
@@ -114,7 +120,11 @@ class FileStorageService:
         file_hash = hashlib.md5(file_content).hexdigest()
         file_size = len(file_content)
         
-        if self.provider == StorageProvider.AZURE_BLOB:
+        if self.provider == StorageProvider.GCS:
+            url = await self._upload_to_gcs(
+                blob_name, file_content, content_type, metadata
+            )
+        elif self.provider == StorageProvider.AZURE_BLOB:
             url = await self._upload_to_azure(
                 blob_name, file_content, content_type, metadata
             )
@@ -174,7 +184,36 @@ class FileStorageService:
         except Exception as e:
             print(f"Azure upload error: {e}")
             raise
-    
+
+    async def _upload_to_gcs(
+        self,
+        blob_name: str,
+        file_content: bytes,
+        content_type: str,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> str:
+        """Upload file to Google Cloud Storage."""
+        try:
+            from google.cloud import storage as gcs_storage
+
+            client = gcs_storage.Client(project=self.gcs_project_id)
+            bucket = client.bucket(self.gcs_bucket_name)
+            blob = bucket.blob(blob_name)
+
+            if metadata:
+                blob.metadata = metadata
+
+            blob.upload_from_string(file_content, content_type=content_type)
+
+            return f"gs://{self.gcs_bucket_name}/{blob_name}"
+
+        except ImportError:
+            # google-cloud-storage not installed, fall back to local
+            return await self._upload_to_local(blob_name, file_content, content_type)
+        except Exception as e:
+            print(f"GCS upload error: {e}")
+            raise
+
     async def _upload_to_local(
         self,
         blob_name: str,
@@ -204,7 +243,9 @@ class FileStorageService:
         Returns:
             Tuple of (file_content, content_type)
         """
-        if self.provider == StorageProvider.AZURE_BLOB:
+        if self.provider == StorageProvider.GCS:
+            return await self._download_from_gcs(file_id)
+        elif self.provider == StorageProvider.AZURE_BLOB:
             return await self._download_from_azure(file_id)
         else:
             return await self._download_from_local(file_id)
@@ -235,7 +276,27 @@ class FileStorageService:
         except Exception as e:
             print(f"Azure download error: {e}")
             raise
-    
+
+    async def _download_from_gcs(
+        self,
+        blob_name: str,
+    ) -> Tuple[bytes, str]:
+        """Download file from Google Cloud Storage."""
+        from google.cloud import storage as gcs_storage
+
+        client = gcs_storage.Client(project=self.gcs_project_id)
+        bucket = client.bucket(self.gcs_bucket_name)
+        blob = bucket.blob(blob_name)
+
+        if not blob.exists():
+            raise FileNotFoundError(f"File not found: {blob_name}")
+
+        content = blob.download_as_bytes()
+        blob.reload()
+        content_type = blob.content_type or "application/octet-stream"
+
+        return content, content_type
+
     async def _download_from_local(
         self,
         blob_name: str,
@@ -269,7 +330,9 @@ class FileStorageService:
         Returns:
             True if deleted successfully
         """
-        if self.provider == StorageProvider.AZURE_BLOB:
+        if self.provider == StorageProvider.GCS:
+            return await self._delete_from_gcs(file_id)
+        elif self.provider == StorageProvider.AZURE_BLOB:
             return await self._delete_from_azure(file_id)
         else:
             return await self._delete_from_local(file_id)
@@ -296,7 +359,25 @@ class FileStorageService:
         except Exception as e:
             print(f"Azure delete error: {e}")
             return False
-    
+
+    async def _delete_from_gcs(
+        self,
+        blob_name: str,
+    ) -> bool:
+        """Delete file from Google Cloud Storage."""
+        try:
+            from google.cloud import storage as gcs_storage
+
+            client = gcs_storage.Client(project=self.gcs_project_id)
+            bucket = client.bucket(self.gcs_bucket_name)
+            blob = bucket.blob(blob_name)
+            blob.delete()
+            return True
+
+        except Exception as e:
+            print(f"GCS delete error: {e}")
+            return False
+
     async def _delete_from_local(
         self,
         blob_name: str,
@@ -333,7 +414,9 @@ class FileStorageService:
         if prefix:
             search_prefix += prefix
         
-        if self.provider == StorageProvider.AZURE_BLOB:
+        if self.provider == StorageProvider.GCS:
+            return await self._list_gcs_files(search_prefix)
+        elif self.provider == StorageProvider.AZURE_BLOB:
             return await self._list_azure_files(search_prefix)
         else:
             return await self._list_local_files(search_prefix)
@@ -366,7 +449,34 @@ class FileStorageService:
         except Exception as e:
             print(f"Azure list error: {e}")
             return []
-    
+
+    async def _list_gcs_files(
+        self,
+        prefix: str,
+    ) -> List[Dict[str, Any]]:
+        """List files in Google Cloud Storage."""
+        try:
+            from google.cloud import storage as gcs_storage
+
+            client = gcs_storage.Client(project=self.gcs_project_id)
+            bucket = client.bucket(self.gcs_bucket_name)
+
+            files = []
+            for blob in client.list_blobs(bucket, prefix=prefix):
+                files.append({
+                    "file_id": blob.name,
+                    "url": f"gs://{self.gcs_bucket_name}/{blob.name}",
+                    "size": blob.size,
+                    "created_at": blob.time_created.isoformat() if blob.time_created else None,
+                    "content_type": blob.content_type,
+                })
+
+            return files
+
+        except Exception as e:
+            print(f"GCS list error: {e}")
+            return []
+
     async def _list_local_files(
         self,
         prefix: str,
@@ -404,11 +514,29 @@ class FileStorageService:
         """
         Generate a signed URL for temporary access.
         
-        Only applicable for Azure Blob Storage.
+        Applicable for Azure Blob Storage and Google Cloud Storage.
         """
+        if self.provider == StorageProvider.GCS:
+            try:
+                from google.cloud import storage as gcs_storage
+                from datetime import timedelta
+
+                client = gcs_storage.Client(project=self.gcs_project_id)
+                bucket = client.bucket(self.gcs_bucket_name)
+                blob = bucket.blob(file_id)
+
+                return blob.generate_signed_url(
+                    version="v4",
+                    expiration=timedelta(hours=expiry_hours),
+                    method="GET",
+                )
+            except Exception as e:
+                print(f"GCS signed URL error: {e}")
+                return None
+
         if self.provider != StorageProvider.AZURE_BLOB:
             return f"/uploads/{file_id}"
-        
+
         try:
             from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
             from datetime import timedelta

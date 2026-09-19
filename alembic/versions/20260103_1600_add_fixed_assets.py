@@ -90,16 +90,8 @@ def upgrade() -> None:
             sa.Column('name', sa.String(255), nullable=False),
             sa.Column('description', sa.Text, nullable=True),
             sa.Column('asset_code', sa.String(50), unique=True, nullable=False),
-            sa.Column('category', sa.Enum(
-                'land', 'buildings', 'plant_machinery', 'furniture_fittings',
-                'motor_vehicles', 'computer_equipment', 'office_equipment',
-                'leasehold_improvements', 'intangible_assets', 'other',
-                name='assetcategory', create_type=False
-            ), nullable=False),
-            sa.Column('status', sa.Enum(
-                'active', 'disposed', 'written_off', 'under_repair', 'idle',
-                name='assetstatus', create_type=False
-            ), server_default='active', nullable=False),
+            sa.Column('category', asset_category, nullable=False),
+            sa.Column('status', asset_status, server_default='active', nullable=False),
             
             # Acquisition details
             sa.Column('acquisition_date', sa.Date, nullable=False),
@@ -109,10 +101,7 @@ def upgrade() -> None:
             sa.Column('invoice_number', sa.String(100), nullable=True),
             
             # Depreciation settings
-            sa.Column('depreciation_method', sa.Enum(
-                'straight_line', 'reducing_balance', 'units_of_production',
-                name='depreciationmethod', create_type=False
-            ), server_default='straight_line', nullable=False),
+            sa.Column('depreciation_method', depreciation_method, server_default='straight_line', nullable=False),
             sa.Column('useful_life_years', sa.Integer, nullable=True),
             sa.Column('depreciation_rate', sa.Numeric(5, 2), nullable=False),
             sa.Column('residual_value', sa.Numeric(15, 2), server_default='0', nullable=False),
@@ -122,10 +111,7 @@ def upgrade() -> None:
             
             # Disposal details
             sa.Column('disposal_date', sa.Date, nullable=True),
-            sa.Column('disposal_type', sa.Enum(
-                'sale', 'trade_in', 'scrapped', 'donated', 'theft', 'insurance_claim',
-                name='disposaltype', create_type=False
-            ), nullable=True),
+            sa.Column('disposal_type', disposal_type, nullable=True),
             sa.Column('disposal_proceeds', sa.Numeric(15, 2), nullable=True),
             sa.Column('disposal_buyer_name', sa.String(255), nullable=True),
             sa.Column('disposal_buyer_tin', sa.String(20), nullable=True),

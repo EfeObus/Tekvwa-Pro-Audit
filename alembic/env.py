@@ -7,7 +7,7 @@ Configuration for database migrations.
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
@@ -53,6 +53,24 @@ def run_migrations_offline() -> None:
 
 def do_run_migrations(connection: Connection) -> None:
     """Run migrations with the given connection."""
+    # Some revision IDs in this project (e.g. '20260106_1400_add_lga_email_verification')
+    # are longer than Alembic's default 32-char version_num column, which would raise
+    # StringDataRightTruncationError when first stamped on a fresh database. Widen it
+    # up front - a no-op once the table already exists at this width.
+    connection.execute(text(
+        "CREATE TABLE IF NOT EXISTS alembic_version ("
+        "version_num VARCHAR(255) NOT NULL, "
+        "CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num))"
+    ))
+    connection.execute(text(
+        "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255)"
+    ))
+    # Commit this setup step on its own so it isn't left as an open outer transaction -
+    # otherwise context.begin_transaction() below runs as a nested transaction whose
+    # commit doesn't actually persist anything, and the whole migration run gets silently
+    # rolled back when the connection closes.
+    connection.commit()
+
     context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():

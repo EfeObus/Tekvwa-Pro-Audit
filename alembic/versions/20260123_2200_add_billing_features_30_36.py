@@ -448,11 +448,13 @@ def upgrade() -> None:
     """)
     
     # Update volume discount rules with entity thresholds
-    op.execute("""
-        UPDATE volume_discount_rules SET min_entities = 5 WHERE name = '5+ Entities';
-        UPDATE volume_discount_rules SET min_entities = 10 WHERE name = '10+ Entities';
-        UPDATE volume_discount_rules SET min_commitment_months = 24 WHERE name = '2-Year Commitment';
-        UPDATE volume_discount_rules SET min_commitment_months = 36 WHERE name = '3-Year Commitment';
+    op.execute("""        UPDATE volume_discount_rules SET min_entities = 5 WHERE name = '5+ Entities';
+    """)
+    op.execute("""        UPDATE volume_discount_rules SET min_entities = 10 WHERE name = '10+ Entities';
+    """)
+    op.execute("""        UPDATE volume_discount_rules SET min_commitment_months = 24 WHERE name = '2-Year Commitment';
+    """)
+    op.execute("""        UPDATE volume_discount_rules SET min_commitment_months = 36 WHERE name = '3-Year Commitment';
     """)
     
     # Insert default exchange rates (for billing)
@@ -490,8 +492,7 @@ def upgrade() -> None:
     """)
     
     # Update USD/EUR/GBP pricing in sku_pricing (approximate conversions)
-    op.execute("""
-        UPDATE sku_pricing SET 
+    op.execute("""        UPDATE sku_pricing SET 
             base_price_monthly_usd = 16.00,
             base_price_annual_usd = 163.00,
             base_price_monthly_eur = 15.00,
@@ -499,8 +500,8 @@ def upgrade() -> None:
             base_price_monthly_gbp = 13.00,
             base_price_annual_gbp = 132.00
         WHERE sku_tier = 'core';
-        
-        UPDATE sku_pricing SET 
+    """)
+    op.execute("""        UPDATE sku_pricing SET 
             base_price_monthly_usd = 97.00,
             base_price_annual_usd = 988.00,
             base_price_monthly_eur = 88.00,
@@ -508,8 +509,8 @@ def upgrade() -> None:
             base_price_monthly_gbp = 77.00,
             base_price_annual_gbp = 785.00
         WHERE sku_tier = 'professional';
-        
-        UPDATE sku_pricing SET 
+    """)
+    op.execute("""        UPDATE sku_pricing SET 
             base_price_monthly_usd = 645.00,
             base_price_annual_usd = 6579.00,
             base_price_monthly_eur = 588.00,

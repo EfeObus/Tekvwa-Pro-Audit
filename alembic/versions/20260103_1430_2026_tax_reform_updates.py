@@ -35,7 +35,7 @@ def upgrade() -> None:
     # =====================================================
     # INVOICE TABLE - Add buyer review fields
     # =====================================================
-    op.add_column('invoices', sa.Column('buyer_status', sa.Enum('pending', 'accepted', 'rejected', name='buyerstatus'), nullable=True, server_default='pending'))
+    op.add_column('invoices', sa.Column('buyer_status', buyer_status_enum, nullable=True, server_default='pending'))
     op.add_column('invoices', sa.Column('buyer_response_at', sa.DateTime(timezone=True), nullable=True))
     op.add_column('invoices', sa.Column('credit_note_id', postgresql.UUID(as_uuid=True), nullable=True))
     op.add_column('invoices', sa.Column('is_credit_note', sa.Boolean(), nullable=False, server_default='false'))
@@ -44,7 +44,7 @@ def upgrade() -> None:
     # =====================================================
     # BUSINESS ENTITY TABLE - Add business type and thresholds
     # =====================================================
-    op.add_column('business_entities', sa.Column('business_type', sa.Enum('business_name', 'limited_company', name='businesstype'), nullable=False, server_default='limited_company'))
+    op.add_column('business_entities', sa.Column('business_type', business_type_enum, nullable=False, server_default='limited_company'))
     op.add_column('business_entities', sa.Column('annual_turnover', sa.Numeric(precision=15, scale=2), nullable=True))
     op.add_column('business_entities', sa.Column('fixed_assets_value', sa.Numeric(precision=15, scale=2), nullable=True))
     op.add_column('business_entities', sa.Column('is_development_levy_exempt', sa.Boolean(), nullable=False, server_default='false'))
@@ -60,7 +60,7 @@ def upgrade() -> None:
         
         # VAT Details
         sa.Column('vat_amount', sa.Numeric(precision=15, scale=2), nullable=False),
-        sa.Column('recovery_type', sa.Enum('stock_in_trade', 'capital_expenditure', 'services', name='vatrecoverytype'), nullable=False),
+        sa.Column('recovery_type', vat_recovery_type_enum, nullable=False),
         sa.Column('is_recoverable', sa.Boolean(), nullable=False, default=True),
         sa.Column('non_recovery_reason', sa.String(500), nullable=True),
         
@@ -128,7 +128,7 @@ def upgrade() -> None:
         sa.Column('user_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
         
         # Relief Details
-        sa.Column('relief_type', sa.Enum('rent', 'life_insurance', 'nhf', 'pension', 'nhis', 'gratuity', 'other', name='relieftype'), nullable=False),
+        sa.Column('relief_type', relief_type_enum, nullable=False),
         sa.Column('fiscal_year', sa.Integer(), nullable=False),
         
         # Amounts

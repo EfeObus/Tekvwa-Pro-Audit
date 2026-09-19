@@ -21,7 +21,10 @@ from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
 from datetime import datetime
 
+import uuid
+
 from sqlalchemy import Boolean, String, Text, Enum as SQLEnum, DateTime
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import BaseModel
@@ -100,7 +103,7 @@ class Organization(BaseModel):
     
     # Organization Type
     organization_type: Mapped[OrganizationType] = mapped_column(
-        SQLEnum(OrganizationType),
+        SQLEnum(OrganizationType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=OrganizationType.SMALL_BUSINESS,
         nullable=False,
         comment="Type of organization for compliance and feature differentiation"
@@ -122,7 +125,7 @@ class Organization(BaseModel):
     # ===========================================
     
     verification_status: Mapped[VerificationStatus] = mapped_column(
-        SQLEnum(VerificationStatus),
+        SQLEnum(VerificationStatus, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=VerificationStatus.PENDING,
         nullable=False,
         comment="Document verification status"
@@ -185,8 +188,8 @@ class Organization(BaseModel):
         nullable=True,
         comment="When the organization was emergency suspended"
     )
-    emergency_suspended_by_id: Mapped[Optional[str]] = mapped_column(
-        String(36),
+    emergency_suspended_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
         nullable=True,
         comment="ID of admin who emergency suspended this organization"
     )

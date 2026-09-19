@@ -193,6 +193,10 @@ class Settings(BaseSettings):
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
     aws_s3_bucket: Optional[str] = None
+
+    # Google Cloud Storage (production file storage on GCP)
+    gcs_bucket_name: Optional[str] = None
+    gcs_project_id: Optional[str] = None
     
     # ===========================================
     # EMAIL CONFIGURATION

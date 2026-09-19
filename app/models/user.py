@@ -137,7 +137,7 @@ class User(BaseModel):
         comment="True for internal TekVwarho employees"
     )
     platform_role: Mapped[Optional[PlatformRole]] = mapped_column(
-        SQLEnum(PlatformRole),
+        SQLEnum(PlatformRole, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=True,  # NULL for organization users
         comment="Role for platform staff only"
     )

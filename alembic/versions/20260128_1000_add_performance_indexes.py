@@ -58,25 +58,11 @@ def upgrade() -> None:
         if_not_exists=True,
     )
     
-    # Account balances - entity and period lookups
-    # Speeds up trial balance and balance sheet generation
-    op.create_index(
-        'ix_account_balances_entity_period',
-        'account_balances',
-        ['entity_id', 'period_end_date'],
-        unique=False,
-        if_not_exists=True,
-    )
-    
-    # Account balances - account and period for specific account queries
-    op.create_index(
-        'ix_account_balances_account_period',
-        'account_balances',
-        ['account_id', 'period_end_date'],
-        unique=False,
-        if_not_exists=True,
-    )
-    
+    # Note: account_balances has no entity_id or period_end_date column (only account_id
+    # and fiscal_period_id, both already indexed at table creation), so the
+    # ix_account_balances_entity_period / ix_account_balances_account_period indexes
+    # originally planned here were dropped as not applicable to the actual schema.
+
     # Transactions - type and date queries for P&L reports
     op.create_index(
         'ix_transactions_entity_type_date',
@@ -90,16 +76,16 @@ def upgrade() -> None:
     op.create_index(
         'ix_intercompany_from_to_date',
         'intercompany_transactions',
-        ['from_entity_id', 'to_entity_id', 'transaction_date'],
+        ['source_entity_id', 'target_entity_id', 'created_at'],
         unique=False,
         if_not_exists=True,
     )
-    
+
     # Intercompany transactions - group-based queries
     op.create_index(
         'ix_intercompany_group_date',
         'intercompany_transactions',
-        ['group_id', 'transaction_date'],
+        ['group_id', 'created_at'],
         unique=False,
         if_not_exists=True,
     )
@@ -141,23 +127,19 @@ def upgrade() -> None:
     )
     
     # Budget line items - budget and account lookups
+    # (column is account_code, not account_id - budget_line_items has no account_id FK)
     op.create_index(
         'ix_budget_line_items_budget_account',
         'budget_line_items',
-        ['budget_id', 'account_id'],
+        ['budget_id', 'account_code'],
         unique=False,
         if_not_exists=True,
     )
-    
-    # Budget line items - period queries
-    op.create_index(
-        'ix_budget_line_items_period',
-        'budget_line_items',
-        ['budget_id', 'period_start', 'period_end'],
-        unique=False,
-        if_not_exists=True,
-    )
-    
+
+    # Note: budget_line_items stores amounts as monthly columns (jan_amount..dec_amount),
+    # not a period_start/period_end range, so ix_budget_line_items_period as originally
+    # planned does not apply to the actual schema and was dropped.
+
     # Entity group members - consolidation queries
     op.create_index(
         'ix_entity_group_members_group',
@@ -167,14 +149,10 @@ def upgrade() -> None:
         if_not_exists=True,
     )
     
-    # FX revaluations - period-end queries
-    op.create_index(
-        'ix_fx_revaluations_entity_date',
-        'fx_revaluations',
-        ['entity_id', 'revaluation_date'],
-        unique=False,
-        if_not_exists=True,
-    )
+    # Note: fx_revaluations is created later in the chain by fx_revaluation_001.py
+    # (its down_revision is this very migration), and that migration already creates
+    # an equivalent 'ix_fx_reval_entity_date' index on the same columns, so no index is
+    # created here for a table that doesn't exist yet at this point in the chain.
     
     # Audit logs - entity and date queries
     op.create_index(

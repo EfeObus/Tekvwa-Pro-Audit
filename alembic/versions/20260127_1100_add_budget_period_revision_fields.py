@@ -75,8 +75,9 @@ def upgrade() -> None:
     op.create_foreign_key('fk_budget_workflow', 'budgets', 'approval_workflows', ['approval_workflow_id'], ['id'])
     op.create_foreign_key('fk_budget_approval_request', 'budgets', 'approval_requests', ['approval_request_id'], ['id'])
     
-    # Drop old unique constraint and add new one with version
-    op.drop_constraint('uq_budget_entity_year_name', 'budgets', type_='unique')
+    # Note: no prior unique constraint named 'uq_budget_entity_year_name' actually exists on
+    # budgets (the original table in 20260106_1600_advanced_accounting.py only has plain
+    # indexes), so there is nothing to drop here - just add the versioned constraint.
     op.create_unique_constraint('uq_budget_entity_year_name_ver', 'budgets', ['entity_id', 'fiscal_year', 'name', 'version'])
     
     # Indexes
@@ -90,7 +91,7 @@ def upgrade() -> None:
     op.create_table(
         'budget_periods',
         sa.Column('id', postgresql.UUID(as_uuid=True), primary_key=True, server_default=sa.text('gen_random_uuid()')),
-        sa.Column('tenant_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('tenants.id'), nullable=True),
+        sa.Column('tenant_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('organizations.id'), nullable=True),
         sa.Column('budget_id', postgresql.UUID(as_uuid=True), sa.ForeignKey('budgets.id', ondelete='CASCADE'), nullable=False),
         
         sa.Column('period_number', sa.Integer(), nullable=False,
