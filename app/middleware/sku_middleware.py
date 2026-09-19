@@ -723,9 +723,9 @@ def get_sku_template_context(request: Request) -> dict:
         @router.get("/dashboard")
         async def dashboard(request: Request):
             return templates.TemplateResponse(
+                request,
                 "dashboard.html",
                 {
-                    "request": request,
                     **get_sku_template_context(request),
                 }
             )
