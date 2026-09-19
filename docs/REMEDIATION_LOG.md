@@ -203,6 +203,146 @@ completed under time pressure in this session.
 
 ---
 
+## Phase 1, Section 1.5 — Finding 49 remainder: STOPPED, new Finding 50 discovered
+
+**Started:** 2026-09-19
+
+Began the planned mechanical fix of the 51 remaining Finding-49 mismatches (29 tables — see Phase 0's
+full list above). Re-ran the newly-promoted `scripts/check_fk_drift.py --verbose` against a freshly
+migrated scratch database (`fk_drift_verify`, `alembic upgrade head`, same clean venv used throughout
+this audit) to get exact DB-side type/nullable/on-delete detail for each column before writing any
+model changes — confirmed the same 51 mismatches, same 29 tables, exact match with Phase 0's list.
+
+**While pulling per-column detail for the first few tables, found something the mechanical fix cannot
+safely paper over.** Checked the full `CREATE TABLE`/`ALTER TABLE` history (not just the FK constraint)
+for every table in the three highest-count files before writing a single line of model code, per this
+roadmap's own instruction not to rush per-column edits. Result:
+
+**Finding 50 (NEW, not in the original 48, not the same shape as Finding 49) — CONFIRMED, severity
+provisionally P1 pending full scope (see "Not yet fully scoped" below): for a significant number of
+tables scoped under Finding 49's "column not in ORM metadata at all" category, the missing column is
+not an isolated oversight — the model's column set for that table diverges substantially from what its
+own migration(s) actually created:** different column names for the same concept, different
+nullability, extra model-only columns with no DB equivalent, missing DB-only columns with no model
+equivalent, and in at least one case a different enum's *value set* entirely. Confirmed present, with
+full detail, in:
+
+- **`IntercompanyTransaction` (`app/models/advanced_accounting.py`, table `intercompany_transactions`)**
+  — model declares `from_entity_id`/`to_entity_id`/`from_transaction_id`/`to_transaction_id`/
+  `transaction_date`/`currency`/`notes`/`elimination_date`; the live table (per
+  `alembic/versions/20260106_1600_advanced_accounting.py:401-419`, confirmed unchanged by any later
+  migration) actually has `source_entity_id`/`target_entity_id`/`source_transaction_id`/
+  `target_transaction_id`/`description`/`eliminated_at`, and has **no** `transaction_date` or `currency`
+  column at all. **This is live, reachable code, not dead code**: `POST /intercompany`
+  (`app/routers/advanced_accounting.py:981-1047`) constructs an `IntercompanyTransaction(...)` using the
+  model's (wrong) attribute names on every single call, so every call to this endpoint fails
+  deterministically with `UndefinedColumnError` the moment it reaches `db.flush()`. Also used by
+  `GET /intercompany` (same router, ~line 1078) and `ConsolidationService.get_unrealized_intercompany_profit`
+  (`app/services/consolidation_service.py:721-725`) — both query using the same wrong attribute names and
+  would fail identically the moment a real row existed to query, and cannot currently create one to test
+  against.
+- **`ApprovalRequest`/`ApprovalWorkflowApprover`/`LedgerEntry`/`ThreeWayMatch`/`WHTCreditNote`
+  (`app/models/advanced_accounting.py`)** — each checked individually against
+  `alembic/versions/20260106_1600_advanced_accounting.py`'s actual `CREATE TABLE` statements (lines
+  180–221, 301–371). All five show the same pattern: model-only columns with no DB equivalent (e.g.
+  `ApprovalRequest.required_approvals`/`current_approvals`/`current_rejections`/`resource_data`/
+  `requested_by_id`/`requested_at`, none of which exist on the real table, which instead has `amount`/
+  `submitted_by_id`/`context`), DB-only columns with no model equivalent, and for `ApprovalRequest` and
+  `ThreeWayMatch` specifically, the model's own Python `Enum` (`ApprovalStatus`, `MatchingStatus`) has a
+  **different value set** than the Postgres `ENUM` type actually installed (e.g. model's
+  `ApprovalStatus.PARTIALLY_APPROVED` has no matching DB enum label; DB's `'cancelled'` label has no
+  matching Python member) — confirmed live via `LedgerEntry`
+  (`app/services/immutable_ledger.py`, `app/services/accounting_service.py`,
+  `app/services/forensic_audit_service.py`, `app/routers/forensic_audit.py`), `ThreeWayMatch`
+  (`app/services/three_way_matching.py`, `app/routers/forensic_audit.py`), `WHTCreditNote`
+  (`app/services/wht_credit_vault.py`, `app/services/audit_reporting.py`,
+  `app/routers/advanced_accounting.py`), `ApprovalWorkflowApprover`/`ApprovalRequest`
+  (`app/services/approval_workflow.py`, `app/services/budget_service.py`,
+  `app/routers/expense_claims.py`) — **all confirmed live and reachable, none dead code.**
+- **`BankReconciliation` (`app/models/bank_reconciliation.py`, table `bank_reconciliations`)** — same
+  pattern, confirmed against the table's actual, current DDL (this table was fully dropped and
+  recreated by a later migration, `alembic/versions/20260118_1200_bank_reconciliation_comprehensive.py:285-338`,
+  so this is checked against its *final* real shape, not a stale intermediate one). Model declares
+  `statement_opening_balance`/`statement_closing_balance`/`book_opening_balance`/`book_closing_balance`
+  (all `NOT NULL`); the real table has `statement_ending_balance`/`ledger_ending_balance` instead (no
+  "opening" variants of either exist in the DB at all) — meaning any INSERT via this model omits two
+  real `NOT NULL` DB columns entirely (`statement_ending_balance`, `ledger_ending_balance`) while trying
+  to write four columns that don't exist. Also missing from the model entirely: `prepared_at`,
+  `reviewed_at`, `rejection_reason`, the Nigerian-specific charge/statistics columns
+  (`total_emtl`/`total_stamp_duty`/`total_vat_on_charges`/`total_wht_deducted`/`total_transactions`/
+  `matched_transactions`/`unmatched_bank_transactions`/`unmatched_book_transactions`/
+  `auto_matched_count`/`manual_matched_count`). Model-only, no DB equivalent: `completed_at`/
+  `completed_by_id`.
+- **`PayrollImpactPreview` (`app/models/payroll_advanced.py`, table `payroll_impact_previews`)** — model
+  imagines a "current period totals vs. previous period totals" comparison record
+  (`current_gross`/`previous_payroll_id`/etc.); the real table
+  (`alembic/versions/20260110_1000_add_advanced_payroll_tables.py:70-90`) implements a completely
+  different concept — a field-level change-log row (`change_type`/`field_changed`/`old_value`/
+  `new_value`/`impact_on_gross`/`impact_on_tax`/`impact_on_pension`/`impact_on_net`/`impact_details`).
+  Also: the model declares `payroll_run_id` as `NOT NULL, unique=True`; the real column is nullable with
+  no uniqueness constraint.
+
+**Confirmed NOT part of this problem (verified individually, genuinely simple missing-FK cases):**
+`transactions.original_category_id`, `organizations.emergency_suspended_by_id`, `invoices.*`,
+`audit_logs.*`, `accounting.py`/`payroll.py`'s `created_by_id`/`updated_by_id` overrides — i.e.
+everything already fixed in Phase 0. Within the *remaining* 51, `budget_periods.tenant_id` is
+individually confirmed genuinely simple (the table's current DDL,
+`alembic/versions/20260127_1100_add_budget_period_revision_fields.py:91-134`, matches the model's other
+declared columns field-for-field; `tenant_id` really is just a bare additional nullable FK the model
+never picked up) — this one alone would be safe to fix mechanically.
+
+**Not yet fully scoped:** the remaining 21 of 51 mismatches (in `fixed_asset.py`, `expense_claims.py`,
+`ml_job.py`, `sku.py`, `risk_signal.py`, `support_ticket.py`, `upsell.py`) have **not** been individually
+checked against their migrations yet. Given the pattern is now confirmed in 3 of the largest-count files
+(30 of 51 mismatches, all in live/reachable code, not isolated to one model author or one work session),
+**do not assume these 21 are simple** — per this roadmap's own instruction against assuming success
+where verification is incomplete. Each needs the same individual DDL-vs-model check before any fix.
+
+**Why this stopped rather than continuing to "fix":** the mechanical fix this section was scoped to
+do — add a `ForeignKey()` to an existing or new column — would be actively misleading here. Declaring
+`IntercompanyTransaction.source_entity_id` with a correct `ForeignKey()` while the model still also
+declares a non-existent `from_entity_id` fixes zero real bugs; the endpoint still crashes on every call.
+Marking Finding 49 §1.5 "done" after only patching FK annotations on these tables would create false
+confidence that these features work, when they are currently, and were probably always, completely
+non-functional against the real database.
+
+**Decision needed before this section can continue (not made unilaterally — see conversation):**
+whether to (a) write new migrations bringing the live schema up to match each model's fuller, apparently
+-intended shape, (b) cut each model back down to match what the database actually has and adjust the
+dependent router/service code to match, table by table, or (c) some mix decided per-table depending on
+which shape reflects the actually-intended, currently-marketed feature behavior — a product decision,
+not a schema decision, since (a) and (b) produce different real user-facing behavior for features like
+intercompany elimination, bank reconciliation statistics, and payroll impact previews.
+
+**Status:** ⚠️ Stopped mid-section, not fixed. Finding 50 opened and documented above. Original Finding
+49 §1.5 scope (mechanical FK-annotation fixes) is now understood to be blocked on resolving Finding 50
+first for at least 3 of 29 tables, and possibly more pending the remaining 21 tables' individual checks.
+`budget_periods.tenant_id` is the one column in this section confirmed safe to fix mechanically without
+waiting on that decision — fixed, verified DDL-neutral, and committed separately from this finding.
+
+**Scale check — how far Finding 50 actually extends beyond the 3 files above:** fixed
+`budget_periods.tenant_id`, then ran `alembic revision --autogenerate` once against the full current
+model set (all Phase 0 fixes + this one column) as a diagnostic-only, never-committed check of *total*
+model/DB drift across the whole schema, not just the 51 columns Finding 49 originally scoped. Result:
+**755 columns the autogenerate tool wants to add, 755 it wants to drop, 1274 `alter_column` operations,
+171 foreign-key changes, across 66 distinct tables** (out of 123 registered). Some fraction of the
+`alter_column` count is very likely cosmetic autogenerate noise (e.g. `server_default` timestamp
+comparison quirks that are a known Alembic false-positive pattern, not real drift) — **not yet separated
+from real drift, and deliberately not assumed to be all-cosmetic either**, per this roadmap's own rule
+against assuming success where verification is incomplete. The exactly-matched 755/755 add/drop count is
+the strongest concrete signal: at minimum, it means renamed-or-retyped columns exist at roughly that
+scale across roughly half the schema's tables. The generated migration file was diagnostic only,
+reviewed, and deleted — not committed.
+
+**This means Finding 50 is not a bounded extension of Finding 49 (a few extra tables needing careful
+column-adds) — it is a separate, schema-wide finding of unknown but apparently large scope**, discovered
+as a side effect of trying to close Finding 49's remainder, not something either finding's original
+scoping anticipated. Continuing to treat it as "part of §1.5" would misrepresent both its size and its
+risk. Flagged to the user rather than either continuing to fix piecemeal or minimizing it — see
+conversation for the decision requested.
+
+---
+
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
 straightforward — the original audit's own instruction against skipping "simple" work applies equally
 here.)*

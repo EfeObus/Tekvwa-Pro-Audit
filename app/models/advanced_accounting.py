@@ -459,7 +459,10 @@ class BudgetPeriod(BaseModel):
     - Period-level locking
     """
     __tablename__ = "budget_periods"
-    
+
+    # Present on the live table (alembic/versions/20260127_1100_add_budget_period_revision_fields.py)
+    # but never declared on this model — Finding 49. Nullable, no ON DELETE action in the migration.
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=True)
     budget_id = Column(UUID(as_uuid=True), ForeignKey("budgets.id", ondelete="CASCADE"), nullable=False)
     
     period_number = Column(Integer, nullable=False, comment="Period sequence (1-12 for monthly, 1-4 for quarterly)")
