@@ -373,14 +373,28 @@ represented there.
 
 ### 1.5 Section: Finding 49 (new — discovered during Phase 0's baseline run, not one of the audit's original 48) — reconcile every real DB foreign-key constraint the ORM doesn't know about
 
-**Understand:** Phase 0's baseline test run surfaced a new, systemic defect: a permanent
-`information_schema`-vs-`Base.metadata` diagnostic script found **93 real FK constraints in a fully
-migrated database with no matching declaration on any SQLAlchemy model**, across three root causes
-(table never registered — Finding 19, already covered by §1.4; column entirely missing from the
-model; column present but its `ForeignKey()` never declared). Full investigation, the exact list of
-affected columns, a documented false-start (a naive fix to the shared `AuditMixin` that made things
-worse before being caught and reverted), and the fix for 57 of the 93 are recorded in full in
-`docs/REMEDIATION_LOG.md`'s Phase 0 entry — this section is the remaining 51.
+**⚠️ SUPERSEDED for most of this section's scope — see Finding 50, `docs/FINDING_50_SCOPE.md`, before
+doing any further work here.** While starting the mechanical per-table fix this section describes, the
+"missing column" mismatches turned out for most tables not to be isolated oversights but symptoms of
+models whose entire column set diverges from their migration (renamed columns, extra model-only fields,
+extra DB-only fields, sometimes a fundamentally different concept under the same table name — e.g.
+`IntercompanyTransaction`, confirmed to crash `POST /intercompany` on every call). This is now its own
+finding (50), schema-wide (66 tables, not 29), requiring a product decision (migrate the DB to match the
+models vs. fix the models/code to match the DB, per table) before any fix is written — see that
+document's "What remediation requires" section. **Only `budget_periods.tenant_id` from this section's
+original 29-table list was confirmed genuinely simple and is done** (commit `7a4740a`). Do not run this
+section's original per-table plan below on the other 28 tables until Finding 50's decision is made —
+28 of them are Finding-50-shaped, not simple FK-annotation gaps.
+
+**Original **Understand** (kept for history, superseded above):** Phase 0's baseline test run surfaced a
+new, systemic defect: a permanent `information_schema`-vs-`Base.metadata` diagnostic script found **93
+real FK constraints in a fully migrated database with no matching declaration on any SQLAlchemy
+model**, across three root causes (table never registered — Finding 19, already covered by §1.4; column
+entirely missing from the model; column present but its `ForeignKey()` never declared). Full
+investigation, the exact list of affected columns, a documented false-start (a naive fix to the shared
+`AuditMixin` that made things worse before being caught and reverted), and the fix for 57 of the 93 are
+recorded in full in `docs/REMEDIATION_LOG.md`'s Phase 0 entry — this section was meant to be the
+remaining 51, until 28 of the 29 tables involved turned out to need Finding 50's decision first.
 
 **This section is now a precondition for §1.3** (switching `tests/conftest.py` to build its schema
 via Alembic): with 51 mismatches still spread across 29 tables, `Base.metadata.create_all()`/
@@ -1562,7 +1576,8 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 46 | P2 | 8 | 8.2 | ⬜ |
 | 47 | P2 | 8 | 8.3 | ⬜ |
 | 48 | P3 | 8 | 8.4 | ⬜ |
-| 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; see `docs/REMEDIATION_LOG.md`) | 🟨 |
+| 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; 28 of the remaining 29 tables superseded by Finding 50; see `docs/REMEDIATION_LOG.md`) | 🟨 |
+| 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 (blocked on a remediation-direction decision; not yet assigned a fix section) | 🟨 |
 
 **Note on Findings 12, 25, and 34 — not yet assigned a dedicated section above, added here for
 completeness rather than left off the table entirely:**

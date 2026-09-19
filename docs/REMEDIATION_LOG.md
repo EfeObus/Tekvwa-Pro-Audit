@@ -338,8 +338,15 @@ reviewed, and deleted — not committed.
 column-adds) — it is a separate, schema-wide finding of unknown but apparently large scope**, discovered
 as a side effect of trying to close Finding 49's remainder, not something either finding's original
 scoping anticipated. Continuing to treat it as "part of §1.5" would misrepresent both its size and its
-risk. Flagged to the user rather than either continuing to fix piecemeal or minimizing it — see
-conversation for the decision requested.
+risk. Flagged to the user rather than either continuing to fix piecemeal or minimizing it.
+
+**Full scope completed and written up separately: see `docs/FINDING_50_SCOPE.md`.** Summary: 109 of 123
+tables show some difference; 66 tables (755 columns) show the severe "column identity mismatch" pattern,
+tiered by severity (21 severe, 22 moderate, 23 minor). All 21 Tier-1 (severe) tables' owning model
+classes confirmed reachable from real routers/services via grep — none dead code. Remediation direction
+(migrate DB to match models / fix models+code to match DB / per-table judgment) is a product decision
+requiring production row-count data this environment cannot access — see that document's "What
+remediation requires" section for the options presented to the user.
 
 ---
 
