@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-Tekvwarho LTD is committed to protecting the confidentiality, integrity, and availability of customer data within TekVwarho ProAudit. This Security Policy outlines our security principles, practices, and commitments.
+Tekvwa IT Solutions LTD is committed to protecting the confidentiality, integrity, and availability of customer data within TekVwarho ProAudit. This Security Policy outlines our security principles, practices, and commitments.
 
 **Our Security Philosophy:** Security is not a feature—it is foundational to everything we build.
 
@@ -392,7 +392,7 @@ Our cloud providers maintain:
 
 If you discover a security vulnerability:
 
-**Email:** security@tekvwarho.com
+**Email:** info@tekvwa.org
 
 Please include:
 - Description of the vulnerability
@@ -418,8 +418,8 @@ We commit to:
 
 ## 14. Contact
 
-**Security Team:** security@tekvwarho.com  
-**Data Protection Officer:** dpo@tekvwarho.com  
+**Security Team:** info@tekvwa.org  
+**Data Protection Officer:** info@tekvwa.org  
 **Emergency:** +234 XXX XXX XXXX (Enterprise customers)  
 
 ---
@@ -432,4 +432,4 @@ We commit to:
 
 ---
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

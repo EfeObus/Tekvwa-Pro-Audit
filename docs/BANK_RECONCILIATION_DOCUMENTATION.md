@@ -631,7 +631,7 @@ pytest tests/test_bank_reconciliation.py --cov=app/services/bank_reconciliation_
 ## Support
 
 For issues or feature requests, please contact:
-- Email: support@tekvwarho.com
+- Email: info@tekvwa.org
 - GitHub: https://github.com/EfeObus/TekVwarho-ProAudit
 
 ---

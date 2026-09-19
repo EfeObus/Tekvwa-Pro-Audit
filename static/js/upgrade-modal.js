@@ -178,7 +178,7 @@
                                 </span>
                             </div>
                             <span>
-                                Questions? <a href="mailto:support@tekvwarho.com" class="text-blue-600 hover:underline">Contact us</a>
+                                Questions? <a href="mailto:info@tekvwa.org" class="text-blue-600 hover:underline">Contact us</a>
                             </span>
                         </div>
                     </div>

@@ -135,7 +135,7 @@ If we determine you have violated this AUP, we may:
 
 To report suspected violations:
 
-Email: abuse@tekvwarho.com
+Email: info@tekvwa.org
 
 Include:
 - Description of the violation
@@ -179,6 +179,6 @@ We may update this AUP periodically. Continued use of the Service after updates 
 
 ---
 
-**Contact:** abuse@tekvwarho.com
+**Contact:** info@tekvwa.org
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

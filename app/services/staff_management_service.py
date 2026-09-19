@@ -524,7 +524,7 @@ class StaffManagementService:
                 name="TekVwarho Demo",
                 slug=self.PLATFORM_ORG_SLUG,
                 organization_type=OrganizationType.SME,
-                email="demo@tekvwarho.com",
+                email="info@tekvwa.org",
                 phone="+234-800-DEMO",
                 subscription_tier=SubscriptionTier.ENTERPRISE,  # Legacy field
                 verification_status=VerificationStatus.VERIFIED,
@@ -562,14 +562,14 @@ class StaffManagementService:
             demo_entity = BusinessEntity(
                 organization_id=demo_org.id,
                 name=self.PLATFORM_ENTITY_NAME,
-                legal_name="TekVwarho LTD Demo Business",
+                legal_name="Tekvwa IT Solutions LTD Demo Business",
                 tin="1234567890",  # Demo TIN
                 rc_number="RC-DEMO-001",
                 address_line1="123 Demo Street",
                 city="Lagos",
                 state="Lagos",
                 country="Nigeria",
-                email="demo@tekvwarho.com",
+                email="info@tekvwa.org",
                 phone="+234-800-DEMO",
                 fiscal_year_start_month=1,
                 currency="NGN",

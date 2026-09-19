@@ -13,20 +13,20 @@ from sqlalchemy import select
 async def reset_passwords():
     async with async_session_maker() as db:
         # Reset Admin password
-        result = await db.execute(select(User).where(User.email == 'test.admin@tekvwarho.com'))
+        result = await db.execute(select(User).where(User.email == 'info@tekvwa.org'))
         admin = result.scalar_one_or_none()
         if admin:
             admin.hashed_password = get_password_hash('TestAdmin@2026!')
-            print('✓ Admin password reset: test.admin@tekvwarho.com → TestAdmin@2026!')
+            print('✓ Admin password reset: info@tekvwa.org → TestAdmin@2026!')
         else:
             print('✗ Admin user not found')
         
         # Reset IT Dev password
-        result = await db.execute(select(User).where(User.email == 'it.dev@tekvwarho.com'))
+        result = await db.execute(select(User).where(User.email == 'info@tekvwa.org'))
         it_dev = result.scalar_one_or_none()
         if it_dev:
             it_dev.hashed_password = get_password_hash('ItDev@2026!')
-            print('✓ IT Dev password reset: it.dev@tekvwarho.com → ItDev@2026!')
+            print('✓ IT Dev password reset: info@tekvwa.org → ItDev@2026!')
         else:
             print('✗ IT Dev user not found')
         

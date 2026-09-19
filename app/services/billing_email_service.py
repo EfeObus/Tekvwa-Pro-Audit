@@ -32,8 +32,8 @@ class BillingEmailService:
         self.email_service = EmailService()
         self.company_name = "TekVwarho ProAudit"
         self.base_url = getattr(settings, 'base_url', 'http://localhost:5120')
-        self.support_email = getattr(settings, 'support_email', 'support@tekvwarho.com')
-        self.billing_email = getattr(settings, 'billing_email', 'billing@tekvwarho.com')
+        self.support_email = getattr(settings, 'support_email', 'info@tekvwa.org')
+        self.billing_email = getattr(settings, 'billing_email', 'info@tekvwa.org')
     
     def _format_naira(self, amount: int) -> str:
         """Format amount as Nigerian Naira."""

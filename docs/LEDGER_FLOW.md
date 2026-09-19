@@ -1202,7 +1202,7 @@ This document provides visual representations of how data flows through TekVwarh
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
-| 1.0.0 | January 2026 | TekVwarho LTD | Initial release |
+| 1.0.0 | January 2026 | Tekvwa IT Solutions LTD | Initial release |
 
 ---
 

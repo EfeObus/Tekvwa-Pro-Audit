@@ -274,7 +274,7 @@ async def admin_user_search_page(
         org_roles = [role.value for role in UserRole]
         
         return templates.TemplateResponse(
-            "admin_user_search.html",
+            request, "admin_user_search.html",
             {
                 "request": request,
                 "current_user": current_user,

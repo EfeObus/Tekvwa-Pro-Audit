@@ -11,9 +11,9 @@
 This Data Processing Agreement ("DPA") is entered into between:
 
 **Data Controller:** The Customer (you, your business entity)  
-**Data Processor:** Tekvwarho LTD (we, us, our)
+**Data Processor:** Tekvwa IT Solutions LTD (we, us, our)
 
-This DPA supplements our Terms and Conditions and Privacy Policy, and governs the processing of personal data by Tekvwarho LTD on behalf of the Customer in connection with the TekVwarho ProAudit Service.
+This DPA supplements our Terms and Conditions and Privacy Policy, and governs the processing of personal data by Tekvwa IT Solutions LTD on behalf of the Customer in connection with the TekVwarho ProAudit Service.
 
 ---
 
@@ -36,7 +36,7 @@ This DPA supplements our Terms and Conditions and Privacy Policy, and governs th
 
 ### 3.1 Scope
 
-This DPA applies to all personal data processed by Tekvwarho LTD on behalf of the Customer through the Service.
+This DPA applies to all personal data processed by Tekvwa IT Solutions LTD on behalf of the Customer through the Service.
 
 ### 3.2 Categories of Data Subjects
 
@@ -91,7 +91,7 @@ You warrant that:
 
 ## 5. Processor Obligations
 
-### 5.1 Tekvwarho LTD Commitments
+### 5.1 Tekvwa IT Solutions LTD Commitments
 
 As Data Processor, we will:
 
@@ -339,13 +339,13 @@ We maintain records of processing activities including:
 ## 15. Contact Information
 
 **Data Protection Officer:**  
-Email: dpo@tekvwarho.com  
+Email: info@tekvwa.org  
 
 **Privacy Inquiries:**  
-Email: privacy@tekvwarho.com  
+Email: info@tekvwa.org  
 
 **DPA Requests:**  
-Email: legal@tekvwarho.com  
+Email: info@tekvwa.org  
 
 ---
 
@@ -357,4 +357,4 @@ This DPA is governed by the laws of the Federal Republic of Nigeria, including:
 
 ---
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

@@ -254,7 +254,7 @@ INSERT INTO data_destruction_log (
     'payment_transactions',
     (SELECT changes()),
     'Data destruction request #XXX',
-    'admin@tekvwarho.com',
+    'info@tekvwa.org',
     NOW()
 );
 ```

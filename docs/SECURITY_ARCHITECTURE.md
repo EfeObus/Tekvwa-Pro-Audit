@@ -509,7 +509,7 @@ All Super Admin actions are logged with full details:
 {
     "id": "uuid",
     "actor_id": "staff_uuid",
-    "actor_email": "admin@tekvwarho.com",
+    "actor_email": "info@tekvwa.org",
     "action": "emergency.tenant.suspend",
     "target_type": "organization",
     "target_id": "tenant_uuid",

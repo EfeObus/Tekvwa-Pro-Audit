@@ -70,7 +70,7 @@ class AuditService:
             changes = self._calculate_changes(old_values, new_values)
         
         # Fetch user email if user_id is provided
-        user_email = "system@tekvwarho.com"  # Default for system actions
+        user_email = "info@tekvwa.org"  # Default for system actions
         if user_id:
             user_result = await self.db.execute(
                 select(User).where(User.id == user_id)

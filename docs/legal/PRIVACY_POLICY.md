@@ -8,7 +8,7 @@
 
 ## 1. Introduction
 
-Welcome to TekVwarho ProAudit ("we," "our," "us," or the "Company"). This Privacy Policy explains how Tekvwarho LTD, a company incorporated under the laws of the Federal Republic of Nigeria, collects, uses, discloses, and protects your personal information when you use our tax compliance and business management platform (the "Service").
+Welcome to TekVwarho ProAudit ("we," "our," "us," or the "Company"). This Privacy Policy explains how Tekvwa IT Solutions LTD, a company incorporated under the laws of the Federal Republic of Nigeria, collects, uses, discloses, and protects your personal information when you use our tax compliance and business management platform (the "Service").
 
 We are committed to protecting your privacy and ensuring compliance with:
 - **Nigeria Data Protection Act 2023 (NDPA)**
@@ -23,11 +23,11 @@ By using TekVwarho ProAudit, you consent to the collection, use, and disclosure 
 ## 2. Data Controller Information
 
 **Data Controller:**  
-Tekvwarho LTD  
+Tekvwa IT Solutions LTD  
 Lagos, Nigeria  
 
 **Data Protection Officer:**  
-Email: privacy@tekvwarho.com  
+Email: info@tekvwa.org  
 Phone: +234 XXX XXX XXXX  
 
 For any privacy-related inquiries or to exercise your data rights, please contact our Data Protection Officer.
@@ -259,8 +259,8 @@ Continued use of the Service after changes constitutes acceptance.
 For privacy inquiries, data requests, or complaints:
 
 **Data Protection Officer**  
-Tekvwarho LTD  
-Email: privacy@tekvwarho.com  
+Tekvwa IT Solutions LTD  
+Email: info@tekvwa.org  
 Phone: +234 XXX XXX XXXX  
 
 **Nigeria Data Protection Commission (NDPC)**  
@@ -285,4 +285,4 @@ For complaints if not resolved by our DPO.
 
 *This Privacy Policy is governed by the laws of the Federal Republic of Nigeria.*
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

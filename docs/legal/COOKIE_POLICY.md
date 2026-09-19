@@ -8,7 +8,7 @@
 
 ## 1. Introduction
 
-This Cookie Policy explains how Tekvwarho LTD ("we," "us," or "our") uses cookies and similar tracking technologies when you use TekVwarho ProAudit (the "Service"). This policy should be read in conjunction with our [Privacy Policy](PRIVACY_POLICY.md) and [Terms and Conditions](TERMS_AND_CONDITIONS.md).
+This Cookie Policy explains how Tekvwa IT Solutions LTD ("we," "us," or "our") uses cookies and similar tracking technologies when you use TekVwarho ProAudit (the "Service"). This policy should be read in conjunction with our [Privacy Policy](PRIVACY_POLICY.md) and [Terms and Conditions](TERMS_AND_CONDITIONS.md).
 
 By using our Service, you consent to the use of cookies as described in this policy. You can manage your cookie preferences as explained in Section 6.
 
@@ -222,11 +222,11 @@ We encourage you to review this policy regularly.
 For questions about our use of cookies:
 
 **Data Protection Officer**  
-Tekvwarho LTD  
-Email: privacy@tekvwarho.com  
+Tekvwa IT Solutions LTD  
+Email: info@tekvwa.org  
 
 **General Support**  
-Email: support@tekvwarho.com  
+Email: info@tekvwa.org  
 
 ---
 
@@ -246,4 +246,4 @@ Email: support@tekvwarho.com
 
 *This Cookie Policy is part of our commitment to transparency and privacy.*
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

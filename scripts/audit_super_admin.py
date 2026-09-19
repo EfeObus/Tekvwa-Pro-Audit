@@ -12,7 +12,7 @@ BASE_URL = "http://localhost:5120/api/v1"
 def main():
     # Login
     login_resp = requests.post(f"{BASE_URL}/auth/login", json={
-        "email": "superadmin@tekvwarho.com",
+        "email": "info@tekvwa.org",
         "password": "SuperAdmin@TekVwarho2026!"
     })
     token = login_resp.json()["tokens"]["access_token"]

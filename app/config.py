@@ -210,8 +210,8 @@ class Settings(BaseSettings):
     mail_from_name: str = "TekVwarho ProAudit"
     
     # Support & Billing emails
-    support_email: str = "support@tekvwarho.com"
-    billing_email: str = "billing@tekvwarho.com"
+    support_email: str = "info@tekvwa.org"
+    billing_email: str = "info@tekvwa.org"
     
     @property
     def smtp_host(self) -> str:

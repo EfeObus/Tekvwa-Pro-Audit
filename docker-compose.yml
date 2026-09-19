@@ -139,7 +139,7 @@ services:
     container_name: tekvwarho-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@tekvwarho.com
+      PGADMIN_DEFAULT_EMAIL: info@tekvwa.org
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"

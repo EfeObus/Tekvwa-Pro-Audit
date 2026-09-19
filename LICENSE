@@ -1,7 +1,7 @@
 TEKVWARHO PROAUDIT - DUAL LICENSE AGREEMENT
 =============================================
 
-Copyright (c) 2024-2026 Tekvwarho LTD. All Rights Reserved.
+Copyright (c) 2024-2026 Tekvwa IT Solutions LTD. All Rights Reserved.
 
 This software is available under TWO distinct licensing options. Your use of
 this software is governed by the license type applicable to your situation.
@@ -11,7 +11,7 @@ this software is governed by the license type applicable to your situation.
 ================================================================================
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  IF YOU HAVE A SIGNED COMMERCIAL LICENSE AGREEMENT WITH TEKVWARHO LTD:     │
+│  IF YOU HAVE A SIGNED COMMERCIAL LICENSE AGREEMENT WITH Tekvwa IT Solutions LTD:     │
 │  → You are governed by the COMMERCIAL LICENSE (Part A) below               │
 │                                                                             │
 │  IF YOU DO NOT HAVE A COMMERCIAL LICENSE:                                   │
@@ -24,7 +24,7 @@ this software is governed by the license type applicable to your situation.
 
 This Commercial License Agreement ("Commercial Agreement") governs the use of
 TekVwarho ProAudit ("Software") by licensees who have executed a separate
-commercial license agreement with Tekvwarho LTD.
+commercial license agreement with Tekvwa IT Solutions LTD.
 
 1. COMMERCIAL LICENSE TIERS
 
@@ -88,7 +88,7 @@ commercial license agreement with Tekvwarho LTD.
    b) Reverse engineer, decompile, or disassemble the Software
    c) Remove or alter proprietary notices or branding
    d) Use the Software to create a competing product
-   e) Transfer the license without written consent from Tekvwarho LTD
+   e) Transfer the license without written consent from Tekvwa IT Solutions LTD
    f) Exceed the scope of the licensed tier
    g) Use the Software in violation of applicable laws
 
@@ -130,11 +130,11 @@ commercial license agreement with Tekvwarho LTD.
 
 This Evaluation License Agreement ("Evaluation Agreement") governs the use of
 TekVwarho ProAudit ("Software") by users who have NOT executed a commercial
-license agreement with Tekvwarho LTD.
+license agreement with Tekvwa IT Solutions LTD.
 
 1. GRANT OF EVALUATION LICENSE
 
-   Subject to the terms of this Evaluation Agreement, Tekvwarho LTD grants you
+   Subject to the terms of this Evaluation Agreement, Tekvwa IT Solutions LTD grants you
    a limited, non-exclusive, non-transferable, revocable license to:
    
    a) ACCESS AND EVALUATE the Software to assess its suitability for your
@@ -177,7 +177,7 @@ license agreement with Tekvwarho LTD.
 3. EVALUATION PERIOD
 
    a) The Evaluation License is valid for THIRTY (30) DAYS from first use
-      unless extended in writing by Tekvwarho LTD.
+      unless extended in writing by Tekvwa IT Solutions LTD.
    
    b) Upon expiration of the evaluation period, you must either:
       - Purchase a Commercial License, or
@@ -197,7 +197,7 @@ license agreement with Tekvwarho LTD.
 
    To convert from Evaluation to Commercial License:
    
-   a) Contact Tekvwarho LTD at licensing@tekvwarho.com
+   a) Contact Tekvwa IT Solutions LTD at info@tekvwa.org
    b) Request a commercial license quote based on your requirements
    c) Execute the commercial license agreement
    d) Receive production deployment credentials and support access
@@ -210,11 +210,11 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
 
 1. INTELLECTUAL PROPERTY
 
-   a) The Software is the exclusive intellectual property of Tekvwarho LTD.
+   a) The Software is the exclusive intellectual property of Tekvwa IT Solutions LTD.
    
    b) All rights, title, and interest in the Software, including copyrights,
       patents, trade secrets, trademarks, and other intellectual property
-      rights, remain the sole property of Tekvwarho LTD.
+      rights, remain the sole property of Tekvwa IT Solutions LTD.
    
    c) This Software is protected under:
       - The Copyright Act (Cap C28, Laws of the Federation of Nigeria 2004)
@@ -229,7 +229,7 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
       - Nigeria Data Protection Act 2023
       - General Data Protection Regulation (GDPR) where applicable
    
-   b) Tekvwarho LTD processes data in accordance with its Privacy Policy
+   b) Tekvwa IT Solutions LTD processes data in accordance with its Privacy Policy
    
    c) Commercial licensees are responsible for their own data protection
       compliance when processing personal data through the Software
@@ -256,7 +256,7 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
    
-   TEKVWARHO LTD DOES NOT WARRANT THAT:
+   Tekvwa IT Solutions LTD DOES NOT WARRANT THAT:
    - The Software will meet your specific requirements
    - The Software will be uninterrupted or error-free
    - Defects in the Software will be corrected
@@ -264,14 +264,14 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
 
 5. LIMITATION OF LIABILITY
 
-   a) IN NO EVENT SHALL TEKVWARHO LTD BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+   a) IN NO EVENT SHALL Tekvwa IT Solutions LTD BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
       SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES, INCLUDING:
       - Loss of profits or revenue
       - Loss of data
       - Business interruption
       - Procurement of substitute goods or services
    
-   b) TEKVWARHO LTD'S TOTAL LIABILITY SHALL NOT EXCEED:
+   b) Tekvwa IT Solutions LTD'S TOTAL LIABILITY SHALL NOT EXCEED:
       - For Commercial Licensees: The license fees paid in the 12 months
         preceding the claim
       - For Evaluation Licensees: Zero (0) Naira
@@ -281,7 +281,7 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
 
 6. INDEMNIFICATION
 
-   You agree to indemnify, defend, and hold harmless Tekvwarho LTD from any
+   You agree to indemnify, defend, and hold harmless Tekvwa IT Solutions LTD from any
    claims, damages, losses, or expenses arising from:
    
    a) Your use of the Software
@@ -334,12 +334,12 @@ The following terms apply to BOTH Commercial and Evaluation Licenses:
 
 For licensing inquiries:
 
-   Tekvwarho LTD
+   Tekvwa IT Solutions LTD
    Federal Republic of Nigeria
    
-   Commercial Licensing:  licensing@tekvwarho.com
-   Legal Inquiries:       legal@tekvwarho.com
-   General Support:       support@tekvwarho.com
+   Commercial Licensing:  info@tekvwa.org
+   Legal Inquiries:       info@tekvwa.org
+   General Support:       info@tekvwa.org
    
    Website: https://tekvwarho.com
 
@@ -354,5 +354,5 @@ IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THIS SOFTWARE.
                                     END OF LICENSE
 ================================================================================
 
-Copyright (c) 2024-2026 Tekvwarho LTD. All Rights Reserved.
-TekVwarho ProAudit™ is a trademark of Tekvwarho LTD.
+Copyright (c) 2024-2026 Tekvwa IT Solutions LTD. All Rights Reserved.
+TekVwarho ProAudit™ is a trademark of Tekvwa IT Solutions LTD.

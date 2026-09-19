@@ -552,7 +552,7 @@ FEATURE_BEHAVIORAL_ANALYTICS
 ## Contact
 
 For enterprise pricing or custom requirements:
-- **Email:** sales@tekvwarho.com
+- **Email:** info@tekvwa.org
 - **Phone:** +234-XXX-XXX-XXXX
 - **Office:** Lagos, Nigeria
 

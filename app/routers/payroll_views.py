@@ -123,7 +123,7 @@ async def payroll_page(
     # SKU Feature Gate: PAYROLL required (Professional+ tier)
     has_access = await check_payroll_feature_access(request, db, user)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             "user": user,
             "entity_id": str(entity_id),
@@ -132,7 +132,7 @@ async def payroll_page(
         }, status_code=403)
     
     response = templates.TemplateResponse(
-        "payroll.html",
+        request, "payroll.html",
         {
             "request": request,
             "user": user,
@@ -166,7 +166,7 @@ async def employee_payslips_page(
         return redirect
     
     return templates.TemplateResponse(
-        "payroll_employee_payslips.html",
+        request, "payroll_employee_payslips.html",
         {
             "request": request,
             "user": user,
@@ -189,7 +189,7 @@ async def payroll_run_details_page(
         return redirect
     
     return templates.TemplateResponse(
-        "payroll_run_details.html",
+        request, "payroll_run_details.html",
         {
             "request": request,
             "user": user,
@@ -211,7 +211,7 @@ async def payroll_reports_page(
         return redirect
     
     return templates.TemplateResponse(
-        "payroll_reports.html",
+        request, "payroll_reports.html",
         {
             "request": request,
             "user": user,
@@ -230,7 +230,7 @@ async def salary_calculator_page(
     user = await get_user_from_token(request, db)
     
     return templates.TemplateResponse(
-        "salary_calculator.html",
+        request, "salary_calculator.html",
         {
             "request": request,
             "user": user,  # May be None for unauthenticated users

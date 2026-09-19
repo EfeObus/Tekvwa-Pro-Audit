@@ -364,4 +364,4 @@ TekVwarho ProAudit represents a timely, necessary, and highly scalable solution 
 
 ---
 
-*For investment inquiries or partnership discussions, contact: [contact@tekvwarho.com]*
+*For investment inquiries or partnership discussions, contact: [info@tekvwa.org]*

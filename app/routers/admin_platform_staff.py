@@ -519,7 +519,7 @@ async def platform_staff_page(
         staff_result = await service.list_platform_staff(page=1, page_size=20)
         
         return templates.TemplateResponse(
-            "admin_platform_staff.html",
+            request, "admin_platform_staff.html",
             {
                 "request": request,
                 "user": current_user,

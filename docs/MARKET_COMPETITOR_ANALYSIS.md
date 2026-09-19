@@ -562,4 +562,4 @@ The window of opportunity is now—before global players adapt or local competit
 
 *This document is confidential and intended for strategic planning purposes only.*
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-This Service Level Agreement ("SLA") defines the service commitments Tekvwarho LTD provides to subscribers of TekVwarho ProAudit. This SLA is incorporated into and forms part of your subscription agreement.
+This Service Level Agreement ("SLA") defines the service commitments Tekvwa IT Solutions LTD provides to subscribers of TekVwarho ProAudit. This SLA is incorporated into and forms part of your subscription agreement.
 
 ---
 
@@ -183,7 +183,7 @@ If we fail to meet availability commitments:
 3. We will verify against our monitoring data
 4. Credit applied within 45 days if approved
 
-**Request Email:** sla@tekvwarho.com
+**Request Email:** info@tekvwa.org
 
 ### 8.4 Exclusions from Credits
 
@@ -315,11 +315,11 @@ We may update this SLA with:
 
 ## 15. Contact Information
 
-**Technical Support:** support@tekvwarho.com  
-**SLA Inquiries:** sla@tekvwarho.com  
+**Technical Support:** info@tekvwa.org  
+**SLA Inquiries:** info@tekvwa.org  
 **Status Page:** status.tekvwarho.com  
 **Emergency (Enterprise):** +234 XXX XXX XXXX  
 
 ---
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**

@@ -15,7 +15,7 @@
 
 TekVwarho ProAudit is a comprehensive financial management and tax compliance solution designed specifically for Nigerian businesses navigating the **2026 Tax Reform landscape**. The platform integrates real-time NRS (Nigeria Revenue Service) e-invoicing, automated tax calculations, and audit-ready financial reporting into a single, unified system.
 
-**Copyright (c) 2026 Tekvwarho LTD. All Rights Reserved.**
+**Copyright (c) 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**
 
 ### Why TekVwarho ProAudit?
 
@@ -1097,7 +1097,7 @@ TekVwarho-ProAudit/
 ├── tests/                        # Test suites
 ├── main.py                       # FastAPI entry point
 ├── README.md                     # This file
-├── LICENSE                       # Tekvwarho LTD Proprietary License
+├── LICENSE                       # Tekvwa IT Solutions LTD Proprietary License
 ├── CONTRIBUTING.md               # Contribution guidelines
 ├── requirements.txt              # Python dependencies
 ├── pyproject.toml                # Python project config
@@ -1172,7 +1172,7 @@ uvicorn main:app --reload --port 8000
 
 **PROPRIETARY - All Rights Reserved**
 
-This software is the intellectual property of Tekvwarho LTD. It may not be sold, resold, redistributed, or sublicensed. Use is permitted for personal and educational purposes only.
+This software is the intellectual property of Tekvwa IT Solutions LTD. It may not be sold, resold, redistributed, or sublicensed. Use is permitted for personal and educational purposes only.
 
 See [LICENSE](LICENSE) for full terms and conditions.
 
@@ -1186,8 +1186,8 @@ This software complies with Nigerian law including:
 
 ## Contact
 
-- **Company:** Tekvwarho LTD
-- **Email:** contact@tekvwarho.com
+- **Company:** Tekvwa IT Solutions LTD
+- **Email:** info@tekvwa.org
 - **GitHub:** [EfeObus/TekVwarho-ProAudit](https://github.com/EfeObus/TekVwarho-ProAudit)
 
 ---
@@ -1200,6 +1200,6 @@ This software complies with Nigerian law including:
 
 ---
 
-*Copyright (c) 2026 Tekvwarho LTD. All Rights Reserved.*
+*Copyright (c) 2026 Tekvwa IT Solutions LTD. All Rights Reserved.*
 *Built for Nigerian businesses navigating the new tax landscape.*
 # Force redeploy Fri Jan 30 14:39:30 EST 2026

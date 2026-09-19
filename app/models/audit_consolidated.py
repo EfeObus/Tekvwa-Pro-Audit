@@ -211,7 +211,7 @@ class AuditLog(Base):
     user_email: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
-        default="system@tekvwarho.com",
+        default="info@tekvwa.org",
         comment="Email of user who performed the action",
     )
     

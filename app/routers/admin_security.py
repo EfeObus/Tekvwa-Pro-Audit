@@ -133,7 +133,7 @@ _ip_whitelist: List[Dict[str, Any]] = [
         "address": "10.0.0.0/8",
         "description": "Internal network",
         "created_at": datetime.utcnow() - timedelta(days=30),
-        "created_by": "superadmin@tekvwarho.com",
+        "created_by": "info@tekvwa.org",
         "is_active": True,
     },
 ]

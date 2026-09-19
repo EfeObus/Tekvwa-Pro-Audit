@@ -104,7 +104,7 @@ class InvoicePDFService:
         # Company details from settings
         self.company_name = getattr(settings, 'company_name', 'TekVwarho ProAudit')
         self.company_address = getattr(settings, 'company_address', 'Lagos, Nigeria')
-        self.company_email = getattr(settings, 'company_email', 'billing@tekvwarho.com')
+        self.company_email = getattr(settings, 'company_email', 'info@tekvwa.org')
         self.company_phone = getattr(settings, 'company_phone', '+234-XXX-XXX-XXXX')
         self.company_tin = getattr(settings, 'company_tin', '')
         self.company_vat_id = getattr(settings, 'company_vat_id', '')

@@ -154,7 +154,7 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci
           JWT_SECRET_KEY: test-jwt-secret-key-for-ci-testing-only
           REDIS_URL: redis://localhost:6379/0
-          SUPER_ADMIN_EMAIL: test-admin@tekvwarho.com
+          SUPER_ADMIN_EMAIL: info@tekvwa.org
           SUPER_ADMIN_PASSWORD: TestPassword123!
         run: |
           # Use direct table creation to avoid alembic enum conflicts
@@ -168,7 +168,7 @@ jobs:
           JWT_SECRET_KEY: test-jwt-secret-key-for-ci-testing-only
           REDIS_URL: redis://localhost:6379/0
           TESTING: "true"
-          SUPER_ADMIN_EMAIL: test-admin@tekvwarho.com
+          SUPER_ADMIN_EMAIL: info@tekvwa.org
           SUPER_ADMIN_PASSWORD: TestPassword123!
           SUPER_ADMIN_FIRST_NAME: Test
           SUPER_ADMIN_LAST_NAME: Admin

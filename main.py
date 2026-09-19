@@ -94,7 +94,7 @@ async def lifespan(app: FastAPI):
         await seed_platform_test_entity()
     except Exception as e:
         logger.warning(f"Test Entity seeding skipped: {e}")
-    
+
     yield
     
     # Shutdown
@@ -248,7 +248,7 @@ async def _render_error_html(
     
     try:
         return templates.TemplateResponse(
-            "error.html",
+            request, "error.html",
             {
                 "request": request,
                 "error_code": status_code,

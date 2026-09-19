@@ -6,7 +6,7 @@ readme = "README.md"
 license = {text = "Proprietary"}
 requires-python = ">=3.11"
 authors = [
-    {name = "Tekvwarho LTD", email = "dev@tekvwarho.com"}
+    {name = "Tekvwa IT Solutions LTD", email = "info@tekvwa.org"}
 ]
 keywords = ["tax", "compliance", "nigeria", "fastapi", "accounting"]
 

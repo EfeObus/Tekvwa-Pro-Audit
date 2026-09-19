@@ -477,7 +477,7 @@ Every action is logged with:
 ### Support
 
 For technical support, contact:
-- Email: support@tekvwarho.com
+- Email: info@tekvwa.org
 - Documentation: /docs/AUDIT_SYSTEM_DOCUMENTATION.md
 
 ---

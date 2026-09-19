@@ -672,7 +672,7 @@ class FeatureGateMiddleware(BaseHTTPMiddleware):
                             "path": path,
                             "current_tier": tier,
                             "upgrade_required": True,
-                            "contact": "Contact sales@tekvwarho.com to upgrade your plan",
+                            "contact": "Contact info@tekvwa.org to upgrade your plan",
                         },
                     )
         

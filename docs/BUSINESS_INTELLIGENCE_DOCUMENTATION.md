@@ -240,7 +240,7 @@ Process text content for insights, sentiment, and classification.
   },
   "entities": [
     {
-      "text": "TekVwarho Ltd",
+      "text": "Tekvwa IT Solutions LTD",
       "type": "ORGANIZATION",
       "confidence": 0.95
     },

@@ -563,7 +563,7 @@ function superAdminDashboard() {
     "dashboard_type": "super_admin",
     "user": {
         "id": "uuid",
-        "email": "superadmin@tekvwarho.com",
+        "email": "info@tekvwa.org",
         "role": "SUPER_ADMIN"
     },
     "overview": {

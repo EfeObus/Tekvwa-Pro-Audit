@@ -188,19 +188,19 @@ async def home(request: Request, db: AsyncSession = Depends(get_async_session)):
     user = await get_user_from_token(request, db)
     if user:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html", {"request": request})
 
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Login page."""
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html", {"request": request})
 
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """Registration page."""
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html", {"request": request})
 
 
 @router.get("/logout")
@@ -245,14 +245,14 @@ async def dashboard(
             
             # Super Admin gets the comprehensive green-white-green dashboard
             if user.platform_role == PlatformRole.SUPER_ADMIN:
-                return templates.TemplateResponse("super_admin_dashboard.html", {
+                return templates.TemplateResponse(request, "super_admin_dashboard.html", {
                     "request": request,
                     "dashboard": dashboard_data,
                     **get_auth_context(user, None),
                 })
             
             # Other platform staff get the standard staff dashboard
-            return templates.TemplateResponse("staff_dashboard.html", {
+            return templates.TemplateResponse(request, "staff_dashboard.html", {
                 "request": request,
                 "dashboard": dashboard_data,
                 **get_auth_context(user, None),
@@ -268,7 +268,7 @@ async def dashboard(
             dashboard_data = await dashboard_service.get_dashboard(user, entity_id)
             
             # Use enhanced dashboard template
-            return templates.TemplateResponse("dashboard_v2.html", {
+            return templates.TemplateResponse(request, "dashboard_v2.html", {
                 "request": request,
                 "dashboard": dashboard_data,
                 "entity_id": str(entity_id) if entity_id else None,
@@ -288,7 +288,7 @@ async def dashboard(
         if not entity_id and not user.is_platform_staff:
             return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
         
-        return templates.TemplateResponse("dashboard_v2.html", {
+        return templates.TemplateResponse(request, "dashboard_v2.html", {
             "request": request,
             "error": str(e),
             "entity_id": str(entity_id) if entity_id else None,
@@ -306,7 +306,7 @@ async def transactions_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("transactions.html", {
+    response = templates.TemplateResponse(request, "transactions.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -333,7 +333,7 @@ async def invoices_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("invoices.html", {
+    response = templates.TemplateResponse(request, "invoices.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -360,7 +360,7 @@ async def sales_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("sales.html", {
+    response = templates.TemplateResponse(request, "sales.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -378,7 +378,7 @@ async def receipt_upload_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("receipts.html", {
+    response = templates.TemplateResponse(request, "receipts.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -396,7 +396,7 @@ async def reports_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("reports.html", {
+    response = templates.TemplateResponse(request, "reports.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -414,7 +414,7 @@ async def vendors_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("vendors.html", {
+    response = templates.TemplateResponse(request, "vendors.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -432,7 +432,7 @@ async def customers_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("customers.html", {
+    response = templates.TemplateResponse(request, "customers.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -450,7 +450,7 @@ async def inventory_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("inventory.html", {
+    response = templates.TemplateResponse(request, "inventory.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -468,7 +468,7 @@ async def accounting_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("accounting.html", {
+    response = templates.TemplateResponse(request, "accounting.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -489,14 +489,14 @@ async def budgets_page(
     # SKU Feature Gate: BUDGET_MANAGEMENT required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.BUDGET_MANAGEMENT)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Budget Management",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("budget_management.html", {
+    response = templates.TemplateResponse(request, "budget_management.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -517,14 +517,14 @@ async def fx_page(
     # SKU Feature Gate: MULTI_CURRENCY required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.MULTI_CURRENCY)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "FX Management",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("fx_management.html", {
+    response = templates.TemplateResponse(request, "fx_management.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -545,14 +545,14 @@ async def year_end_page(
     # SKU Feature Gate: ADVANCED_REPORTS required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.ADVANCED_REPORTS)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Year-End Closing",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("year_end.html", {
+    response = templates.TemplateResponse(request, "year_end.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -573,14 +573,14 @@ async def consolidation_page(
     # SKU Feature Gate: CONSOLIDATION required (Enterprise tier)
     has_access = await check_view_feature_access(request, db, user, Feature.CONSOLIDATION)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Consolidation",
             "required_tier": "Enterprise",
         }, status_code=403)
     
-    response = templates.TemplateResponse("consolidation.html", {
+    response = templates.TemplateResponse(request, "consolidation.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -601,14 +601,14 @@ async def fixed_assets_page(
     # SKU Feature Gate: FIXED_ASSETS required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.FIXED_ASSETS)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Fixed Assets",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("fixed_assets.html", {
+    response = templates.TemplateResponse(request, "fixed_assets.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -629,14 +629,14 @@ async def bank_reconciliation_page(
     # SKU Feature Gate: BANK_RECONCILIATION required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.BANK_RECONCILIATION)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Bank Reconciliation",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("bank_reconciliation.html", {
+    response = templates.TemplateResponse(request, "bank_reconciliation.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -657,14 +657,14 @@ async def expense_claims_page(
     # SKU Feature Gate: EXPENSE_CLAIMS required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.EXPENSE_CLAIMS)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Expense Claims",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("expense_claims.html", {
+    response = templates.TemplateResponse(request, "expense_claims.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -682,7 +682,7 @@ async def settings_page(
     if redirect:
         return redirect
     
-    return templates.TemplateResponse("settings.html", {
+    return templates.TemplateResponse(request, "settings.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -711,7 +711,7 @@ async def admin_verifications_page(
     if user.platform_role not in [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN]:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("admin_verifications.html", {
+    return templates.TemplateResponse(request, "admin_verifications.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -736,7 +736,7 @@ async def admin_settings_page(
     if user.platform_role != PlatformRole.SUPER_ADMIN:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("admin_settings.html", {
+    return templates.TemplateResponse(request, "admin_settings.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -761,7 +761,7 @@ async def admin_api_keys_page(
     if user.platform_role != PlatformRole.SUPER_ADMIN:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("admin_api_keys.html", {
+    return templates.TemplateResponse(request, "admin_api_keys.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -786,7 +786,7 @@ async def admin_security_page(
     if user.platform_role != PlatformRole.SUPER_ADMIN:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("admin_security.html", {
+    return templates.TemplateResponse(request, "admin_security.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -811,7 +811,7 @@ async def admin_automation_page(
     if user.platform_role != PlatformRole.SUPER_ADMIN:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("admin_automation.html", {
+    return templates.TemplateResponse(request, "admin_automation.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -835,7 +835,7 @@ async def admin_tenants_page(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard(user) if user.platform_role == PlatformRole.SUPER_ADMIN else {}
     
-    return templates.TemplateResponse("admin_tenants.html", {
+    return templates.TemplateResponse(request, "admin_tenants.html", {
         "request": request,
         "dashboard": dashboard_data,
         **get_auth_context(user, entity_id),
@@ -860,7 +860,7 @@ async def admin_support_page(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard(user) if user.platform_role == PlatformRole.SUPER_ADMIN else {}
     
-    return templates.TemplateResponse("admin_support.html", {
+    return templates.TemplateResponse(request, "admin_support.html", {
         "request": request,
         "dashboard": dashboard_data,
         **get_auth_context(user, entity_id),
@@ -885,7 +885,7 @@ async def admin_ml_jobs_page(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard(user)
     
-    return templates.TemplateResponse("admin_ml_jobs.html", {
+    return templates.TemplateResponse(request, "admin_ml_jobs.html", {
         "request": request,
         "dashboard": dashboard_data,
         **get_auth_context(user, entity_id),
@@ -910,7 +910,7 @@ async def admin_legal_holds_page(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard(user)
     
-    return templates.TemplateResponse("admin_legal_holds.html", {
+    return templates.TemplateResponse(request, "admin_legal_holds.html", {
         "request": request,
         "dashboard": dashboard_data,
         **get_auth_context(user, entity_id),
@@ -935,7 +935,7 @@ async def admin_risk_signals_page(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard(user)
     
-    return templates.TemplateResponse("admin_risk_signals.html", {
+    return templates.TemplateResponse(request, "admin_risk_signals.html", {
         "request": request,
         "dashboard": dashboard_data,
         **get_auth_context(user, entity_id),
@@ -1068,7 +1068,7 @@ async def admin_emergency_controls_page(
             "ended_at": control.ended_at.strftime("%Y-%m-%d %H:%M") if control.ended_at else None,
         })
     
-    return templates.TemplateResponse("admin_emergency_controls.html", {
+    return templates.TemplateResponse(request, "admin_emergency_controls.html", {
         "request": request,
         "platform_status": platform_status,
         "active_controls_count": stats.get("active_emergency_controls", 0),
@@ -1100,7 +1100,7 @@ async def staff_onboard_page(
     if user.platform_role not in [PlatformRole.SUPER_ADMIN, PlatformRole.ADMIN]:
         return RedirectResponse(url="/dashboard", status_code=status.HTTP_302_FOUND)
     
-    return templates.TemplateResponse("staff_onboard.html", {
+    return templates.TemplateResponse(request, "staff_onboard.html", {
         "request": request,
         "preset_role": role,  # Pre-select role if passed in URL
         **get_auth_context(user, entity_id),
@@ -1147,7 +1147,7 @@ async def admin_user_search_page(
     platform_roles = [role.value for role in PlatformRole]
     org_roles = [role.value for role in UserRole]
     
-    return templates.TemplateResponse("admin_user_search.html", {
+    return templates.TemplateResponse(request, "admin_user_search.html", {
         "request": request,
         "stats": stats,
         "platform_roles": platform_roles,
@@ -1194,7 +1194,7 @@ async def admin_platform_staff_page(
         pagination = {"page": 1, "page_size": 20, "total_count": 0, "total_pages": 0}
         stats = {"total_staff": 0, "active_staff": 0, "inactive_staff": 0, "staff_by_role": {}}
     
-    return templates.TemplateResponse("admin_platform_staff.html", {
+    return templates.TemplateResponse(request, "admin_platform_staff.html", {
         "request": request,
         "staff": staff_list,
         "stats": stats,
@@ -1218,7 +1218,7 @@ async def select_entity_page(
     if redirect:
         return redirect
     
-    return templates.TemplateResponse("select_entity.html", {
+    return templates.TemplateResponse(request, "select_entity.html", {
         "request": request,
         **get_auth_context(user, None),
     })
@@ -1248,31 +1248,31 @@ async def set_entity(
 @router.get("/terms", response_class=HTMLResponse)
 async def terms_page(request: Request):
     """Terms and Conditions page."""
-    return templates.TemplateResponse("legal/terms.html", {"request": request})
+    return templates.TemplateResponse(request, "legal/terms.html", {"request": request})
 
 
 @router.get("/privacy", response_class=HTMLResponse)
 async def privacy_page(request: Request):
     """Privacy Policy page."""
-    return templates.TemplateResponse("legal/privacy.html", {"request": request})
+    return templates.TemplateResponse(request, "legal/privacy.html", {"request": request})
 
 
 @router.get("/cookies", response_class=HTMLResponse)
 async def cookies_page(request: Request):
     """Cookie Policy page."""
-    return templates.TemplateResponse("legal/cookies.html", {"request": request})
+    return templates.TemplateResponse(request, "legal/cookies.html", {"request": request})
 
 
 @router.get("/faq", response_class=HTMLResponse)
 async def faq_page(request: Request):
     """FAQ page."""
-    return templates.TemplateResponse("legal/faq.html", {"request": request})
+    return templates.TemplateResponse(request, "legal/faq.html", {"request": request})
 
 
 @router.get("/security", response_class=HTMLResponse)
 async def security_page(request: Request):
     """Security Policy page."""
-    return templates.TemplateResponse("legal/security.html", {"request": request})
+    return templates.TemplateResponse(request, "legal/security.html", {"request": request})
 
 
 # ===========================================
@@ -1290,7 +1290,7 @@ async def tax_2026_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("tax_2026.html", {
+    response = templates.TemplateResponse(request, "tax_2026.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -1305,13 +1305,13 @@ async def tax_2026_page(
 @router.get("/forgot-password", response_class=HTMLResponse)
 async def forgot_password_page(request: Request):
     """Forgot password page."""
-    return templates.TemplateResponse("forgot_password.html", {"request": request})
+    return templates.TemplateResponse(request, "forgot_password.html", {"request": request})
 
 
 @router.get("/reset-password", response_class=HTMLResponse)
 async def reset_password_page(request: Request, token: str = None):
     """Reset password page."""
-    return templates.TemplateResponse("reset_password.html", {"request": request, "token": token})
+    return templates.TemplateResponse(request, "reset_password.html", {"request": request, "token": token})
 
 
 # ===========================================
@@ -1321,7 +1321,7 @@ async def reset_password_page(request: Request, token: str = None):
 @router.get("/verify-email", response_class=HTMLResponse)
 async def verify_email_page(request: Request, token: str = None):
     """Email verification page."""
-    return templates.TemplateResponse("verify_email.html", {"request": request, "token": token})
+    return templates.TemplateResponse(request, "verify_email.html", {"request": request, "token": token})
 
 
 # ===========================================
@@ -1350,7 +1350,7 @@ async def audit_unified_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("audit_unified.html", {
+    response = templates.TemplateResponse(request, "audit_unified.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -1379,7 +1379,7 @@ async def audit_old_page(
     if redirect:
         return redirect
     
-    response = templates.TemplateResponse("audit_dashboard.html", {
+    response = templates.TemplateResponse(request, "audit_dashboard.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -1449,14 +1449,14 @@ async def business_insights_page(
     # SKU Feature Gate: ADVANCED_REPORTS required (Professional+ tier)
     has_access = await check_view_feature_access(request, db, user, Feature.ADVANCED_REPORTS)
     if not has_access:
-        return templates.TemplateResponse("feature_locked.html", {
+        return templates.TemplateResponse(request, "feature_locked.html", {
             "request": request,
             **get_auth_context(user, entity_id),
             "feature_name": "Business Insights",
             "required_tier": "Professional",
         }, status_code=403)
     
-    response = templates.TemplateResponse("business_insights.html", {
+    response = templates.TemplateResponse(request, "business_insights.html", {
         "request": request,
         **get_auth_context(user, entity_id),
     })
@@ -1498,7 +1498,7 @@ async def feature_unavailable_page(
     # Get feature-specific upgrade prompt info
     feature_info = get_feature_upgrade_prompt(feature) if feature else {}
     
-    response = templates.TemplateResponse("feature_unavailable.html", {
+    response = templates.TemplateResponse(request, "feature_unavailable.html", {
         "request": request,
         "sku": sku,
         "feature": feature,
@@ -1535,7 +1535,7 @@ async def pricing_page(
     if user and user.organization_id:
         sku = await get_sku_context(db, user.organization_id)
     
-    return templates.TemplateResponse("pricing.html", {
+    return templates.TemplateResponse(request, "pricing.html", {
         "request": request,
         "sku": sku,
         "tier_pricing": TIER_PRICING,
@@ -1571,7 +1571,7 @@ async def checkout_page(
     if user and user.organization_id:
         sku = await get_sku_context(db, user.organization_id)
     
-    return templates.TemplateResponse("checkout.html", {
+    return templates.TemplateResponse(request, "checkout.html", {
         "request": request,
         "sku": sku,
         "tier": tier or (sku.tier.value if sku else "professional"),
@@ -1620,7 +1620,7 @@ async def payment_success_page(
         except Exception:
             pass  # Don't fail the success page if verification has issues
     
-    return templates.TemplateResponse("payment_success.html", {
+    return templates.TemplateResponse(request, "payment_success.html", {
         "request": request,
         "sku": sku,
         "tier_name": tier_name,
@@ -1648,7 +1648,7 @@ async def payment_failed_page(
     if redirect:
         return redirect
     
-    return templates.TemplateResponse("payment_failed.html", {
+    return templates.TemplateResponse(request, "payment_failed.html", {
         "request": request,
         "tier": tier,
         "error_message": error,
@@ -1678,7 +1678,7 @@ async def legal_holds_table_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/legal_holds.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/legal_holds.html", {
         "request": request,
         "dashboard": dashboard_data,
     })
@@ -1702,7 +1702,7 @@ async def risk_signals_table_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/risk_signals.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/risk_signals.html", {
         "request": request,
         "dashboard": dashboard_data,
     })
@@ -1726,7 +1726,7 @@ async def ml_jobs_table_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/ml_jobs.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/ml_jobs.html", {
         "request": request,
         "dashboard": dashboard_data,
     })
@@ -1750,7 +1750,7 @@ async def ml_models_grid_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/models.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/models.html", {
         "request": request,
         "dashboard": dashboard_data,
     })
@@ -1774,7 +1774,7 @@ async def upsell_table_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/upsell.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/upsell.html", {
         "request": request,
         "dashboard": dashboard_data,
     })
@@ -1798,7 +1798,7 @@ async def support_tickets_table_partial(
     dashboard_service = DashboardService(db)
     dashboard_data = await dashboard_service.get_super_admin_dashboard()
     
-    return templates.TemplateResponse("partials/super_admin/support.html", {
+    return templates.TemplateResponse(request, "partials/super_admin/support.html", {
         "request": request,
         "dashboard": dashboard_data,
     })

@@ -22,7 +22,7 @@ These Terms and Conditions ("Terms") constitute a legally binding agreement betw
 
 **And**
 
-**Tekvwarho LTD** ("Company," "we," "us," or "our") – a company incorporated under the laws of the Federal Republic of Nigeria, with registration number [RC Number]
+**Tekvwa IT Solutions LTD** ("Company," "we," "us," or "our") – a company incorporated under the laws of the Federal Republic of Nigeria, with registration number [RC Number]
 
 ### 1.2 Acceptance
 
@@ -215,7 +215,7 @@ While we provide compliance tools, you remain responsible for:
 
 ### 7.1 Our Intellectual Property
 
-The Service, including all software, designs, text, graphics, logos, icons, and content, is owned by Tekvwarho LTD and protected by:
+The Service, including all software, designs, text, graphics, logos, icons, and content, is owned by Tekvwa IT Solutions LTD and protected by:
 - Copyright Act (Cap C28, LFN 2004)
 - Trademarks Act (Cap T13, LFN 2004)
 - International intellectual property treaties
@@ -358,7 +358,7 @@ We do not guarantee the availability, accuracy, or performance of:
 
 ### 12.1 Exclusion of Damages
 
-TO THE MAXIMUM EXTENT PERMITTED BY NIGERIAN LAW, TEKVWARHO LTD SHALL NOT BE LIABLE FOR:
+TO THE MAXIMUM EXTENT PERMITTED BY NIGERIAN LAW, Tekvwa IT Solutions LTD SHALL NOT BE LIABLE FOR:
 - Indirect, incidental, special, consequential, or punitive damages
 - Loss of profits, revenue, or data
 - Business interruption
@@ -391,7 +391,7 @@ You acknowledge that:
 
 ### 13.1 Your Indemnification Obligations
 
-You agree to indemnify, defend, and hold harmless Tekvwarho LTD, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:
+You agree to indemnify, defend, and hold harmless Tekvwa IT Solutions LTD, its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including legal fees) arising from:
 - Your use of the Service
 - Your violation of these Terms
 - Your violation of any law or regulation
@@ -465,7 +465,7 @@ This agreement is subject to:
 ### 16.1 Informal Resolution
 
 Before initiating formal proceedings, you agree to:
-- Contact us at legal@tekvwarho.com with a description of the dispute
+- Contact us at info@tekvwa.org with a description of the dispute
 - Attempt to resolve the matter informally for 30 days
 - Engage in good faith negotiations
 
@@ -521,7 +521,7 @@ We are not liable for delays or failures caused by events beyond our reasonable 
 ### 17.6 Notices
 
 - **To You:** Via email to the address on your account, or through in-app notifications
-- **To Us:** Via email to legal@tekvwarho.com, or by mail to our registered address
+- **To Us:** Via email to info@tekvwa.org, or by mail to our registered address
 
 ### 17.7 Language
 
@@ -531,19 +531,19 @@ These Terms are in English. In case of translation, the English version prevails
 
 ## 18. Contact Information
 
-**Tekvwarho LTD**
+**Tekvwa IT Solutions LTD**
 
 **General Inquiries:**  
-Email: contact@tekvwarho.com  
+Email: info@tekvwa.org  
 
 **Legal Inquiries:**  
-Email: legal@tekvwarho.com  
+Email: info@tekvwa.org  
 
 **Support:**  
-Email: support@tekvwarho.com  
+Email: info@tekvwa.org  
 
 **Mailing Address:**  
-Tekvwarho LTD  
+Tekvwa IT Solutions LTD  
 Lagos, Nigeria  
 
 ---
@@ -556,4 +556,4 @@ BY USING TEKVWARHO PROAUDIT, YOU ACKNOWLEDGE THAT YOU HAVE READ THESE TERMS AND 
 
 *Last Updated: January 3, 2026*
 
-**© 2026 Tekvwarho LTD. All Rights Reserved.**
+**© 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**
