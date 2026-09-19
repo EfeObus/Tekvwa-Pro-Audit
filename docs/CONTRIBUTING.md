@@ -1,8 +1,8 @@
-# Contributing to TekVwarho ProAudit
+# Contributing to Tekvwa Pro Audit
 
-Thank you for considering contributing to TekVwarho ProAudit!
+Thank you for considering contributing to Tekvwa Pro Audit!
 
-**Important Notice:** This project is proprietary software owned by Tekvwarho LTD. By contributing, you agree that your contributions become the intellectual property of Tekvwarho LTD under the same proprietary license. Please review the LICENSE file before contributing.
+**Important Notice:** This project is proprietary software owned by Tekvwa IT Solutions LTD. By contributing, you agree that your contributions become the intellectual property of Tekvwa IT Solutions LTD under the same proprietary license. Please review the LICENSE file before contributing.
 
 This project aims to help Nigerian businesses navigate the 2026 tax reform landscape. Every contribution helps make tax compliance easier for millions of businesses.
 
@@ -47,7 +47,7 @@ We are committed to providing a welcoming and inclusive environment for all cont
 
 Found a bug? Please help us by reporting it!
 
-1. Check if the bug has already been reported in [Issues](https://github.com/EfeObus/TekVwarho-ProAudit/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/EfeObus/Tekvwa-Pro-Audit/issues)
 2. If not, create a new issue with:
    - Clear, descriptive title
    - Steps to reproduce
@@ -60,7 +60,7 @@ Found a bug? Please help us by reporting it!
 
 Have an idea? We'd love to hear it!
 
-1. Check existing [Feature Requests](https://github.com/EfeObus/TekVwarho-ProAudit/issues?q=is%3Aissue+label%3Aenhancement)
+1. Check existing [Feature Requests](https://github.com/EfeObus/Tekvwa-Pro-Audit/issues?q=is%3Aissue+label%3Aenhancement)
 2. Create a new issue with:
    - Problem statement (what pain point does this solve?)
    - Proposed solution
@@ -108,11 +108,11 @@ Documentation improvements are always welcome:
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/TekVwarho-ProAudit.git
-cd TekVwarho-ProAudit
+git clone https://github.com/YOUR_USERNAME/Tekvwa-Pro-Audit.git
+cd Tekvwa-Pro-Audit
 
 # Add upstream remote
-git remote add upstream https://github.com/EfeObus/TekVwarho-ProAudit.git
+git remote add upstream https://github.com/EfeObus/Tekvwa-Pro-Audit.git
 
 # Create virtual environment
 python -m venv venv
@@ -137,7 +137,7 @@ uvicorn main:app --reload --port 8000
 ### Project Structure
 
 ```
-TekVwarho-ProAudit/
+Tekvwa-Pro-Audit/
 ├── docs/                 # Documentation
 ├── app/
 │   ├── config.py         # Settings & environment
@@ -421,8 +421,8 @@ Contributors will be recognized in:
 
 ## Questions?
 
-- Create a [Discussion](https://github.com/EfeObus/TekVwarho-ProAudit/discussions)
-- Email: contributors@tekvwarho.com
+- Create a [Discussion](https://github.com/EfeObus/Tekvwa-Pro-Audit/discussions)
+- Email: info@tekvwa.org
 - Community Slack: [Coming Soon]
 
 ---

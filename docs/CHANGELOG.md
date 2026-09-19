@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Changelog
+# Tekvwa Pro Audit - Changelog
 
 All notable changes to this project will be documented in this file.
 
@@ -1327,7 +1327,7 @@ This release implements critical Nigeria Tax Administration Act (NTAA) 2025 comp
 
 #### Role-Based Access Control (RBAC)
 - Two-tier RBAC system implemented:
-  1. **Platform Staff** (Internal TekVwarho employees)
+  1. **Platform Staff** (Internal Tekvwa employees)
      - Super Admin, Admin, IT/Developer, Customer Service, Marketing
   2. **Organization Users** (External customers)
      - Owner, Admin, Accountant, Auditor, Payroll Manager, Inventory Manager, Viewer
@@ -1355,7 +1355,7 @@ This release implements critical Nigeria Tax Administration Act (NTAA) 2025 comp
 
 ### Added
 
-- Initial release of TekVwarho ProAudit
+- Initial release of Tekvwa Pro Audit
 - Core accounting features (transactions, invoices, inventory)
 - NRS e-invoicing integration
 - VAT, PAYE, CIT, WHT calculators (2026 Tax Reform compliant)
