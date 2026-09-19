@@ -266,7 +266,7 @@ intent = await service.create_payment_intent(
     admin_email="admin@company.com",
     intelligence_addon=None,
     additional_users=0,
-    callback_url="https://app.tekvwa.com/billing/success"
+    callback_url="https://app.proaudit.com/billing/success"
 )
 
 # Response
@@ -320,7 +320,7 @@ Create a checkout session for payment.
     "billing_cycle": "monthly",
     "intelligence_addon": null,
     "additional_users": 0,
-    "callback_url": "https://app.tekvwa.com/billing/success"
+    "callback_url": "https://app.proaudit.com/billing/success"
 }
 ```
 
@@ -666,7 +666,7 @@ async def process_payment_webhook(event_type: str, payload: dict) -> dict:
 
 Configure in Paystack Dashboard:
 1. Go to Settings → API Keys & Webhooks
-2. Add webhook URL: `https://api.tekvwa.com/api/v1/billing/webhook/paystack`
+2. Add webhook URL: `https://api.proaudit.com/api/v1/billing/webhook/paystack`
 3. Copy webhook secret to `.env`
 
 ---

@@ -74,7 +74,7 @@ The following are NOT counted as downtime:
 You will be notified via:
 - Email to account owner
 - In-app banner announcement
-- Status page update (status.tekvwa.com)
+- Status page update (status.proaudit.com)
 
 ---
 
@@ -266,7 +266,7 @@ Enterprise customers have direct access to:
 
 ### 12.1 Status Page
 
-Real-time service status: **status.tekvwa.com**
+Real-time service status: **status.proaudit.com**
 
 Includes:
 - Current system status
@@ -317,7 +317,7 @@ We may update this SLA with:
 
 **Technical Support:** info@tekvwa.org  
 **SLA Inquiries:** info@tekvwa.org  
-**Status Page:** status.tekvwa.com  
+**Status Page:** status.proaudit.com  
 **Emergency (Enterprise):** +234 90 6577 9323  
 
 ---

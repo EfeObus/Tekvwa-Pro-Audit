@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "tekvwa-pro-audit-admin-api",
     "name": "Tekvwa Pro Audit - Super Admin Dashboard API",
-    "description": "Complete API collection for the Tekvwa Pro Audit Super Admin Dashboard. Includes all 50+ endpoints for platform management, security, tenant administration, and system monitoring.\n\n## Authentication\nAll endpoints require Super Admin authentication via JWT Bearer token or HTTP-only cookie.\n\n## Base URL\n- Development: `http://localhost:5120`\n- Production: `https://api.tekvwa.com`\n\n## Super Admin Credentials (Dev)\n- Email: `info@tekvwa.org`\n- Password: `SuperAdmin@Tekvwa2026!`",
+    "description": "Complete API collection for the Tekvwa Pro Audit Super Admin Dashboard. Includes all 50+ endpoints for platform management, security, tenant administration, and system monitoring.\n\n## Authentication\nAll endpoints require Super Admin authentication via JWT Bearer token or HTTP-only cookie.\n\n## Base URL\n- Development: `http://localhost:5120`\n- Production: `https://api.proaudit.com`\n\n## Super Admin Credentials (Dev)\n- Email: `info@tekvwa.org`\n- Password: `SuperAdmin@Tekvwa2026!`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"
   },

@@ -123,7 +123,7 @@ jobs:
       - name: Health check
         run: |
           echo "Running health check..."
-          # curl -f https://staging.tekvwa.com/health || exit 1
+          # curl -f https://staging.proaudit.com/health || exit 1
       
       - name: Notify deployment success
         if: success()
@@ -173,7 +173,7 @@ jobs:
       - name: Health check
         run: |
           echo "Running health check..."
-          # curl -f https://app.tekvwa.com/health || exit 1
+          # curl -f https://app.proaudit.com/health || exit 1
       
       - name: Notify deployment success
         if: success()

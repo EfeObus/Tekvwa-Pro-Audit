@@ -171,12 +171,12 @@ This runbook provides step-by-step procedures for responding to billing-related 
 
 2. **Verify Webhook Configuration**
    - Go to Paystack Dashboard → Settings → API Keys & Webhooks
-   - Confirm webhook URL: `https://api.tekvwa.com/api/v1/billing/webhook/paystack`
+   - Confirm webhook URL: `https://api.proaudit.com/api/v1/billing/webhook/paystack`
    - Check webhook secret matches environment variable
 
 3. **Test Webhook Endpoint**
    ```bash
-   curl -X POST https://api.tekvwa.com/api/v1/billing/webhook/paystack \
+   curl -X POST https://api.proaudit.com/api/v1/billing/webhook/paystack \
      -H "Content-Type: application/json" \
      -H "X-Paystack-Signature: test" \
      -d '{"event": "test"}'
@@ -428,7 +428,7 @@ If the entire billing system is down:
 2. **Assess Scope**
    ```bash
    # Check service health
-   curl https://api.tekvwa.com/health
+   curl https://api.proaudit.com/health
    
    # Check database connectivity
    psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT 1"
@@ -459,7 +459,7 @@ If the entire billing system is down:
    ```
 
 5. **Customer Communication**
-   - Post status update to status.tekvwa.com
+   - Post status update to status.proaudit.com
    - Send email to affected customers
    - Update social media if prolonged
 
@@ -506,9 +506,9 @@ groups:
 
 ### Dashboard Links
 
-- Grafana Billing Dashboard: `https://grafana.tekvwa.com/d/billing`
+- Grafana Billing Dashboard: `https://grafana.proaudit.com/d/billing`
 - Paystack Dashboard: `https://dashboard.paystack.com`
-- Application Logs: `https://logs.tekvwa.com/billing`
+- Application Logs: `https://logs.proaudit.com/billing`
 
 ---
 

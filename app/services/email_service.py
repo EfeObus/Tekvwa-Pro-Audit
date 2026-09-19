@@ -298,7 +298,7 @@ class EmailService:
                     <li>Generate tax-compliant reports</li>
                 </ul>
                 <p>
-                    <a href="https://app.tekvwa.com/dashboard" 
+                    <a href="https://app.proaudit.com/dashboard" 
                        style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                         Go to Dashboard
                     </a>
@@ -323,7 +323,7 @@ class EmailService:
         - Start tracking income and expenses
         - Generate tax-compliant reports
         
-        Visit your dashboard: https://app.tekvwa.com/dashboard
+        Visit your dashboard: https://app.proaudit.com/dashboard
         
         Best regards,
         The Tekvwa Team
@@ -506,7 +506,7 @@ class EmailService:
                 <p>This is a reminder that your VAT return for <strong>{period}</strong> is due on <strong>{deadline}</strong>.</p>
                 <p>Estimated VAT payable: <strong>₦{vat_amount:,.2f}</strong></p>
                 <p>
-                    <a href="https://app.tekvwa.com/reports?tab=tax" 
+                    <a href="https://app.proaudit.com/reports?tab=tax" 
                        style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                         View VAT Report
                     </a>
@@ -526,7 +526,7 @@ class EmailService:
         
         Estimated VAT payable: ₦{vat_amount:,.2f}
         
-        View VAT report: https://app.tekvwa.com/reports?tab=tax
+        View VAT report: https://app.proaudit.com/reports?tab=tax
         
         Don't forget to file on time to avoid penalties.
         """

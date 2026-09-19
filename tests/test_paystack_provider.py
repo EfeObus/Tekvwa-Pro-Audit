@@ -296,7 +296,7 @@ class TestPaystackProviderRealMode:
                 email="admin@company.com",
                 amount_naira=150000,
                 reference="TVP-test1234-20260122120000",
-                callback_url="https://app.tekvwa.com/billing/callback"
+                callback_url="https://app.proaudit.com/billing/callback"
             )
             
             assert result["status"] is True

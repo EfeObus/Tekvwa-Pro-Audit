@@ -536,7 +536,7 @@ GET    /api/v1/entities/{entityId}/banking/reconciliation
 
 ```json
 {
-  "type": "https://api.tekvwa.com/errors/validation-error",
+  "type": "https://api.proaudit.com/errors/validation-error",
   "title": "Validation Error",
   "status": 400,
   "detail": "The TIN format is invalid. Expected format: 12345678-0001",
