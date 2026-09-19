@@ -102,7 +102,7 @@ These are small, contained changes — doing them first de-risks the infra move:
 - Stand up staging fully on GCP first; run the existing test suite (`tests/`) against it.
 - Do a dry-run data migration into a scratch Cloud SQL instance to time it and rehearse the checklist.
 - Final cutover: short maintenance window → final incremental `pg_dump`/WAL catch-up → DNS switch → smoke test critical flows (login, invoice creation, Paystack checkout, file upload/download, a Celery-driven task).
-- Keep Railway environment running (scaled down, not deleted) for a rollback window (recommend 1–2 weeks) before decommissioning.
+- **Update, post-migration:** Railway was decommissioned immediately rather than kept as a rollback window — see `docs/GCP_DEPLOYMENT.md` Section 4 for what was removed and what's still outstanding (the actual Railway project/service itself needs deleting from the Railway dashboard, or via CLI once authenticated).
 
 ---
 

@@ -253,8 +253,7 @@ async def login(
     
     # Set access token as HTTP-only cookie for server-side authentication
     # This is more reliable than client-side JavaScript cookie setting
-    import os
-    is_production = os.environ.get('RAILWAY_PUBLIC_DOMAIN') or settings.app_env == 'production'
+    is_production = settings.app_env == 'production'
     response.set_cookie(
         key="access_token",
         value=tokens["access_token"],

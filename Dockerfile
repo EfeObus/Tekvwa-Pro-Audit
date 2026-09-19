@@ -54,14 +54,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Switch to non-root user
 USER appuser
 
-# Expose port (Railway uses $PORT)
+# Expose port (Cloud Run sets $PORT)
 EXPOSE 8000
 
-# Health check - disabled for Railway (Railway handles health checks)
+# Health check - disabled here since Cloud Run performs its own startup/liveness probes
 # HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 #     CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Run with uvicorn - Railway sets PORT env var
+# Run with uvicorn - Cloud Run sets PORT env var
 CMD sh -c "uvicorn main:app --host 0.0.0.0 --port \${PORT:-8000}"
 
 

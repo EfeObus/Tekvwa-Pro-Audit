@@ -120,36 +120,30 @@ gcloud builds triggers create github \
 (Requires connecting the GitHub repo to Cloud Build first via the Cloud Console's "Connect
 Repository" flow — this needs an interactive GitHub OAuth step, so it isn't scriptable from here.)
 
-## 4. Data migration from Railway (blocked on credentials)
+## 4. Railway decommissioning
 
-Everything above stands up a fresh, empty production database. To bring over the real data
-currently on Railway:
+Railway has been removed as a target entirely - there is no data migration step, and no fallback
+environment. What was done:
 
-1. Get the Railway Postgres `DATABASE_URL` (Railway dashboard → Postgres plugin → Connect tab, or
-   `railway variables` after `railway login` + `railway link`).
-2. Dump it:
-   ```bash
-   pg_dump --no-owner --no-privileges "$RAILWAY_DATABASE_URL" -Fc -f proaudit_railway.dump
-   ```
-3. Restore into Cloud SQL over the VPC connector (via a Cloud SQL Auth Proxy, or `gcloud sql import`
-   from a GCS-staged dump):
-   ```bash
-   gcloud storage cp proaudit_railway.dump gs://tekvwarho-proaudit-db-backups/
-   gcloud sql import sql proaudit-db gs://tekvwarho-proaudit-db-backups/proaudit_railway.dump \
-     --project=tekvwarho-proaudit --database=tekvwarho_proaudit
-   ```
-   (`gcloud sql import` needs a plain-SQL dump, not custom format — use
-   `pg_dump --no-owner --no-privileges -Fp` instead of `-Fc` if going this route, or restore via a
-   temporary Compute Engine VM/Cloud Shell with `pg_restore` and a Cloud SQL Auth Proxy connection.)
-4. Reconcile: run `alembic current` against both databases to confirm they land on the same
-   migration head, and spot-check row counts on `journal_entries`, `gl_accounts`, and
-   `payment_transactions` per the existing checklist in `docs/MIGRATION_GUIDE.md`.
-5. Re-point DNS/webhooks (Paystack, Mono, Okra, Stitch, FIRS) at the new Cloud Run URL/custom domain
-   only after this step is verified.
-
-This step was not run as part of this session because the Railway database credentials were not
-available in this environment (`.env` is empty and the Railway CLI here is not authenticated). Provide
-the `DATABASE_URL` or run `railway login && railway link` locally to unblock it.
+- Deleted `railway.json` and the three Railway-only ops scripts under `scripts/`
+  (`create_railway_tables.py`, `seed_railway_db.py`, `fix_railway_efe_obus_user.py`).
+- Removed the `RAILWAY_PUBLIC_DOMAIN` environment-variable check from `app/routers/auth.py`
+  (cookie `Secure` flag now derives from `APP_ENV` alone, which Cloud Run already sets to
+  `production`).
+- Cleaned up Railway-specific comments in the `Dockerfile`.
+- Checked whether the database credential hardcoded in the now-deleted
+  `fix_railway_efe_obus_user.py` (`postgresql://postgres:***@turntable.proxy.rlwy.net:28165/railway`)
+  still had recoverable data before removing it: the host's TCP port accepted a connection, but the
+  Postgres server closed the connection immediately during authentication - the credential is
+  stale/rotated and nothing could be read. **This does not confirm Railway has no data** - it only
+  confirms this one leaked credential no longer works. If there is data on Railway you still need,
+  get a current `DATABASE_URL` from the Railway dashboard before deleting the Railway project itself.
+- The actual Railway project/service was **not** deleted from this session - doing that requires
+  Railway credentials this environment doesn't have (`railway whoami` is unauthenticated here). Do
+  that from the Railway dashboard, or run `railway login` locally and let me know so I can do it via
+  the CLI.
+- That leaked credential was live in git history in this repo. Even though Railway is being retired,
+  treat it as compromised - do not reuse that password anywhere else.
 
 ## 5. Bugs found and fixed while running a truly clean migration
 
@@ -216,7 +210,8 @@ they would hit any fresh database, including a future rebuild of Railway itself)
 
 ## 6. Rollback / cleanup
 
-Nothing on Railway was touched or deleted. If GCP needs to be torn down:
+There is no Railway fallback anymore (see Section 4) - GCP is the only environment. If GCP needs
+to be torn down anyway:
 
 ```bash
 gcloud projects delete tekvwarho-proaudit
