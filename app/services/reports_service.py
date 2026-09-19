@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Reports Service
+Tekvwa Pro Audit - Reports Service
 
 Financial and tax reporting service.
 
@@ -1016,7 +1016,7 @@ class ReportsService:
         # Footer
         elements.append(Spacer(1, 30))
         elements.append(Paragraph(
-            "TekVwarho ProAudit - Nigeria's Premier Tax Compliance Platform",
+            "Tekvwa Pro Audit - Nigeria's Premier Tax Compliance Platform",
             ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
         ))
         

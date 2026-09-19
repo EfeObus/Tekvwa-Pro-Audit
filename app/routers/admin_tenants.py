@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin Tenants Router
+Tekvwa Pro Audit - Admin Tenants Router
 
 Platform staff endpoints for managing tenants (organizations).
 Accessible by SUPER_ADMIN and ADMIN platform roles.

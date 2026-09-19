@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Bank Reconciliation Model
+Tekvwa Pro Audit - Bank Reconciliation Model
 
 Comprehensive bank reconciliation models for Nigerian businesses.
 Supports:

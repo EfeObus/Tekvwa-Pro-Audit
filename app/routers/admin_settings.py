@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Platform Settings Router
+Tekvwa Pro Audit - Platform Settings Router
 
 Super Admin endpoints for managing platform-wide settings.
 Includes general settings, trial configuration, billing, NRS, and notifications.
@@ -32,7 +32,7 @@ router = APIRouter(
 
 class GeneralSettingsRequest(BaseModel):
     """General platform settings."""
-    platform_name: str = Field(default="TekVwarho ProAudit", max_length=100)
+    platform_name: str = Field(default="Tekvwa Pro Audit", max_length=100)
     support_email: EmailStr = Field(default="info@tekvwa.org")
     billing_email: EmailStr = Field(default="info@tekvwa.org")
     default_currency: str = Field(default="NGN", pattern="^[A-Z]{3}$")
@@ -81,7 +81,7 @@ class NotificationSettingsRequest(BaseModel):
     smtp_host: str = Field(default="smtp.sendgrid.net", max_length=255)
     smtp_port: int = Field(default=587, ge=25, le=65535)
     from_email: EmailStr = Field(default="info@tekvwa.org")
-    from_name: str = Field(default="TekVwarho ProAudit", max_length=100)
+    from_name: str = Field(default="Tekvwa Pro Audit", max_length=100)
     email_enabled: bool = Field(default=True)
     sms_enabled: bool = Field(default=False)
     slack_enabled: bool = Field(default=False)
@@ -104,7 +104,7 @@ class PlatformSettingsResponse(BaseModel):
 
 _platform_settings = {
     "general": {
-        "platform_name": "TekVwarho ProAudit",
+        "platform_name": "Tekvwa Pro Audit",
         "support_email": "info@tekvwa.org",
         "billing_email": "info@tekvwa.org",
         "default_currency": "NGN",
@@ -143,7 +143,7 @@ _platform_settings = {
         "smtp_host": "smtp.sendgrid.net",
         "smtp_port": 587,
         "from_email": "info@tekvwa.org",
-        "from_name": "TekVwarho ProAudit",
+        "from_name": "Tekvwa Pro Audit",
         "email_enabled": True,
         "sms_enabled": False,
         "slack_enabled": False,

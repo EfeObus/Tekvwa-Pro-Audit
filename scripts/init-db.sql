@@ -1,5 +1,5 @@
 -- =============================================
--- TekVwarho ProAudit - Database Initialization
+-- Tekvwa Pro Audit - Database Initialization
 -- Run on first setup to create extensions
 -- =============================================
 
@@ -13,5 +13,5 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 
 -- Create test database if not exists (for pytest)
-SELECT 'CREATE DATABASE tekvwarho_proaudit_test'
-WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tekvwarho_proaudit_test')\gexec
+SELECT 'CREATE DATABASE tekvwa_pro_audit_test'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'tekvwa_pro_audit_test')\gexec

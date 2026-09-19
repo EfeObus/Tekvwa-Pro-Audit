@@ -340,7 +340,7 @@ class TestUsageReportService:
             }
         )
         assert "Test Org" in html
-        assert "TekVwarho ProAudit" in html
+        assert "Tekvwa Pro Audit" in html
         assert "Usage Report" in html
         assert "100" in html  # total_transactions
     

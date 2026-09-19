@@ -9,7 +9,7 @@
 
 ## Overview
 
-The TekVwarho ProAudit Advanced Accounting Module provides enterprise-grade financial management capabilities specifically designed for Nigerian businesses operating under the 2026 Tax Reform regulations. This module encompasses Zero-Touch Autonomous Accounting, Multi-Entity Consolidation, Tax Intelligence, and comprehensive audit compliance features.
+The Tekvwa Pro Audit Advanced Accounting Module provides enterprise-grade financial management capabilities specifically designed for Nigerian businesses operating under the 2026 Tax Reform regulations. This module encompasses Zero-Touch Autonomous Accounting, Multi-Entity Consolidation, Tax Intelligence, and comprehensive audit compliance features.
 
 > **SKU Gating Notes:**
 > - **Intercompany Transactions:** Enterprise tier (`Feature.INTERCOMPANY`)
@@ -861,4 +861,4 @@ All API endpoints return standardized error responses:
 
 ## Support
 
-For technical support or feature requests, contact the TekVwarho development team.
+For technical support or feature requests, contact the Tekvwa development team.

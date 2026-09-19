@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Self-Assessment Router
+Tekvwa Pro Audit - Self-Assessment Router
 
 API endpoints for tax self-assessment and annual returns generation.
 

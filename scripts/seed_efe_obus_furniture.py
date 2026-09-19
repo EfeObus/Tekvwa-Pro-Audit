@@ -1,7 +1,7 @@
 """
 Seed Script: Efe Obus Furniture Manufacturing LTD
 ==================================================
-A comprehensive test company with full data for testing TekVwarho ProAudit.
+A comprehensive test company with full data for testing Tekvwa Pro Audit.
 
 Owner: Efe Obukohwo
 Email: efeobukohwo64@gmail.com

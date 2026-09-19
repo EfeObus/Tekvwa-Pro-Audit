@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Legal Hold Service
+Tekvwa Pro Audit - Legal Hold Service
 
 Service layer for managing legal holds.
 Super Admin only feature for compliance and data preservation.

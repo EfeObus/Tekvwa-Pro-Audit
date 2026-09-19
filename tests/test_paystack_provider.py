@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Paystack Provider Tests
+Tekvwa Pro Audit - Paystack Provider Tests
 
 Comprehensive tests for Paystack payment integration.
 Uses mocked httpx responses to test without real API calls.
@@ -296,7 +296,7 @@ class TestPaystackProviderRealMode:
                 email="admin@company.com",
                 amount_naira=150000,
                 reference="TVP-test1234-20260122120000",
-                callback_url="https://app.tekvwarho.com/billing/callback"
+                callback_url="https://app.tekvwa.com/billing/callback"
             )
             
             assert result["status"] is True

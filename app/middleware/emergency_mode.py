@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Emergency Mode Middleware
+Tekvwa Pro Audit - Emergency Mode Middleware
 
 FastAPI middleware for enforcing emergency platform controls:
 1. Read-only mode (blocks write operations)
@@ -222,7 +222,7 @@ class EmergencyModeMiddleware(BaseHTTPMiddleware):
         <!DOCTYPE html>
         <html>
         <head>
-            <title>TekVwarho ProAudit - Maintenance</title>
+            <title>Tekvwa Pro Audit - Maintenance</title>
             <style>
                 body {{ font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #1e3a5f 0%, #0d1b2a 100%); color: white; }}
                 .container {{ text-align: center; padding: 40px; }}

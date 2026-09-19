@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers data migration procedures for TekVwarho ProAudit, including:
+This guide covers data migration procedures for Tekvwa Pro Audit, including:
 - Database schema upgrades
 - Data migration from legacy systems
 - Version upgrade procedures
@@ -28,7 +28,7 @@ This guide covers data migration procedures for TekVwarho ProAudit, including:
 
 - [ ] **Backup Database**
   ```bash
-  pg_dump -h localhost -U proaudit -d tekvwarho_proaudit > backup_$(date +%Y%m%d_%H%M%S).sql
+  pg_dump -h localhost -U proaudit -d tekvwa_pro_audit > backup_$(date +%Y%m%d_%H%M%S).sql
   ```
 
 - [ ] **Document Current State**
@@ -131,7 +131,7 @@ alembic revision -m "seed_initial_gl_accounts"
    docker-compose down
    
    # Backup database
-   pg_dump -h localhost -U proaudit -d tekvwarho_proaudit > backup_v1_to_v2.sql
+   pg_dump -h localhost -U proaudit -d tekvwa_pro_audit > backup_v1_to_v2.sql
    ```
 
 2. **Update Application Code**
@@ -351,13 +351,13 @@ alembic downgrade base
 2. **Restore Database**
    ```bash
    # Drop current database
-   dropdb tekvwarho_proaudit
+   dropdb tekvwa_pro_audit
    
    # Create fresh database
-   createdb tekvwarho_proaudit
+   createdb tekvwa_pro_audit
    
    # Restore from backup
-   psql tekvwarho_proaudit < backup_pre_migration.sql
+   psql tekvwa_pro_audit < backup_pre_migration.sql
    ```
 
 3. **Restore Application Code**

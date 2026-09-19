@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Technical Architecture Document
+# Tekvwa Pro Audit - Technical Architecture Document
 
 **Document Version:** 2.2  
 **Date:** January 27, 2026  
@@ -43,7 +43,7 @@
 
 ### 1.1 Purpose
 
-TekVwarho ProAudit is a cloud-native, multi-tenant SaaS platform designed to provide Nigerian businesses with integrated financial management and tax compliance capabilities, with native support for the 2026 NRS e-invoicing mandate.
+Tekvwa Pro Audit is a cloud-native, multi-tenant SaaS platform designed to provide Nigerian businesses with integrated financial management and tax compliance capabilities, with native support for the 2026 NRS e-invoicing mandate.
 
 ### 1.2 Key System Characteristics
 
@@ -174,7 +174,7 @@ TekVwarho ProAudit is a cloud-native, multi-tenant SaaS platform designed to pro
 ### 5.1 FastAPI Project Structure
 
 ```
-tekvwarho_proaudit/
+tekvwa_pro_audit/
 ├── main.py                 # FastAPI application entry point
 ├── requirements.txt
 ├── pyproject.toml
@@ -536,7 +536,7 @@ GET    /api/v1/entities/{entityId}/banking/reconciliation
 
 ```json
 {
-  "type": "https://api.tekvwarho.com/errors/validation-error",
+  "type": "https://api.tekvwa.com/errors/validation-error",
   "title": "Validation Error",
   "status": 400,
   "detail": "The TIN format is invalid. Expected format: 12345678-0001",
@@ -765,7 +765,7 @@ Consistent error responses across all API endpoints:
 │                  NRS E-INVOICING FLOW                            │
 ├──────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  TekVwarho                          NRS Portal                   │
+│  Tekvwa                          NRS Portal                   │
 │      │                                  │                        │
 │      │  1. Prepare Invoice Payload      │                        │
 │      │  (JSON with digital signature)   │                        │
@@ -904,7 +904,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build Docker Image
-        run: docker build -t tekvwarho-api .
+        run: docker build -t tekvwa-api .
       - name: Push to ECR
         run: aws ecr push ...
 
@@ -1028,4 +1028,4 @@ desktop applications for Windows and macOS platforms.
 
 ---
 
-*Document prepared by TekVwarho ProAudit Engineering Team*
+*Document prepared by Tekvwa Pro Audit Engineering Team*

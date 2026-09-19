@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - OCR Service
+Tekvwa Pro Audit - OCR Service
 
 OCR service for receipt processing and data extraction.
 

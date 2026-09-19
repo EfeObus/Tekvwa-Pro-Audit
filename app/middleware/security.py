@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Security Middleware
+Tekvwa Pro Audit - Security Middleware
 
 FastAPI middleware for:
 1. Geo-Fencing (Nigeria-First)

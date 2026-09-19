@@ -1,4 +1,4 @@
-# TekVwarho ProAudit
+# Tekvwa Pro Audit
 
 > **Nigeria's Premier Tax Compliance & Business Management Platform for the 2026 Tax Reform Era**
 
@@ -13,11 +13,11 @@
 
 ## Overview
 
-TekVwarho ProAudit is a comprehensive financial management and tax compliance solution designed specifically for Nigerian businesses navigating the **2026 Tax Reform landscape**. The platform integrates real-time NRS (Nigeria Revenue Service) e-invoicing, automated tax calculations, and audit-ready financial reporting into a single, unified system.
+Tekvwa Pro Audit is a comprehensive financial management and tax compliance solution designed specifically for Nigerian businesses navigating the **2026 Tax Reform landscape**. The platform integrates real-time NRS (Nigeria Revenue Service) e-invoicing, automated tax calculations, and audit-ready financial reporting into a single, unified system.
 
 **Copyright (c) 2026 Tekvwa IT Solutions LTD. All Rights Reserved.**
 
-### Why TekVwarho ProAudit?
+### Why Tekvwa Pro Audit?
 
 With Nigeria's historic 2026 tax reforms introducing:
 - **Progressive PAYE brackets** (starting with ₦800,000 tax-free threshold)
@@ -181,7 +181,7 @@ POST /api/v1/billing/webhook/paystack     # Webhook handler (secured)
 ## Version 2.2.0 - World-Class Forensic Audit System
 
 ### Overview
-TekVwarho ProAudit now includes a **world-class forensic audit system** designed for Nigerian tax compliance and enterprise-grade auditing. The system provides:
+Tekvwa Pro Audit now includes a **world-class forensic audit system** designed for Nigerian tax compliance and enterprise-grade auditing. The system provides:
 
 - **Benford's Law Analysis** - Statistical fraud detection using first/second digit distribution
 - **Z-Score Anomaly Detection** - Identify statistical outliers in transaction data
@@ -372,7 +372,7 @@ For complete audit system documentation, see:
 ## Version 2.2.1 - 5 Critical Advanced Audit Features
 
 ### Overview
-Building on the world-class forensic audit system, TekVwarho ProAudit now implements **5 critical audit compliance features** required by Nigerian FIRS, NTAA 2025, and CAMA 2020.
+Building on the world-class forensic audit system, Tekvwa Pro Audit now implements **5 critical audit compliance features** required by Nigerian FIRS, NTAA 2025, and CAMA 2020.
 
 ### 1. Auditor Read-Only Role (Hard-Enforced)
 Enterprise-grade access control for external auditors:
@@ -474,7 +474,7 @@ alembic/versions/20260107_1800_audit_system.py - Database migration
 ## Version 2.1.0 - Security & Compliance Suite (NDPA/NITDA 2023)
 
 ### Nigerian Data Protection Compliance
-TekVwarho ProAudit now includes **enterprise-grade security** features fully compliant with Nigeria's Data Protection Act 2023 (NDPA) and NITDA guidelines.
+Tekvwa Pro Audit now includes **enterprise-grade security** features fully compliant with Nigeria's Data Protection Act 2023 (NDPA) and NITDA guidelines.
 
 #### PII Encryption (AES-256-GCM)
 - **Field-Level Encryption**: BVN, NIN, RSA PIN, bank accounts, TIN, phone numbers
@@ -552,7 +552,7 @@ docs/SECURITY_ARCHITECTURE.md  - Security documentation
 ## Version 2.0.0 - Business Intelligence & Executive Compensation Suite
 
 ### BIK (Benefit-in-Kind) Automator for Executive Compensation
-TekVwarho ProAudit now includes a **comprehensive BIK calculation engine** that automatically values executive benefits using 2026 Nigerian tax rules.
+Tekvwa Pro Audit now includes a **comprehensive BIK calculation engine** that automatically values executive benefits using 2026 Nigerian tax rules.
 
 #### Vehicle Benefits
 - **Saloon Car**: 5% of vehicle cost
@@ -698,7 +698,7 @@ GET  /api/v1/business-intelligence/inventory/transfer/types
 ## Version 1.9.0 - Payroll System with Nigerian 2026 Compliance
 
 ### Complete Payroll Management
-TekVwarho ProAudit now includes a **full-featured payroll system** designed specifically for Nigerian businesses, with complete 2026 Tax Reform compliance built-in.
+Tekvwa Pro Audit now includes a **full-featured payroll system** designed specifically for Nigerian businesses, with complete 2026 Tax Reform compliance built-in.
 
 ### Nigerian Tax Reform 2026 - PAYE Compliance
 - **New Tax-Free Threshold**: ₦800,000 annual (was ₦300,000) - employees earning below this pay no PAYE
@@ -1073,7 +1073,7 @@ native desktop applications for Windows and macOS.
 ## Project Structure
 
 ```
-TekVwarho-ProAudit/
+Tekvwa-Pro-Audit/
 ├── docs/
 │   ├── BUSINESS_CASE.md          # Business justification & ROI
 │   ├── USE_CASES.md              # Detailed use case scenarios
@@ -1119,8 +1119,8 @@ TekVwarho-ProAudit/
 
 ```bash
 # Clone the repository
-git clone https://github.com/EfeObus/TekVwarho-ProAudit.git
-cd TekVwarho-ProAudit
+git clone https://github.com/EfeObus/Tekvwa-Pro-Audit.git
+cd Tekvwa-Pro-Audit
 
 # Create virtual environment
 python -m venv venv
@@ -1188,7 +1188,7 @@ This software complies with Nigerian law including:
 
 - **Company:** Tekvwa IT Solutions LTD
 - **Email:** info@tekvwa.org
-- **GitHub:** [EfeObus/TekVwarho-ProAudit](https://github.com/EfeObus/TekVwarho-ProAudit)
+- **GitHub:** [EfeObus/Tekvwa-Pro-Audit](https://github.com/EfeObus/Tekvwa-Pro-Audit)
 
 ---
 

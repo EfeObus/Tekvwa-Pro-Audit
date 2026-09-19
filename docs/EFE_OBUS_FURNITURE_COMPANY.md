@@ -4,7 +4,7 @@
 
 **Document Version:** 1.0  
 **Last Updated:** January 10, 2026  
-**System:** TekVwarho ProAudit
+**System:** Tekvwa Pro Audit
 
 ---
 
@@ -402,7 +402,7 @@ As per the RBAC documentation, the Owner has:
 To populate the database with this test data, run:
 
 ```bash
-cd /Users/efeobukohwo/Desktop/TekVwarho\ ProAudit
+cd /Users/efeobukohwo/Desktop/Tekvwa\ Pro Audit
 python scripts/seed_efe_obus_furniture.py
 ```
 
@@ -427,4 +427,4 @@ python scripts/seed_efe_obus_furniture.py
 
 **© 2026 Efe Obus Furniture Manufacturing LTD. All rights reserved.**
 
-*This document is generated for testing purposes in TekVwarho ProAudit system.*
+*This document is generated for testing purposes in Tekvwa Pro Audit system.*

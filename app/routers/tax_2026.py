@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - 2026 Tax Reform Router
+Tekvwa Pro Audit - 2026 Tax Reform Router
 
 API endpoints for the 2026 Nigerian Tax Administration Act compliance:
 - 72-Hour Buyer Review Module
@@ -3276,7 +3276,7 @@ async def get_self_assessment_info() -> SelfAssessmentInfoResponse:
     - Fiscal year support
     """
     return SelfAssessmentInfoResponse(
-        service_name="TekVwarho ProAudit Self-Assessment",
+        service_name="Tekvwa Pro Audit Self-Assessment",
         description="Pre-fills NRS tax forms based on yearly financial data for TaxPro Max upload",
         supported_forms=[
             {"code": TaxProMaxFormCode.CIT_ANNUAL.value, "name": "Annual CIT Return", "description": "Company Income Tax annual return"},

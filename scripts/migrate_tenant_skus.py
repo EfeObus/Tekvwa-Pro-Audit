@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 # Add project root to path
 import sys
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 from app.database import get_async_session
 

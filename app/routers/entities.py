@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Business Entities Router
+Tekvwa Pro Audit - Business Entities Router
 
 API endpoints for business entity management.
 """

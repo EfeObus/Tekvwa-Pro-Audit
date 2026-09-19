@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Self-Assessment & TaxPro Max Export Service
+Tekvwa Pro Audit - Self-Assessment & TaxPro Max Export Service
 
 Generates pre-filled tax return data for NRS TaxPro Max portal upload.
 
@@ -9,7 +9,7 @@ Under the 2026 Nigeria Tax Administration Act:
 - Returns include VAT, CIT, PAYE, WHT, Development Levy
 - Data must be exported in specific CSV/Excel formats
 
-Author: TekVwarho ProAudit
+Author: Tekvwa Pro Audit
 """
 
 import csv

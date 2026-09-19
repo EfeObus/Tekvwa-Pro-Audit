@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Security Utilities
+Tekvwa Pro Audit - Security Utilities
 
 Password hashing, JWT token management, and security helpers.
 """

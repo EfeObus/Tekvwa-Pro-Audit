@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Tax Calculator Tests
+Tekvwa Pro Audit - Tax Calculator Tests
 
 Unit tests for Nigeria 2026 Tax Reform calculations.
 """

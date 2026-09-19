@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Continuous Deployment
+# Tekvwa Pro Audit - Continuous Deployment
 # Deploys to staging on develop branch
 # Deploys to production on main branch with approval
 # =============================================
@@ -123,7 +123,7 @@ jobs:
       - name: Health check
         run: |
           echo "Running health check..."
-          # curl -f https://staging.tekvwarho.com/health || exit 1
+          # curl -f https://staging.tekvwa.com/health || exit 1
       
       - name: Notify deployment success
         if: success()
@@ -173,7 +173,7 @@ jobs:
       - name: Health check
         run: |
           echo "Running health check..."
-          # curl -f https://app.tekvwarho.com/health || exit 1
+          # curl -f https://app.tekvwa.com/health || exit 1
       
       - name: Notify deployment success
         if: success()

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SKU Context for Templates
+Tekvwa Pro Audit - SKU Context for Templates
 
 Provides SKU tier and feature context to Jinja2 templates for UI-level feature gating.
 """

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Risk Signal Model
+Tekvwa Pro Audit - Risk Signal Model
 
 Risk signals for platform monitoring and early warning system.
 Tracks various risk indicators across tenants for proactive intervention.

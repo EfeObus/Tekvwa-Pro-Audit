@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Emergency Control Service
+Tekvwa Pro Audit - Emergency Control Service
 
 Service layer for managing platform emergency controls.
 Super Admin only feature for critical security operations.

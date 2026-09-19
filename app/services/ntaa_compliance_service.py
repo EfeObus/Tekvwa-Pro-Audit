@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - NTAA 2025 Compliance Service
+Tekvwa Pro Audit - NTAA 2025 Compliance Service
 
 Service for handling Nigeria Tax Administration Act 2025 compliance requirements:
 1. 72-Hour Legal Lock for NRS-submitted invoices

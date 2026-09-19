@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin User Search Service
+Tekvwa Pro Audit - Admin User Search Service
 
 Cross-tenant user search service for Super Admin functionality.
 Allows searching users across all organizations with advanced filters.

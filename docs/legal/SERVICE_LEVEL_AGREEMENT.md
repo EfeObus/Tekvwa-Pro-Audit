@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Service Level Agreement (SLA)
+# Tekvwa Pro Audit - Service Level Agreement (SLA)
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -9,7 +9,7 @@
 
 ## 1. Overview
 
-This Service Level Agreement ("SLA") defines the service commitments Tekvwa IT Solutions LTD provides to subscribers of TekVwarho ProAudit. This SLA is incorporated into and forms part of your subscription agreement.
+This Service Level Agreement ("SLA") defines the service commitments Tekvwa IT Solutions LTD provides to subscribers of Tekvwa Pro Audit. This SLA is incorporated into and forms part of your subscription agreement.
 
 ---
 
@@ -74,7 +74,7 @@ The following are NOT counted as downtime:
 You will be notified via:
 - Email to account owner
 - In-app banner announcement
-- Status page update (status.tekvwarho.com)
+- Status page update (status.tekvwa.com)
 
 ---
 
@@ -266,7 +266,7 @@ Enterprise customers have direct access to:
 
 ### 12.1 Status Page
 
-Real-time service status: **status.tekvwarho.com**
+Real-time service status: **status.tekvwa.com**
 
 Includes:
 - Current system status
@@ -297,7 +297,7 @@ Monthly reports include:
 
 ### 13.2 Third-Party SLA Pass-Through
 
-We do not control third-party uptime. If a third-party outage causes TekVwarho outage:
+We do not control third-party uptime. If a third-party outage causes Tekvwa outage:
 - We will communicate transparently
 - We will work with the provider for resolution
 - Service credits may apply at our discretion
@@ -317,8 +317,8 @@ We may update this SLA with:
 
 **Technical Support:** info@tekvwa.org  
 **SLA Inquiries:** info@tekvwa.org  
-**Status Page:** status.tekvwarho.com  
-**Emergency (Enterprise):** +234 XXX XXX XXXX  
+**Status Page:** status.tekvwa.com  
+**Emergency (Enterprise):** +234 90 6577 9323  
 
 ---
 

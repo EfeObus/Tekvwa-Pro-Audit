@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin Global Audit Log API Router
+Tekvwa Pro Audit - Admin Global Audit Log API Router
 
 Platform-wide audit log viewing, searching, and analytics for Super Admin users.
 Provides cross-tenant visibility into all platform activity.

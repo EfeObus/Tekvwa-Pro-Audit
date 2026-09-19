@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Invoices Router
+Tekvwa Pro Audit - Invoices Router
 
 API endpoints for invoice management with NRS e-invoicing support.
 

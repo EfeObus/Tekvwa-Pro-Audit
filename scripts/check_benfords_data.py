@@ -7,7 +7,7 @@ from datetime import date
 def main():
     conn = psycopg2.connect(
         host="localhost",
-        database="tekvwarho_proaudit",
+        database="tekvwa_pro_audit",
         user="efeobukohwo",
         password="12345"
     )

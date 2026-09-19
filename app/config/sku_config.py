@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SKU Configuration
+Tekvwa Pro Audit - SKU Configuration
 
 Central configuration for all SKU-related settings.
 Pricing in Nigerian Naira (₦).
@@ -18,7 +18,7 @@ from enum import Enum
 
 class SKUTier(str, Enum):
     """
-    Commercial SKU tiers for TekVwarho ProAudit.
+    Commercial SKU tiers for Tekvwa Pro Audit.
     
     Pricing in Nigerian Naira (₦):
     - CORE: ₦25,000 - ₦75,000/month
@@ -140,7 +140,7 @@ TIER_PRICING: Dict[SKUTier, TierPricing] = {
         annual_max=Decimal("765000"),   # ₦75,000 × 10.2 months
         base_users_included=5,
         price_per_additional_user=Decimal("5000"),
-        name="ProAudit Core",
+        name="Pro Audit Core",
         tagline="Essential accounting for Nigerian SMEs",
         target_market="Small businesses, sole practitioners, startups, POS operators",
     ),
@@ -152,7 +152,7 @@ TIER_PRICING: Dict[SKUTier, TierPricing] = {
         annual_max=Decimal("4080000"),
         base_users_included=10,
         price_per_additional_user=Decimal("10000"),
-        name="ProAudit Professional",
+        name="Pro Audit Professional",
         tagline="Full-featured solution for growing businesses",
         target_market="Growing SMEs, accounting firms, manufacturing, retail chains",
     ),
@@ -164,7 +164,7 @@ TIER_PRICING: Dict[SKUTier, TierPricing] = {
         annual_max=Decimal("51000000"),
         base_users_included=50,
         price_per_additional_user=Decimal("15000"),
-        name="ProAudit Enterprise",
+        name="Pro Audit Enterprise",
         tagline="Compliance-ready platform for large organizations",
         target_market="Multinationals, banks, oil & gas, NSE-listed companies, government",
     ),
@@ -195,7 +195,7 @@ INTELLIGENCE_PRICING: Dict[IntelligenceAddon, IntelligencePricing] = {
         addon=IntelligenceAddon.STANDARD,
         monthly_min=Decimal("250000"),
         monthly_max=Decimal("500000"),
-        name="ProAudit Intelligence Standard",
+        name="Pro Audit Intelligence Standard",
         description="ML anomaly detection, Benford's Law, Z-Score, OCR, Forecasting",
         requires_tier=SKUTier.PROFESSIONAL,
     ),
@@ -203,7 +203,7 @@ INTELLIGENCE_PRICING: Dict[IntelligenceAddon, IntelligencePricing] = {
         addon=IntelligenceAddon.ADVANCED,
         monthly_min=Decimal("500000"),
         monthly_max=Decimal("1000000"),
-        name="ProAudit Intelligence Advanced",
+        name="Pro Audit Intelligence Advanced",
         description="Full ML suite including NLP, custom model training, behavioral analytics",
         requires_tier=SKUTier.PROFESSIONAL,
     ),

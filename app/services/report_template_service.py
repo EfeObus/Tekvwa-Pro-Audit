@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Report Template Service
+Tekvwa Pro Audit - Report Template Service
 
 Service for managing customizable report templates:
 - CRUD operations for templates

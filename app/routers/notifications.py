@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Notifications Router
+Tekvwa Pro Audit - Notifications Router
 
 API endpoints for managing user notifications.
 

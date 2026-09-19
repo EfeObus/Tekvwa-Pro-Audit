@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Docker Compose
+# Tekvwa Pro Audit - Docker Compose
 # Local development and production deployment
 # =============================================
 
@@ -13,12 +13,12 @@ services:
     build:
       context: .
       target: development
-    container_name: tekvwarho-web
+    container_name: tekvwa-web
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://tekvwarho:tekvwarho_secret@db:5432/tekvwarho_proaudit
+      - DATABASE_URL=postgresql+asyncpg://tekvwa:tekvwa_secret@db:5432/tekvwa_pro_audit
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-supersecretkey_change_in_production}
       - ENVIRONMENT=development
@@ -40,7 +40,7 @@ services:
       redis:
         condition: service_started
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -53,21 +53,21 @@ services:
   # =============================================
   db:
     image: postgres:15-alpine
-    container_name: tekvwarho-db
+    container_name: tekvwa-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: tekvwarho
-      POSTGRES_PASSWORD: tekvwarho_secret
-      POSTGRES_DB: tekvwarho_proaudit
+      POSTGRES_USER: tekvwa
+      POSTGRES_PASSWORD: tekvwa_secret
+      POSTGRES_DB: tekvwa_pro_audit
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tekvwarho -d tekvwarho_proaudit"]
+      test: ["CMD-SHELL", "pg_isready -U tekvwa -d tekvwa_pro_audit"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -77,14 +77,14 @@ services:
   # =============================================
   redis:
     image: redis:7-alpine
-    container_name: tekvwarho-redis
+    container_name: tekvwa-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     command: redis-server --appendonly yes
 
   # =============================================
@@ -94,18 +94,18 @@ services:
     build:
       context: .
       target: production
-    container_name: tekvwarho-celery-worker
+    container_name: tekvwa-celery-worker
     restart: unless-stopped
     command: celery -A app.celery_app worker --loglevel=info --concurrency=4
     environment:
-      - DATABASE_URL=postgresql+asyncpg://tekvwarho:tekvwarho_secret@db:5432/tekvwarho_proaudit
+      - DATABASE_URL=postgresql+asyncpg://tekvwa:tekvwa_secret@db:5432/tekvwa_pro_audit
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-supersecretkey_change_in_production}
     depends_on:
       - db
       - redis
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     profiles:
       - production
 
@@ -116,18 +116,18 @@ services:
     build:
       context: .
       target: production
-    container_name: tekvwarho-celery-beat
+    container_name: tekvwa-celery-beat
     restart: unless-stopped
     command: celery -A app.celery_app beat --loglevel=info --scheduler=celery.beat:PersistentScheduler
     environment:
-      - DATABASE_URL=postgresql+asyncpg://tekvwarho:tekvwarho_secret@db:5432/tekvwarho_proaudit
+      - DATABASE_URL=postgresql+asyncpg://tekvwa:tekvwa_secret@db:5432/tekvwa_pro_audit
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-supersecretkey_change_in_production}
     depends_on:
       - db
       - redis
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     profiles:
       - production
 
@@ -136,7 +136,7 @@ services:
   # =============================================
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: tekvwarho-pgadmin
+    container_name: tekvwa-pgadmin
     restart: unless-stopped
     environment:
       PGADMIN_DEFAULT_EMAIL: info@tekvwa.org
@@ -146,7 +146,7 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     depends_on:
       - db
     profiles:
@@ -157,13 +157,13 @@ services:
   # =============================================
   mailhog:
     image: mailhog/mailhog:latest
-    container_name: tekvwarho-mailhog
+    container_name: tekvwa-mailhog
     restart: unless-stopped
     ports:
       - "1025:1025"  # SMTP
       - "8025:8025"  # Web UI
     networks:
-      - tekvwarho-network
+      - tekvwa-network
     profiles:
       - dev-tools
 
@@ -171,7 +171,7 @@ services:
 # NETWORKS
 # =============================================
 networks:
-  tekvwarho-network:
+  tekvwa-network:
     driver: bridge
 
 # =============================================

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Sales Router
+Tekvwa Pro Audit - Sales Router
 
 API endpoints for sales recording with inventory integration.
 Provides:

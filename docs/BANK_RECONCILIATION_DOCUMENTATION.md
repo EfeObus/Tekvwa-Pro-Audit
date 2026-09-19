@@ -2,7 +2,7 @@
 
 ## Overview
 
-TekVwarho ProAudit's Bank Reconciliation module is a comprehensive, Nigerian-market-ready solution for reconciling bank statements with internal accounting records. It features automatic Nigerian bank charge detection (EMTL, Stamp Duty, VAT, WHT), integration with Nigerian open banking APIs (Mono, Okra, Stitch), and intelligent transaction matching algorithms.
+Tekvwa Pro Audit's Bank Reconciliation module is a comprehensive, Nigerian-market-ready solution for reconciling bank statements with internal accounting records. It features automatic Nigerian bank charge detection (EMTL, Stamp Duty, VAT, WHT), integration with Nigerian open banking APIs (Mono, Okra, Stitch), and intelligent transaction matching algorithms.
 
 ## Table of Contents
 
@@ -632,7 +632,7 @@ pytest tests/test_bank_reconciliation.py --cov=app/services/bank_reconciliation_
 
 For issues or feature requests, please contact:
 - Email: info@tekvwa.org
-- GitHub: https://github.com/EfeObus/TekVwarho-ProAudit
+- GitHub: https://github.com/EfeObus/Tekvwa-Pro-Audit
 
 ---
 

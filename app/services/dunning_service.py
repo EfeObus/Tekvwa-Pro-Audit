@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Dunning Management Service
+Tekvwa Pro Audit - Dunning Management Service
 
 Manages the dunning process for failed payments.
 Implements escalation rules and retry schedules.

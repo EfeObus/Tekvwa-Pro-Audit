@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Expense Claims Model
+Tekvwa Pro Audit - Expense Claims Model
 
 Expense claims and reimbursement models for Nigerian businesses.
 Supports:

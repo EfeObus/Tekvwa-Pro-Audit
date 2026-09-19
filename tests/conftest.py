@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Test Configuration
+Tekvwa Pro Audit - Test Configuration
 
 Pytest fixtures and configuration.
 """

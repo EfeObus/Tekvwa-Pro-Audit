@@ -1,8 +1,8 @@
-# TekVwarho ProAudit - Payroll System Documentation
+# Tekvwa Pro Audit - Payroll System Documentation
 
 ## Overview
 
-TekVwarho ProAudit includes a comprehensive payroll management system built specifically for Nigerian businesses. The system handles all statutory deductions, compliance requirements, and provides complete employee compensation management.
+Tekvwa Pro Audit includes a comprehensive payroll management system built specifically for Nigerian businesses. The system handles all statutory deductions, compliance requirements, and provides complete employee compensation management.
 
 ---
 
@@ -564,4 +564,4 @@ All PenCom-licensed Pension Fund Administrators:
 ---
 
 *Last Updated: January 7, 2026*
-*TekVwarho ProAudit - Nigeria's Premier Tax Compliance Platform*
+*Tekvwa Pro Audit - Nigeria's Premier Tax Compliance Platform*

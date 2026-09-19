@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Bank Reconciliation Service
+Tekvwa Pro Audit - Bank Reconciliation Service
 
 Comprehensive service for Nigerian bank reconciliation operations.
 Features:

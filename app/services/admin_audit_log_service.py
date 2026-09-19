@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin Global Audit Log Service
+Tekvwa Pro Audit - Admin Global Audit Log Service
 
 Service for platform-wide audit log viewing, searching, and analytics.
 Cross-tenant visibility for Super Admin users.

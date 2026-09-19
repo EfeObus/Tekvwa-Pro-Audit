@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - TIN Validation Service (2026 Compliance)
+Tekvwa Pro Audit - TIN Validation Service (2026 Compliance)
 
 Real-time TIN validation via the Nigeria Revenue Service (NRS) TaxID Portal.
 
@@ -157,7 +157,7 @@ class TINValidationService:
             "Accept": "application/json",
             "Authorization": f"Bearer {self.api_key}",
             "X-API-Version": "1.0",
-            "X-Client-ID": "tekvwarho-proaudit",
+            "X-Client-ID": "tekvwa-pro-audit",
         }
     
     def _validate_tin_format(self, tin: str) -> Tuple[bool, str]:

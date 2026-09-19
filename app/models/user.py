@@ -1,10 +1,10 @@
 """
-TekVwarho ProAudit - User Model
+Tekvwa Pro Audit - User Model
 
 User model with role-based access control.
 
 RBAC Hierarchy:
-1. Platform Staff (Internal TekVwarho employees):
+1. Platform Staff (Internal Tekvwa employees):
    - Super Admin: Full root access, hardcoded credentials
    - Admin: Operational access, approves verification documents
    - IT/Developer: Backend and infrastructure access
@@ -45,12 +45,12 @@ if TYPE_CHECKING:
 
 
 # ===========================================
-# PLATFORM STAFF ROLES (Internal TekVwarho Employees)
+# PLATFORM STAFF ROLES (Internal Tekvwa Employees)
 # ===========================================
 
 class PlatformRole(str, Enum):
     """
-    Platform-level roles for TekVwarho internal staff.
+    Platform-level roles for Tekvwa internal staff.
     These users manage the multi-tenant platform.
     """
     SUPER_ADMIN = "super_admin"      # Full root access to entire platform
@@ -86,7 +86,7 @@ class User(BaseModel):
     User model for authentication and authorization.
     
     Users can be either:
-    1. Platform Staff: Internal TekVwarho employees (is_platform_staff=True)
+    1. Platform Staff: Internal Tekvwa employees (is_platform_staff=True)
     2. Organization Users: External customers (is_platform_staff=False)
     
     Platform staff have platform_role set and organization_id is NULL.
@@ -134,7 +134,7 @@ class User(BaseModel):
         default=False, 
         nullable=False,
         index=True,
-        comment="True for internal TekVwarho employees"
+        comment="True for internal Tekvwa employees"
     )
     platform_role: Mapped[Optional[PlatformRole]] = mapped_column(
         SQLEnum(PlatformRole, values_callable=lambda enum_cls: [e.value for e in enum_cls]),

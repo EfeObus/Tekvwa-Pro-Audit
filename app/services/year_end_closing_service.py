@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Year-End Closing Automation Service
+Tekvwa Pro Audit - Year-End Closing Automation Service
 
 Comprehensive service for fiscal year-end closing procedures including:
 - Automated year-end closing journal entries

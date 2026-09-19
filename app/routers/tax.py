@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Tax Router
+Tekvwa Pro Audit - Tax Router
 
 API endpoints for tax management (VAT, PAYE, WHT, CIT).
 """

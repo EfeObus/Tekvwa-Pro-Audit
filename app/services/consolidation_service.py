@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Multi-Entity Consolidation Service
+Tekvwa Pro Audit - Multi-Entity Consolidation Service
 
 Comprehensive service for financial statement consolidation across entity groups.
 Implements IFRS 10 consolidation requirements including:

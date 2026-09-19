@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Alembic Environment
+Tekvwa Pro Audit - Alembic Environment
 
 Configuration for database migrations.
 """

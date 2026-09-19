@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Categories Router
+Tekvwa Pro Audit - Categories Router
 
 API endpoints for category management with WREN classification.
 """

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Risk Signals Router
+Tekvwa Pro Audit - Risk Signals Router
 
 API endpoints for managing risk signals.
 Super Admin only feature for platform monitoring and early warning.

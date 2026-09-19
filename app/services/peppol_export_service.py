@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Peppol BIS Billing 3.0 E-Invoice Export Service
+Tekvwa Pro Audit - Peppol BIS Billing 3.0 E-Invoice Export Service
 
 Generates NRS-compliant invoices in structured digital formats:
 - XML (UBL 2.1 - Universal Business Language)
@@ -417,7 +417,7 @@ class PeppolExportService:
                 "standard": "Peppol BIS Billing 3.0",
                 "customization_id": self.CUSTOMIZATION_ID,
                 "profile_id": self.PEPPOL_PROFILE_ID,
-                "generator": "TekVwarho ProAudit",
+                "generator": "Tekvwa Pro Audit",
             },
             "nrs_compliance": {
                 "irn": invoice.nrs_irn,

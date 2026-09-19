@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Compliance Penalty Tracker (2026 Tax Reform)
+Tekvwa Pro Audit - Compliance Penalty Tracker (2026 Tax Reform)
 
 Tracks and calculates penalties under the Nigeria 2026 Tax Reform Act.
 

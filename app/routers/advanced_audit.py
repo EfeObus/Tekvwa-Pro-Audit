@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Audit Router
+Tekvwa Pro Audit - Advanced Audit Router
 
 Enterprise Audit API Endpoints:
 1. Tax Explainability Layer - Detailed breakdown with legal references
@@ -850,7 +850,7 @@ async def get_advanced_audit_info():
     Get information about all advanced audit capabilities.
     """
     return {
-        "name": "TekVwarho ProAudit Advanced Audit Engine",
+        "name": "Tekvwa Pro Audit Advanced Audit Engine",
         "version": "2.0.0",
         "compliance_standards": [
             "NTAA 2025",

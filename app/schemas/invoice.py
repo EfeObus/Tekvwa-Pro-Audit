@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Invoice Schemas
+Tekvwa Pro Audit - Invoice Schemas
 
 Pydantic schemas for invoice management with NRS e-invoicing support.
 """

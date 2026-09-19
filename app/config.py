@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Configuration Settings
+Tekvwa Pro Audit - Configuration Settings
 
 This module handles all application configuration using Pydantic Settings.
 Environment variables are loaded from .env file.
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # ===========================================
     # APPLICATION CONFIGURATION
     # ===========================================
-    app_name: str = "TekVwarho ProAudit"
+    app_name: str = "Tekvwa Pro Audit"
     app_env: str = "development"
     debug: bool = True
     secret_key: str  # Required - must be set in .env
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     postgres_password: str = ""
     postgres_host: str = "localhost"
     postgres_port: int = 5432
-    postgres_db: str = "tekvwarho_proaudit"
+    postgres_db: str = "tekvwa_pro_audit"
     
     @property
     def async_database_url(self) -> str:
@@ -207,7 +207,7 @@ class Settings(BaseSettings):
     mail_username: str = ""
     mail_password: str = ""
     mail_from: str = ""
-    mail_from_name: str = "TekVwarho ProAudit"
+    mail_from_name: str = "Tekvwa Pro Audit"
     
     # Support & Billing emails
     support_email: str = "info@tekvwa.org"

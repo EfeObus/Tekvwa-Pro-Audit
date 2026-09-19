@@ -1,6 +1,6 @@
 ---
 name: Pull Request
-about: Submit changes to TekVwarho ProAudit
+about: Submit changes to Tekvwa Pro Audit
 title: ''
 labels: ''
 assignees: ''

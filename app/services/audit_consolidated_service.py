@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Consolidated Audit Service Module
+Tekvwa Pro Audit - Consolidated Audit Service Module
 
 This module provides a single entry point for all audit-related services.
 It consolidates access to:

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transaction Matching Engine
+Tekvwa Pro Audit - Transaction Matching Engine
 
 Intelligent matching engine for bank reconciliation with support for:
 - Exact matching (amount, date, reference)

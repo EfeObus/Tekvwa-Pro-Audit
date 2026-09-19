@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Sales Recording Service
+Tekvwa Pro Audit - Sales Recording Service
 
 Business logic for recording sales, integrating inventory with invoicing.
 Provides robust sales recording with:

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Foreign Exchange (FX) Router
+Tekvwa Pro Audit - Foreign Exchange (FX) Router
 
 API endpoints for multi-currency operations including:
 - Exchange rate management

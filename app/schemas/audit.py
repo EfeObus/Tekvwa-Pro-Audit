@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Schemas
+Tekvwa Pro Audit - Audit Schemas
 
 Pydantic schemas for audit-related request/response validation.
 """

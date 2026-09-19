@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Machine Learning Engine
+Tekvwa Pro Audit - Machine Learning Engine
 
 Comprehensive ML/AI Engine with:
 - Deep Learning (Neural Networks with PyTorch)

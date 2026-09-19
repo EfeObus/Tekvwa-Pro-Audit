@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Staff Management Router
+Tekvwa Pro Audit - Staff Management Router
 
 API endpoints for platform staff management.
 

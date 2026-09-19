@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Customer Service
+Tekvwa Pro Audit - Customer Service
 
 Business logic for customer management.
 """

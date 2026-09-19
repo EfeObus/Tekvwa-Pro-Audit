@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transactions Router
+Tekvwa Pro Audit - Transactions Router
 
 API endpoints for transaction (expense/income) recording.
 

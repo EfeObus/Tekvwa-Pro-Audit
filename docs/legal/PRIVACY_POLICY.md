@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Privacy Policy
+# Tekvwa Pro Audit - Privacy Policy
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -8,7 +8,7 @@
 
 ## 1. Introduction
 
-Welcome to TekVwarho ProAudit ("we," "our," "us," or the "Company"). This Privacy Policy explains how Tekvwa IT Solutions LTD, a company incorporated under the laws of the Federal Republic of Nigeria, collects, uses, discloses, and protects your personal information when you use our tax compliance and business management platform (the "Service").
+Welcome to Tekvwa Pro Audit ("we," "our," "us," or the "Company"). This Privacy Policy explains how Tekvwa IT Solutions LTD, a company incorporated under the laws of the Federal Republic of Nigeria, collects, uses, discloses, and protects your personal information when you use our tax compliance and business management platform (the "Service").
 
 We are committed to protecting your privacy and ensuring compliance with:
 - **Nigeria Data Protection Act 2023 (NDPA)**
@@ -16,7 +16,7 @@ We are committed to protecting your privacy and ensuring compliance with:
 - **Nigeria Tax Administration Act 2025**
 - **Companies and Allied Matters Act (CAMA) 2020**
 
-By using TekVwarho ProAudit, you consent to the collection, use, and disclosure of your information as described in this Privacy Policy.
+By using Tekvwa Pro Audit, you consent to the collection, use, and disclosure of your information as described in this Privacy Policy.
 
 ---
 
@@ -28,7 +28,7 @@ Lagos, Nigeria
 
 **Data Protection Officer:**  
 Email: info@tekvwa.org  
-Phone: +234 XXX XXX XXXX  
+Phone: +234 90 6577 9323  
 
 For any privacy-related inquiries or to exercise your data rights, please contact our Data Protection Officer.
 
@@ -228,7 +228,7 @@ Primary data storage is within Nigeria or the ECOWAS region. Where international
 
 ## 11. Children's Privacy
 
-TekVwarho ProAudit is a business application not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If we become aware of such collection, we will delete the data immediately.
+Tekvwa Pro Audit is a business application not intended for individuals under 18 years of age. We do not knowingly collect personal information from children. If we become aware of such collection, we will delete the data immediately.
 
 ---
 
@@ -261,7 +261,7 @@ For privacy inquiries, data requests, or complaints:
 **Data Protection Officer**  
 Tekvwa IT Solutions LTD  
 Email: info@tekvwa.org  
-Phone: +234 XXX XXX XXXX  
+Phone: +234 90 6577 9323  
 
 **Nigeria Data Protection Commission (NDPC)**  
 Website: https://ndpc.gov.ng  

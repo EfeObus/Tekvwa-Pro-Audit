@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Year-End Closing Unit Tests
+Tekvwa Pro Audit - Year-End Closing Unit Tests
 
 Comprehensive tests for year-end closing procedures:
 - Period close validation

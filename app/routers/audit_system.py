@@ -1489,7 +1489,7 @@ async def download_audit_report_pdf(
     </head>
     <body>
         <div class="header">
-            <div class="logo">TekVwarho ProAudit</div>
+            <div class="logo">Tekvwa Pro Audit</div>
             <h1>Audit Report</h1>
             <div class="meta">
                 <strong>Run ID:</strong> {run.run_id}<br>
@@ -1549,9 +1549,9 @@ async def download_audit_report_pdf(
         </table>
         
         <div class="footer">
-            <p>This report was generated automatically by TekVwarho ProAudit.</p>
+            <p>This report was generated automatically by Tekvwa Pro Audit.</p>
             <p>Report Hash: {run.run_hash or 'N/A'}</p>
-            <p>© {datetime.now().year} TekVwarho. All rights reserved.</p>
+            <p>© {datetime.now().year} Tekvwa. All rights reserved.</p>
         </div>
     </body>
     </html>

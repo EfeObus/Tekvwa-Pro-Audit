@@ -23,7 +23,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL_ASYNC", "postgresql+asyncpg://efeobukohwo@localhost:5432/tekvwarho_proaudit")
+DATABASE_URL = os.getenv("DATABASE_URL_ASYNC", "postgresql+asyncpg://efeobukohwo@localhost:5432/tekvwa_pro_audit")
 engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

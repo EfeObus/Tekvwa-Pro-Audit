@@ -12,7 +12,7 @@ import sys
 import httpx
 from datetime import datetime
 
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 
 async def test_authenticated_checkout():

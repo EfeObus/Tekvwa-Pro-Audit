@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Payroll Models
+Tekvwa Pro Audit - Advanced Payroll Models
 
 World-class payroll features for Nigerian enterprises:
 - Compliance Status Engine with penalty estimation

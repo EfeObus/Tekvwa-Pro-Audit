@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - 2026 Tax Reform Models
+Tekvwa Pro Audit - 2026 Tax Reform Models
 
 Models for the 2026 Nigerian Tax Administration Act compliance:
 - VAT Recovery Audit Trail

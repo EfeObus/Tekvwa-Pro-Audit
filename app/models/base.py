@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Base Model
+Tekvwa Pro Audit - Base Model
 
 Base model class and mixins for all SQLAlchemy models.
 """

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The TekVwarho ProAudit Consolidation module provides comprehensive group accounting capabilities for multi-entity organizations. It supports parent-subsidiary relationships, currency translation for foreign operations, intercompany eliminations, and non-controlling interest calculations, all compliant with **IFRS 10 - Consolidated Financial Statements** and **IAS 21 - The Effects of Changes in Foreign Exchange Rates**.
+The Tekvwa Pro Audit Consolidation module provides comprehensive group accounting capabilities for multi-entity organizations. It supports parent-subsidiary relationships, currency translation for foreign operations, intercompany eliminations, and non-controlling interest calculations, all compliant with **IFRS 10 - Consolidated Financial Statements** and **IAS 21 - The Effects of Changes in Foreign Exchange Rates**.
 
 ---
 

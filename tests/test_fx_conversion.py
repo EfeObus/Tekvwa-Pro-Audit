@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - FX Conversion Unit Tests
+Tekvwa Pro Audit - FX Conversion Unit Tests
 
 Comprehensive tests for multi-currency functionality:
 - Exchange rate fetching and caching

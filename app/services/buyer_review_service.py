@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Buyer Review Service
+Tekvwa Pro Audit - Buyer Review Service
 
 Handles the 72-hour buyer confirmation window for NRS e-invoices.
 Per the Nigeria Tax Administration Act 2025, buyers have 72 hours

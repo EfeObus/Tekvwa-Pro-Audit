@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Email Service
+Tekvwa Pro Audit - Email Service
 
 Handles transactional email sending.
 Supports SendGrid, Mailgun, or SMTP.
@@ -57,7 +57,7 @@ class EmailService:
         
         # From email - use username if mail_from not set
         self.from_email = settings.mail_from or settings.mail_username
-        self.from_name = settings.mail_from_name or 'TekVwarho ProAudit'
+        self.from_name = settings.mail_from_name or 'Tekvwa Pro Audit'
         
         # Provider settings
         self.provider = getattr(settings, 'email_provider', None)
@@ -281,15 +281,15 @@ class EmailService:
         first_name: str,
     ) -> bool:
         """Send welcome email to new users."""
-        subject = "Welcome to TekVwarho ProAudit!"
+        subject = "Welcome to Tekvwa Pro Audit!"
         
         body_html = f"""
         <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h1 style="color: #16a34a;">Welcome to TekVwarho ProAudit!</h1>
+                <h1 style="color: #16a34a;">Welcome to Tekvwa Pro Audit!</h1>
                 <p>Hi {first_name},</p>
-                <p>Thank you for joining TekVwarho ProAudit, Nigeria's premier tax compliance and business management platform.</p>
+                <p>Thank you for joining Tekvwa Pro Audit, Nigeria's premier tax compliance and business management platform.</p>
                 <p>Here's what you can do next:</p>
                 <ul>
                     <li>Set up your business entity</li>
@@ -298,24 +298,24 @@ class EmailService:
                     <li>Generate tax-compliant reports</li>
                 </ul>
                 <p>
-                    <a href="https://app.tekvwarho.com/dashboard" 
+                    <a href="https://app.tekvwa.com/dashboard" 
                        style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                         Go to Dashboard
                     </a>
                 </p>
                 <p>If you have any questions, our support team is here to help.</p>
-                <p>Best regards,<br>The TekVwarho Team</p>
+                <p>Best regards,<br>The Tekvwa Team</p>
             </div>
         </body>
         </html>
         """
         
         body_text = f"""
-        Welcome to TekVwarho ProAudit!
+        Welcome to Tekvwa Pro Audit!
         
         Hi {first_name},
         
-        Thank you for joining TekVwarho ProAudit, Nigeria's premier tax compliance and business management platform.
+        Thank you for joining Tekvwa Pro Audit, Nigeria's premier tax compliance and business management platform.
         
         Here's what you can do next:
         - Set up your business entity
@@ -323,10 +323,10 @@ class EmailService:
         - Start tracking income and expenses
         - Generate tax-compliant reports
         
-        Visit your dashboard: https://app.tekvwarho.com/dashboard
+        Visit your dashboard: https://app.tekvwa.com/dashboard
         
         Best regards,
-        The TekVwarho Team
+        The Tekvwa Team
         """
         
         return await self.send_email(EmailMessage(
@@ -346,7 +346,7 @@ class EmailService:
         invoice_url: str,
     ) -> bool:
         """Send invoice to customer."""
-        subject = f"Invoice {invoice_number} from TekVwarho"
+        subject = f"Invoice {invoice_number} from Tekvwa"
         
         body_html = f"""
         <html>
@@ -506,7 +506,7 @@ class EmailService:
                 <p>This is a reminder that your VAT return for <strong>{period}</strong> is due on <strong>{deadline}</strong>.</p>
                 <p>Estimated VAT payable: <strong>₦{vat_amount:,.2f}</strong></p>
                 <p>
-                    <a href="https://app.tekvwarho.com/reports?tab=tax" 
+                    <a href="https://app.tekvwa.com/reports?tab=tax" 
                        style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                         View VAT Report
                     </a>
@@ -526,7 +526,7 @@ class EmailService:
         
         Estimated VAT payable: ₦{vat_amount:,.2f}
         
-        View VAT report: https://app.tekvwarho.com/reports?tab=tax
+        View VAT report: https://app.tekvwa.com/reports?tab=tax
         
         Don't forget to file on time to avoid penalties.
         """
@@ -544,7 +544,7 @@ class EmailService:
         reset_url: str,
     ) -> bool:
         """Send password reset email."""
-        subject = "Reset Your Password - TekVwarho ProAudit"
+        subject = "Reset Your Password - Tekvwa Pro Audit"
         
         body_html = f"""
         <html>
@@ -591,7 +591,7 @@ class EmailService:
         verification_url: str,
     ) -> bool:
         """Send email verification link to new users."""
-        subject = "Verify Your Email - TekVwarho ProAudit"
+        subject = "Verify Your Email - Tekvwa Pro Audit"
         
         body_html = f"""
         <html>
@@ -599,7 +599,7 @@ class EmailService:
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <h1 style="color: #16a34a;">Verify Your Email Address</h1>
                 <p>Hi {user_name},</p>
-                <p>Thank you for registering with TekVwarho ProAudit! Please verify your email address by clicking the button below:</p>
+                <p>Thank you for registering with Tekvwa Pro Audit! Please verify your email address by clicking the button below:</p>
                 <p>
                     <a href="{verification_url}" 
                        style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
@@ -607,8 +607,8 @@ class EmailService:
                     </a>
                 </p>
                 <p>This link will expire in 24 hours.</p>
-                <p>If you didn't create an account with TekVwarho ProAudit, you can safely ignore this email.</p>
-                <p>Best regards,<br>The TekVwarho Team</p>
+                <p>If you didn't create an account with Tekvwa Pro Audit, you can safely ignore this email.</p>
+                <p>Best regards,<br>The Tekvwa Team</p>
             </div>
         </body>
         </html>
@@ -619,16 +619,16 @@ class EmailService:
         
         Hi {user_name},
         
-        Thank you for registering with TekVwarho ProAudit! Please verify your email address by visiting the link below:
+        Thank you for registering with Tekvwa Pro Audit! Please verify your email address by visiting the link below:
         
         {verification_url}
         
         This link will expire in 24 hours.
         
-        If you didn't create an account with TekVwarho ProAudit, you can safely ignore this email.
+        If you didn't create an account with Tekvwa Pro Audit, you can safely ignore this email.
         
         Best regards,
-        The TekVwarho Team
+        The Tekvwa Team
         """
         
         return await self.send_email(EmailMessage(

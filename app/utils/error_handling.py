@@ -1,5 +1,5 @@
 """
-Comprehensive Error Handling Module for TekVwarho ProAudit
+Comprehensive Error Handling Module for Tekvwa Pro Audit
 
 This module provides robust, centralized error handling with:
 - Custom exception hierarchy
@@ -32,7 +32,7 @@ from sqlalchemy.exc import (
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # Configure logging
-logger = logging.getLogger("tekvwarho.errors")
+logger = logging.getLogger("tekvwa.errors")
 
 
 class ErrorCode(str, Enum):

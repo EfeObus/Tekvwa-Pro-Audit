@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# TekVwarho ProAudit - GCP first-time deployment bootstrap
+# Tekvwa Pro Audit - GCP first-time deployment bootstrap
 #
 # Runs once, after the base infrastructure (project, VPC, VPC connector,
 # Cloud SQL, Memorystore, GCS buckets, Artifact Registry, Secret Manager
@@ -17,7 +17,7 @@ set -euo pipefail
 PROJECT="tekvwarho-proaudit"
 REGION="africa-south1"
 SQL_INSTANCE="proaudit-db"
-DB_NAME="tekvwarho_proaudit"
+DB_NAME="tekvwa_pro_audit"
 DB_USER="proaudit_app"
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/proaudit-repo/proaudit:initial"
 SA_EMAIL="proaudit-run-sa@${PROJECT}.iam.gserviceaccount.com"
@@ -63,7 +63,7 @@ SUPER_ADMIN_PASSWORD=super-admin-password:latest,\
 SUPER_ADMIN_FIRST_NAME=super-admin-first-name:latest,\
 SUPER_ADMIN_LAST_NAME=super-admin-last-name:latest"
 
-ENV_VARS="APP_ENV=production,DEBUG=False,GCS_BUCKET_NAME=tekvwarho-proaudit-files,GCS_PROJECT_ID=${PROJECT}"
+ENV_VARS="APP_ENV=production,DEBUG=False,GCS_BUCKET_NAME=tekvwa-pro-audit-files,GCS_PROJECT_ID=${PROJECT}"
 
 echo "== Deploying migration Cloud Run Job =="
 gcloud run jobs create proaudit-migrate \

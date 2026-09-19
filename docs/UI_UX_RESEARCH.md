@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - UI/UX Research Document
+# Tekvwa Pro Audit - UI/UX Research Document
 
 **Document Version:** 1.0  
 **Date:** January 3, 2026  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document outlines the user research, design principles, and UX guidelines for TekVwarho ProAudit. Given the critical nature of tax compliance and the diverse user base across Nigeria, our design approach prioritizes **clarity, accessibility, and error prevention** above aesthetic complexity.
+This document outlines the user research, design principles, and UX guidelines for Tekvwa Pro Audit. Given the critical nature of tax compliance and the diverse user base across Nigeria, our design approach prioritizes **clarity, accessibility, and error prevention** above aesthetic complexity.
 
 ---
 
@@ -278,7 +278,7 @@ VAT Filing      PAYE Remittance   Annual Returns
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  TEKVWARHO PROAUDIT DESIGN PRINCIPLES                           │
+│  TEKVWA PRO AUDIT DESIGN PRINCIPLES                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  1. CLARITY OVER CLEVERNESS                                     │
@@ -364,7 +364,7 @@ High contrast mode available for accessibility compliance
 ### 5.1 Navigation Structure
 
 ```
-TEKVWARHO PROAUDIT - NAVIGATION MAP
+TEKVWA PRO AUDIT - NAVIGATION MAP
 
 ┌──────────────────────────────────────────────────────────────────┐
 │                        GLOBAL HEADER                              │
@@ -576,7 +576,7 @@ STEP 4: NRS Confirmation
 
 ```
 ┌─────────────────────────┐
-│ ☰  TekVwarho    🔔 2    │
+│ ☰  Tekvwa    🔔 2    │
 ├─────────────────────────┤
 │                         │
 │ Good morning, Chidi     │
@@ -726,7 +726,7 @@ LARGE NUMBERS
 
 ## 9. Responsive Web & Desktop Considerations
 
-Note: TekVwarho ProAudit is a web-first application. No mobile native app is 
+Note: Tekvwa Pro Audit is a web-first application. No mobile native app is 
 planned. Future development will include desktop applications (Windows/macOS).
 The web application is fully responsive and optimized for use on mobile devices
 through the browser.
@@ -1088,4 +1088,4 @@ DISPUTE MONITOR COMPONENT
 
 ---
 
-*Document prepared by UX Research Team | TekVwarho ProAudit*
+*Document prepared by UX Research Team | Tekvwa Pro Audit*

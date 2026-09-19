@@ -1,9 +1,9 @@
 """
-TekVwarho ProAudit - Payroll Router
+Tekvwa Pro Audit - Payroll Router
 
 API endpoints for payroll management with Nigerian compliance.
 
-SKU REQUIREMENT: ProAudit Professional tier or above
+SKU REQUIREMENT: Pro Audit Professional tier or above
 """
 
 import uuid

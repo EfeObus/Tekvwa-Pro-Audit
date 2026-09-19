@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Authentication Schemas
+Tekvwa Pro Audit - Authentication Schemas
 
 Pydantic schemas for authentication requests and responses.
 """

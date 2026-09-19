@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Customer Model
+Tekvwa Pro Audit - Customer Model
 
 Customer model for tracking customers/clients.
 """

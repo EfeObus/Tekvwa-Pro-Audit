@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Financial Report Export Router
+Tekvwa Pro Audit - Financial Report Export Router
 
 API endpoints for exporting financial reports in multiple formats:
 - Balance Sheet (PDF, Excel, CSV)

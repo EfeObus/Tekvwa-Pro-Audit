@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Entity Schemas
+Tekvwa Pro Audit - Entity Schemas
 
 Pydantic schemas for business entity management.
 """

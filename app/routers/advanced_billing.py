@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Billing Router
+Tekvwa Pro Audit - Advanced Billing Router
 
 API endpoints for Issues #30-36:
 - #30: Usage report generation

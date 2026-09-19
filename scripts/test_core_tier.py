@@ -9,10 +9,10 @@ async def test():
     async with async_session_maker() as db:
         service = FeatureFlagService(db)
         
-        # Test with TekVwarho Demo org (no tenant_sku record)
+        # Test with Tekvwa Demo org (no tenant_sku record)
         demo_org_id = UUID('8d505426-5a31-4a57-84c5-87f4529685ac')
         
-        print('Testing TekVwarho Demo org (no tenant_sku record):')
+        print('Testing Tekvwa Demo org (no tenant_sku record):')
         tenant_sku = await service.get_tenant_sku(demo_org_id)
         print(f'  tenant_sku: {tenant_sku}')
         

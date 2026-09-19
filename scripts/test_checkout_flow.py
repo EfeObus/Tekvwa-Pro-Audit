@@ -16,9 +16,9 @@ from datetime import datetime
 from uuid import UUID
 
 # Add project root to path
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
-os.environ.setdefault('DATABASE_URL', 'postgresql+asyncpg://postgres:postgres@localhost:5432/tekvwarho_proaudit')
+os.environ.setdefault('DATABASE_URL', 'postgresql+asyncpg://postgres:postgres@localhost:5432/tekvwa_pro_audit')
 
 from sqlalchemy import text, select
 from app.database import async_session_maker

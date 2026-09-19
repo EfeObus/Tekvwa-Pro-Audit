@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Bank Reconciliation API Router
+Tekvwa Pro Audit - Bank Reconciliation API Router
 
 Comprehensive API endpoints for Nigerian bank reconciliation operations.
 Supports:

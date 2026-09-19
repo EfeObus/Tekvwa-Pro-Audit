@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Services Package
+Tekvwa Pro Audit - Services Package
 
 Business logic services.
 """

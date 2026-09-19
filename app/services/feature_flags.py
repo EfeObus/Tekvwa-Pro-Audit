@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Feature Flags Service
+Tekvwa Pro Audit - Feature Flags Service
 
 Service for checking feature access based on SKU tier.
 Implements feature gating for commercial tier enforcement.
@@ -161,12 +161,12 @@ class FeatureAccessDenied(Exception):
         
         if requires_addon:
             message = (
-                f"Feature '{feature.value}' requires ProAudit Intelligence add-on. "
+                f"Feature '{feature.value}' requires Pro Audit Intelligence add-on. "
                 f"Contact sales to enable ML/AI features."
             )
         elif required_tier:
             message = (
-                f"Feature '{feature.value}' requires ProAudit {required_tier.value.title()} tier. "
+                f"Feature '{feature.value}' requires Pro Audit {required_tier.value.title()} tier. "
                 f"Current tier: {current_tier.value.title()}. Upgrade to access this feature."
             )
         else:
@@ -511,11 +511,11 @@ class FeatureFlagService:
         }
         
         if requires_intel and current_intel == IntelligenceAddon.NONE:
-            recommendation["recommendation"] = "Add ProAudit Intelligence"
+            recommendation["recommendation"] = "Add Pro Audit Intelligence"
             recommendation["requires_intelligence"] = True
             recommendation["estimated_price_naira"] = "₦250,000 - ₦1,000,000/month"
         elif required_tier and self._tier_rank(required_tier) > self._tier_rank(current_tier):
-            recommendation["recommendation"] = f"Upgrade to ProAudit {required_tier.value.title()}"
+            recommendation["recommendation"] = f"Upgrade to Pro Audit {required_tier.value.title()}"
             recommendation["required_tier"] = required_tier.value
             if required_tier == SKUTier.PROFESSIONAL:
                 recommendation["estimated_price_naira"] = "₦150,000 - ₦400,000/month"

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Forensic Audit Service
+Tekvwa Pro Audit - Forensic Audit Service
 
 World-Class Audit Features:
 1. Benford's Law Analysis - Detect fraud in digit distributions

@@ -8,7 +8,7 @@ from uuid import UUID
 
 async def test():
     async with async_session_maker() as db:
-        # Create a CORE tier tenant_sku for TekVwarho Demo
+        # Create a CORE tier tenant_sku for Tekvwa Demo
         demo_org_id = UUID('8d505426-5a31-4a57-84c5-87f4529685ac')
         
         # Check if already exists
@@ -25,7 +25,7 @@ async def test():
             await db.commit()
         
         # Create a CORE tier record
-        print('Creating CORE tier tenant_sku for TekVwarho Demo...')
+        print('Creating CORE tier tenant_sku for Tekvwa Demo...')
         sku = TenantSKU(
             organization_id=demo_org_id,
             tier=SKUTier.CORE,

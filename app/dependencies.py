@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - FastAPI Dependencies
+Tekvwa Pro Audit - FastAPI Dependencies
 
 Shared dependencies for authentication, database sessions, and RBAC.
 

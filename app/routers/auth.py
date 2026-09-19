@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Authentication Router
+Tekvwa Pro Audit - Authentication Router
 
 API endpoints for user authentication.
 """
@@ -857,7 +857,7 @@ async def setup_2fa(
     totp = pyotp.TOTP(secret)
     qr_code_url = totp.provisioning_uri(
         name=current_user.email,
-        issuer_name="TekVwarho ProAudit"
+        issuer_name="Tekvwa Pro Audit"
     )
     
     return Setup2FAResponse(

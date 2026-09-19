@@ -1,8 +1,8 @@
-# TekVwarho ProAudit - Demo Companies Documentation
+# Tekvwa Pro Audit - Demo Companies Documentation
 
 ## Overview
 
-This document provides login details and information for the three demo companies set up in TekVwarho ProAudit, representing each subscription tier (Core, Professional, Enterprise).
+This document provides login details and information for the three demo companies set up in Tekvwa Pro Audit, representing each subscription tier (Core, Professional, Enterprise).
 
 ---
 
@@ -244,7 +244,7 @@ To test different tiers:
 
 ## Technical Notes
 
-- Database: PostgreSQL (tekvwarho_proaudit)
+- Database: PostgreSQL (tekvwa_pro_audit)
 - All passwords are securely hashed with bcrypt
 - Employee salaries vary by role and company
 - Core company uses Edo State Benin names (regional authenticity)

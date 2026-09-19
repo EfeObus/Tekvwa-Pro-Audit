@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Bank Reconciliation Schemas
+Tekvwa Pro Audit - Bank Reconciliation Schemas
 
 Pydantic schemas for bank reconciliation API requests and responses.
 Includes Nigerian-specific features for EMTL, Stamp Duty, and bank charge detection.

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Vault Service
+Tekvwa Pro Audit - Audit Vault Service
 
 5-Year Digital Record Keeping for NTAA 2025 Compliance
 

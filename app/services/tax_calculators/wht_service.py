@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - WHT Calculator Service
+Tekvwa Pro Audit - WHT Calculator Service
 
 Withholding Tax (WHT) calculation service for Nigerian tax compliance.
 

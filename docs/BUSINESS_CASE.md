@@ -1,9 +1,9 @@
-# TekVwarho ProAudit - Business Case Document
+# Tekvwa Pro Audit - Business Case Document
 
 **Document Version:** 1.0  
 **Date:** January 3, 2026  
 **Classification:** Confidential - For Internal & Government Stakeholder Review  
-**Prepared By:** TekVwarho ProAudit Team
+**Prepared By:** Tekvwa Pro Audit Team
 
 ---
 
@@ -13,7 +13,7 @@
 
 Nigeria's 2026 Tax Reform represents the most significant overhaul of the country's fiscal policy in decades. With mandatory e-invoicing, progressive PAYE restructuring, and new compliance requirements, **over 40 million registered businesses** face an unprecedented challenge: adapt to complex new regulations or face penalties and audit risks.
 
-**TekVwarho ProAudit** is positioned to be Nigeria's leading tax compliance and business management platform, offering an integrated solution that transforms tax compliance from a burden into a competitive advantage.
+**Tekvwa Pro Audit** is positioned to be Nigeria's leading tax compliance and business management platform, offering an integrated solution that transforms tax compliance from a burden into a competitive advantage.
 
 ### Value Proposition
 
@@ -59,13 +59,13 @@ We enable Nigerian businesses to:
 
 ## 2. Solution Overview
 
-### 2.1 TekVwarho ProAudit Platform
+### 2.1 Tekvwa Pro Audit Platform
 
 A unified, cloud-based platform that integrates:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    TekVwarho ProAudit                           │
+│                    Tekvwa Pro Audit                           │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
 │  OPERATIONS     │  COMPLIANCE     │  INTELLIGENCE               │
 │  ─────────────  │  ─────────────  │  ─────────────────          │
@@ -79,7 +79,7 @@ A unified, cloud-based platform that integrates:
 
 ### 2.2 Competitive Advantages
 
-| Feature | TekVwarho ProAudit | QuickBooks | Sage | Local Alternatives |
+| Feature | Tekvwa Pro Audit | QuickBooks | Sage | Local Alternatives |
 |---------|-------------------|------------|------|-------------------|
 | NRS E-Invoicing | Native | No | No | Partial |
 | 2026 Tax Logic | Full | No | No | No |
@@ -173,7 +173,7 @@ One-click export of all financial data in TaxPro Max compatible format, enabling
 | **OCR Credits** | ₦100 per receipt scan beyond free tier | 70% |
 | **Premium Reports** | ₦25,000 per audit-ready annual report pack | 85% |
 | **API Access** | ₦500,000/year for integrators | 90% |
-| **Training & Certification** | ₦75,000 per "ProAudit Certified" course | 80% |
+| **Training & Certification** | ₦75,000 per "Pro Audit Certified" course | 80% |
 
 ### 4.2 Unit Economics
 
@@ -354,7 +354,7 @@ One-click export of all financial data in TaxPro Max compatible format, enabling
 
 ## 12. Conclusion
 
-TekVwarho ProAudit represents a timely, necessary, and highly scalable solution to Nigeria's tax compliance challenge. With the 2026 reforms creating urgent demand and our integrated platform offering clear value, we are positioned to:
+Tekvwa Pro Audit represents a timely, necessary, and highly scalable solution to Nigeria's tax compliance challenge. With the 2026 reforms creating urgent demand and our integrated platform offering clear value, we are positioned to:
 
 1. Capture significant market share in the underserved SME segment
 2. Become the default NRS-compliant business management solution

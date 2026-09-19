@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Demo Companies Seeder
+Tekvwa Pro Audit - Demo Companies Seeder
 
 Creates two complete demo companies:
 1. Okonkwo & Sons Trading (Core tier) - Benin City
@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 # Database connection
-DATABASE_URL = "postgresql+asyncpg://efeobukohwo:12345@localhost:5432/tekvwarho_proaudit"
+DATABASE_URL = "postgresql+asyncpg://efeobukohwo:12345@localhost:5432/tekvwa_pro_audit"
 
 # Password hashing (bcrypt)
 def hash_password(password: str) -> str:
@@ -761,7 +761,7 @@ async def create_company_data(session: AsyncSession, company_config: dict, staff
 async def main():
     """Main function to seed demo companies."""
     print("\n" + "="*70)
-    print("TekVwarho ProAudit - Demo Companies Seeder")
+    print("Tekvwa Pro Audit - Demo Companies Seeder")
     print("="*70)
     
     engine = create_async_engine(DATABASE_URL, echo=False)

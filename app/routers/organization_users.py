@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Organization Users Router
+Tekvwa Pro Audit - Organization Users Router
 
 API endpoints for managing users within an organization.
 

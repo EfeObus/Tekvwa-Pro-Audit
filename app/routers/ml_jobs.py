@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - ML Jobs Router
+Tekvwa Pro Audit - ML Jobs Router
 
 API endpoints for managing ML jobs and models.
 Super Admin only feature for platform ML operations.

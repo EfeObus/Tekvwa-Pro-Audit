@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Dashboard Schemas
+Tekvwa Pro Audit - Dashboard Schemas
 
 Pydantic schemas for world-class organizational dashboards.
 

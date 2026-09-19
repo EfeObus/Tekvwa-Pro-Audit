@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Consolidated Audit Router
+Tekvwa Pro Audit - Consolidated Audit Router
 
 This module provides a unified entry point for all audit-related API endpoints.
 It consolidates routes from:

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Business Entity Model
+Tekvwa Pro Audit - Business Entity Model
 
 Business entity model for multi-entity support within an organization.
 """

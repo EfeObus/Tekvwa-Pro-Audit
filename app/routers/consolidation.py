@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Multi-Entity Consolidation Router
+Tekvwa Pro Audit - Multi-Entity Consolidation Router
 
 API endpoints for consolidated financial statements and multi-entity management.
 Implements IFRS 10/11/28 consolidation requirements.

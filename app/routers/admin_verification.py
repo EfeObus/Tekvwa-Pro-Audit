@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin Organization Verification Router
+Tekvwa Pro Audit - Admin Organization Verification Router
 
 Super Admin endpoints for comprehensive organization verification workflow:
 - GET /admin/verifications - List organizations with filtering

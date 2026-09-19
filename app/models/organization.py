@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Organization Model
+Tekvwa Pro Audit - Organization Model
 
 Organization model for multi-tenancy support.
 

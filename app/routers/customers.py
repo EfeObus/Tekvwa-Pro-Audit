@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Customers Router
+Tekvwa Pro Audit - Customers Router
 
 API endpoints for customer management.
 """

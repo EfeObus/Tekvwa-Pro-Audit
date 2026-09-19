@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Integration Tests
+Tekvwa Pro Audit - Integration Tests
 
 Tests for end-to-end workflows including:
 - Invoice creation and NRS submission

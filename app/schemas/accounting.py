@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Accounting Schemas
+Tekvwa Pro Audit - Accounting Schemas
 
 Pydantic schemas for Chart of Accounts and General Ledger.
 """

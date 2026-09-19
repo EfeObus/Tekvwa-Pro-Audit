@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Report Template Models
+Tekvwa Pro Audit - Report Template Models
 
 Models for customizable report templates per tenant with:
 - Custom branding (logo, colors, fonts)

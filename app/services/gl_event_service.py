@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - GL Event Service
+Tekvwa Pro Audit - GL Event Service
 
 This service handles automatic GL posting when source documents are created/modified.
 It ensures proper double-entry accounting is maintained across all source systems.

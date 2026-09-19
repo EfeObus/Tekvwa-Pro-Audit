@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Invoice Model
+Tekvwa Pro Audit - Invoice Model
 
 Invoice model for sales invoices with NRS e-invoicing support.
 

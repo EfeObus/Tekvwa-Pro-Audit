@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Platform API Key Model
+Tekvwa Pro Audit - Platform API Key Model
 
 Model for managing platform-level API keys for government gateways (NRS, JTB)
 and external integrations. Only Super Admin can manage these keys.

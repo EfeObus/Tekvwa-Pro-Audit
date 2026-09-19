@@ -5,7 +5,7 @@ Revises: 2026_tax_reform
 Create Date: 2026-01-03 15:30:00.000000
 
 This migration implements Role-Based Access Control (RBAC) for:
-1. Platform Staff (Internal TekVwarho employees)
+1. Platform Staff (Internal Tekvwa employees)
    - Super Admin, Admin, IT/Developer, Customer Service, Marketing
 2. Organizations (External customers)
    - SME, Small Business, School, Non-Profit, Individual, Corporation
@@ -82,7 +82,7 @@ def upgrade() -> None:
             sa.Boolean(),
             nullable=False,
             server_default='false',
-            comment='True for internal TekVwarho employees'
+            comment='True for internal Tekvwa employees'
         )
     )
     

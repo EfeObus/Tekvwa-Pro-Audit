@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Security Policy
+# Tekvwa Pro Audit - Security Policy
 
 **Document Version:** 1.0  
 **Date:** January 3, 2026  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-Tekvwa IT Solutions LTD is committed to protecting the confidentiality, integrity, and availability of customer data within TekVwarho ProAudit. This Security Policy outlines our security principles, practices, and commitments.
+Tekvwa IT Solutions LTD is committed to protecting the confidentiality, integrity, and availability of customer data within Tekvwa Pro Audit. This Security Policy outlines our security principles, practices, and commitments.
 
 **Our Security Philosophy:** Security is not a feature—it is foundational to everything we build.
 
@@ -420,7 +420,7 @@ We commit to:
 
 **Security Team:** info@tekvwa.org  
 **Data Protection Officer:** info@tekvwa.org  
-**Emergency:** +234 XXX XXX XXXX (Enterprise customers)  
+**Emergency:** +234 90 6577 9323 (Enterprise customers)  
 
 ---
 

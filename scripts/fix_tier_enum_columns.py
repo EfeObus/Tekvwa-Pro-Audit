@@ -9,7 +9,7 @@ Solution: Convert these columns to VARCHAR like we did for transaction_type and 
 """
 import asyncio
 import sys
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 from sqlalchemy import text
 from app.database import async_session_maker

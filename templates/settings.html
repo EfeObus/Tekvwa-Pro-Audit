@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Settings - TekVwarho ProAudit{% endblock %}
+{% block title %}Settings - Tekvwa Pro Audit{% endblock %}
 
 {% block content %}
 <div x-data="settingsPage()" x-init="init()">
@@ -2638,7 +2638,7 @@ function settingsPage() {
         },
         
         downloadBackupCodes() {
-            const content = 'TekVwarho ProAudit - 2FA Backup Codes\n' +
+            const content = 'Tekvwa Pro Audit - 2FA Backup Codes\n' +
                           '=====================================\n\n' +
                           'Keep these codes safe. Each code can only be used once.\n\n' +
                           this.twoFactor.backupCodes.join('\n');
@@ -2647,7 +2647,7 @@ function settingsPage() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'tekvwarho-backup-codes.txt';
+            a.download = 'tekvwa-backup-codes.txt';
             a.click();
             URL.revokeObjectURL(url);
         },

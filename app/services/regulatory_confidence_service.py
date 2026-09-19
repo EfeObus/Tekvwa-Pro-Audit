@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Regulatory Confidence Scoring Service
+Tekvwa Pro Audit - Regulatory Confidence Scoring Service
 
 This module provides quantified compliance scoring with detailed reasons,
 enabling organizations to:

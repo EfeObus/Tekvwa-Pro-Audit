@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Forensic Audit Router
+Tekvwa Pro Audit - Forensic Audit Router
 
 World-Class Audit API Endpoints:
 1. Benford's Law Analysis
@@ -82,7 +82,7 @@ async def get_forensic_audit_info():
     Describes all available world-class audit features.
     """
     return {
-        "name": "TekVwarho ProAudit Forensic Audit Engine",
+        "name": "Tekvwa Pro Audit Forensic Audit Engine",
         "version": "1.0.0",
         "compliance_standards": ["NTAA 2025", "Nigerian Tax Reform 2026", "FIRS e-Invoicing"],
         "capabilities": {

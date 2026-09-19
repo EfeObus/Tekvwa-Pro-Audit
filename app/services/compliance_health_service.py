@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Compliance Health Service
+Tekvwa Pro Audit - Compliance Health Service
 
 Real-time compliance score calculation with automated threshold monitoring.
 Implements 2026 Nigeria Tax Reforms compliance checking.

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}TekVwarho ProAudit{% endblock %}</title>
+    <title>{% block title %}Tekvwa Pro Audit{% endblock %}</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -38,7 +38,7 @@
     {% if sku %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            TekVwarhoUpgrade.init('{{ sku.tier.value if sku.tier else "core" }}');
+            TekvwaUpgrade.init('{{ sku.tier.value if sku.tier else "core" }}');
         });
     </script>
     {% endif %}
@@ -153,7 +153,7 @@
         });
         
         // Log initialization
-        console.log('TekVwarho ProAudit initialized');
+        console.log('Tekvwa Pro Audit initialized');
     </script>
     
     {% block head %}{% endblock %}
@@ -166,9 +166,9 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center space-x-8">
                     <a href="/" class="flex-shrink-0 flex items-center space-x-2">
-                        <img src="/static/images/logo.jpg" alt="TekVwarho ProAudit" class="h-10 w-10 rounded-lg">
-                        <span class="text-xl font-bold text-green-600">TekVwarho</span>
-                        <span class="text-xl font-light text-gray-700">ProAudit</span>
+                        <img src="/static/images/logo.jpg" alt="Tekvwa Pro Audit" class="h-10 w-10 rounded-lg">
+                        <span class="text-xl font-bold text-green-600">Tekvwa</span>
+                        <span class="text-xl font-light text-gray-700">Pro Audit</span>
                     </a>
                     <!-- Main Navigation Links (shown when entity_id is set) -->
                     <div class="hidden md:flex items-center space-x-1" x-data="{ currentPath: window.location.pathname }">

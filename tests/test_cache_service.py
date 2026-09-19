@@ -1,9 +1,9 @@
 """
-TekVwarho ProAudit - Cache Service Tests
+Tekvwa Pro Audit - Cache Service Tests
 
 Tests for Redis-based caching service.
 
-Author: TekVwarho ProAudit Team
+Author: Tekvwa Pro Audit Team
 Date: January 2026
 """
 

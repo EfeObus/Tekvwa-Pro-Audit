@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Vendor Service
+Tekvwa Pro Audit - Vendor Service
 
 Business logic for vendor management with TIN verification.
 """

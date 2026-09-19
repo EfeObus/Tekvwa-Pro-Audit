@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Customer Schemas
+Tekvwa Pro Audit - Customer Schemas
 
 Pydantic schemas for customer management (for invoicing).
 """

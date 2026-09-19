@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Data Retention Policy
+# Tekvwa Pro Audit - Data Retention Policy
 
 > **Document Version:** 1.0  
 > **Effective Date:** January 24, 2026  
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This document describes the data retention policy for TekVwarho ProAudit billing and usage data. The policy ensures compliance with Nigerian data protection regulations (NDPR), tax authority requirements (FIRS), and accounting standards (FRCN) while managing database storage efficiently.
+This document describes the data retention policy for Tekvwa Pro Audit billing and usage data. The policy ensures compliance with Nigerian data protection regulations (NDPR), tax authority requirements (FIRS), and accounting standards (FRCN) while managing database storage efficiently.
 
 ---
 

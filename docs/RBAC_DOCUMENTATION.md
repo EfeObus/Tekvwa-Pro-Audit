@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Role-Based Access Control (RBAC) Documentation
+# Tekvwa Pro Audit - Role-Based Access Control (RBAC) Documentation
 
 **Document Version:** 2.2  
 **Last Updated:** January 27, 2026  
@@ -6,16 +6,16 @@
 
 ## Overview
 
-TekVwarho ProAudit implements a comprehensive two-tier RBAC system:
+Tekvwa Pro Audit implements a comprehensive two-tier RBAC system:
 
-1. **Platform Staff (Internal TekVwarho Employees)** - Manage the multi-tenant platform
+1. **Platform Staff (Internal Tekvwa Employees)** - Manage the multi-tenant platform
 2. **Organization Users (External Customers)** - Use the platform for their businesses
 
 ---
 
 ## 1. Platform Staff Roles
 
-Platform staff are internal TekVwarho employees who manage the platform. They are identified by `is_platform_staff = True` and do not belong to any organization (`organization_id = NULL`).
+Platform staff are internal Tekvwa employees who manage the platform. They are identified by `is_platform_staff = True` and do not belong to any organization (`organization_id = NULL`).
 
 ### Role Hierarchy
 
@@ -414,7 +414,7 @@ curl -X GET http://localhost:5120/api/v1/auth/me \
 
 ## 12. Dashboard System
 
-TekVwarho ProAudit provides role-specific dashboards for different user types.
+Tekvwa Pro Audit provides role-specific dashboards for different user types.
 
 ### Dashboard Routing
 
@@ -567,7 +567,7 @@ The dashboard system uses HTTP-only cookies for server-side authentication:
 
 ## 13. NTAA 2025 Compliance Features
 
-TekVwarho ProAudit implements critical Nigeria Tax Administration Act (NTAA) 2025 compliance features.
+Tekvwa Pro Audit implements critical Nigeria Tax Administration Act (NTAA) 2025 compliance features.
 
 ### 72-Hour Legal Lock (Invoice State Lock)
 

@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Commercial SKU Structure
+# Tekvwa Pro Audit - Commercial SKU Structure
 
 > **Document Version:** 1.3  
 > **Effective Date:** January 22, 2026  
@@ -9,7 +9,7 @@
 
 ## Overview
 
-TekVwarho ProAudit is offered in **four distinct product tiers** designed to serve different market segments in Nigeria while providing clear upgrade paths and predictable pricing for customers.
+Tekvwa Pro Audit is offered in **four distinct product tiers** designed to serve different market segments in Nigeria while providing clear upgrade paths and predictable pricing for customers.
 
 ---
 
@@ -56,7 +56,7 @@ TekVwarho ProAudit is offered in **four distinct product tiers** designed to ser
 
 ---
 
-## Tier 1: ProAudit Core
+## Tier 1: Pro Audit Core
 
 ### Pricing
 - **Monthly:** ₦25,000 - ₦75,000/month
@@ -133,7 +133,7 @@ TekVwarho ProAudit is offered in **four distinct product tiers** designed to ser
 
 ---
 
-## Tier 2: ProAudit Professional
+## Tier 2: Pro Audit Professional
 
 ### Pricing
 - **Monthly:** ₦150,000 - ₦400,000/month (based on user count)
@@ -241,7 +241,7 @@ TekVwarho ProAudit is offered in **four distinct product tiers** designed to ser
 
 ---
 
-## Tier 3: ProAudit Enterprise
+## Tier 3: Pro Audit Enterprise
 
 ### Pricing
 - **Monthly:** ₦1,000,000 - ₦5,000,000+/month
@@ -324,7 +324,7 @@ TekVwarho ProAudit is offered in **four distinct product tiers** designed to ser
 
 ---
 
-## Tier 4: ProAudit Intelligence (Add-On)
+## Tier 4: Pro Audit Intelligence (Add-On)
 
 ### Pricing
 - **Monthly:** ₦250,000 - ₦1,000,000/month
@@ -483,21 +483,21 @@ FEATURE_BEHAVIORAL_ANALYTICS
 
 ```
 ┌─────────────────┐
-│   ProAudit      │
+│   Pro Audit      │
 │     Core        │
 │ ₦25K-75K/mo     │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐     ┌─────────────────┐
-│   ProAudit      │────▶│   ProAudit      │
+│   Pro Audit      │────▶│   Pro Audit      │
 │  Professional   │     │  Intelligence   │
 │ ₦150K-400K/mo   │     │  (Add-on)       │
 └────────┬────────┘     │ ₦250K-1M/mo     │
          │              └─────────────────┘
          ▼                      ▲
 ┌─────────────────┐             │
-│   ProAudit      │─────────────┘
+│   Pro Audit      │─────────────┘
 │   Enterprise    │
 │ ₦1M-5M+/mo      │
 └─────────────────┘

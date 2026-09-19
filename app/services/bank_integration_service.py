@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Bank Integration Service
+Tekvwa Pro Audit - Bank Integration Service
 
 Service for integrating with Nigerian banking APIs:
 - Mono (https://mono.co) - Bank data aggregation

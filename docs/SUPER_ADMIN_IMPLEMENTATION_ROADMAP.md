@@ -979,5 +979,5 @@ PUT    /admin/tenants/{tenant_id}           - Update tenant
 
 ---
 
-*Document maintained by: TekVwarho ProAudit Team*  
+*Document maintained by: Tekvwa Pro Audit Team*  
 *Last Updated: January 27, 2026*

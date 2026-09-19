@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Platform Automation Router
+Tekvwa Pro Audit - Platform Automation Router
 
 Super Admin endpoints for managing workflow automation rules.
 Automates platform operations, notifications, and scheduled tasks.

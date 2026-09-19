@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Category Model
+Tekvwa Pro Audit - Category Model
 
 Category model for expense/income classification with WREN support.
 """

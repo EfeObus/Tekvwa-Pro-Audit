@@ -1,7 +1,7 @@
 # Commercial SKU Implementation Audit Report
 **Date:** January 29, 2026  
 **Auditor:** GitHub Copilot  
-**Application:** TekVwarho ProAudit
+**Application:** Tekvwa Pro Audit
 
 ---
 
@@ -19,7 +19,7 @@ The organization "Efe Obus Furniture Manufacturing LTD" is actually on the **ENT
 | Organization | Legacy Tier | Actual SKU Tier | Active | Intelligence Addon |
 |-------------|------------|-----------------|--------|-------------------|
 | Efe Obus Furniture Manufacturing LTD | ENTERPRISE | **enterprise** | ✓ | advanced |
-| TekVwarho Demo | ENTERPRISE | **core** | ✓ | none |
+| Tekvwa Demo | ENTERPRISE | **core** | ✓ | none |
 
 ---
 
@@ -148,7 +148,7 @@ Template already exists and displays an upgrade prompt when users try to access 
 
 ### Immediate Actions
 
-1. **Test with TekVwarho Demo organization** (actual CORE tier) to verify SKU enforcement works correctly now.
+1. **Test with Tekvwa Demo organization** (actual CORE tier) to verify SKU enforcement works correctly now.
 
 2. **Fix Settings page display bug** - The API returns correct tier but the frontend defaults to "Core" when null.
 
@@ -176,7 +176,7 @@ Template already exists and displays an upgrade prompt when users try to access 
 
 ### Test Procedure
 
-1. **Log in as a CORE tier user** (TekVwarho Demo organization)
+1. **Log in as a CORE tier user** (Tekvwa Demo organization)
 
 2. **Check menu visibility:**
    - Budget Management: Should be hidden

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Tests for 2026 Tax Reform Compliance Features
+Tekvwa Pro Audit - Tests for 2026 Tax Reform Compliance Features
 
 Tests for:
 - TIN Validation Service

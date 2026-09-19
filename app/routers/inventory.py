@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Inventory Router
+Tekvwa Pro Audit - Inventory Router
 
 API endpoints for inventory management, stock tracking, and write-offs.
 """

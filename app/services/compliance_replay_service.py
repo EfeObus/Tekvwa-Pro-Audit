@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Compliance Replay Engine (Audit Time Machine)
+Tekvwa Pro Audit - Compliance Replay Engine (Audit Time Machine)
 
 This module provides point-in-time reconstruction of tax calculations,
 enabling auditors to:

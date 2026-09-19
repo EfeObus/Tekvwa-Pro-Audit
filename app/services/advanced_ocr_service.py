@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced OCR Service
+Tekvwa Pro Audit - Advanced OCR Service
 
 Comprehensive OCR service with:
 - Azure Document Intelligence integration

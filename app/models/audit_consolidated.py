@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Unified Audit System Models
+Tekvwa Pro Audit - Unified Audit System Models
 
 This consolidated module provides ALL database models for the audit system:
 

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Platform API Keys Router
+Tekvwa Pro Audit - Platform API Keys Router
 
 Super Admin endpoints for managing platform API keys.
 Used for external integrations and partner access.

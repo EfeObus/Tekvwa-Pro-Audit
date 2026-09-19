@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Category Service
+Tekvwa Pro Audit - Category Service
 
 Business logic for category management with WREN classification.
 """

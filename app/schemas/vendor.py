@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Vendor Schemas
+Tekvwa Pro Audit - Vendor Schemas
 
 Pydantic schemas for vendor management with TIN verification.
 """

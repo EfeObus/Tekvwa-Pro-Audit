@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Minimum ETR & CGT Calculator (2026 Tax Reform)
+Tekvwa Pro Audit - Minimum ETR & CGT Calculator (2026 Tax Reform)
 
 Implements the 15% Minimum Effective Tax Rate (ETR) for large companies
 and Capital Gains Tax at CIT rate (30%) as per the 2026 Nigeria Tax Reform.

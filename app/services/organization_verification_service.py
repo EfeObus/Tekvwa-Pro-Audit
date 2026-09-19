@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Enhanced Organization Verification Service
+Tekvwa Pro Audit - Enhanced Organization Verification Service
 
 Provides comprehensive verification workflow for organizations:
 - List organizations by verification status

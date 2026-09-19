@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Legal Holds Router
+Tekvwa Pro Audit - Legal Holds Router
 
 API endpoints for managing legal holds.
 Super Admin only feature for compliance and data preservation.

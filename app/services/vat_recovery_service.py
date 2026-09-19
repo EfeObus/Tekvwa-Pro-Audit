@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - VAT Recovery Service (2026 Reform)
+Tekvwa Pro Audit - VAT Recovery Service (2026 Reform)
 
 Handles the Advanced Input VAT Recovery rules under the 2026 Act.
 

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Payroll Schemas
+Tekvwa Pro Audit - Payroll Schemas
 
 Pydantic schemas for payroll requests and responses.
 Nigerian compliance ready.

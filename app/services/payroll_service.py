@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Payroll Service
+Tekvwa Pro Audit - Payroll Service
 
 Comprehensive payroll calculation service with Nigerian compliance.
 
@@ -1697,7 +1697,7 @@ class PayrollService:
             ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=colors.grey, alignment=1)
         ))
         elements.append(Paragraph(
-            "TekVwarho ProAudit - Nigeria's Premier Tax Compliance Platform",
+            "Tekvwa Pro Audit - Nigeria's Premier Tax Compliance Platform",
             ParagraphStyle('Footer2', parent=styles['Normal'], fontSize=7, textColor=colors.grey, alignment=1)
         ))
         

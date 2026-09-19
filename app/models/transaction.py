@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transaction Model
+Tekvwa Pro Audit - Transaction Model
 
 Transaction model for recording income and expenses.
 

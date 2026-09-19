@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - GCP Deployment Reference
+# Tekvwa Pro Audit - GCP Deployment Reference
 
 **Status: live.** The app is fully deployed and serving traffic at
 `https://proaudit-web-966191721117.africa-south1.run.app` (health check returns
@@ -14,6 +14,16 @@ be reproduced, extended, or torn down deliberately.
 Project: `tekvwarho-proaudit` (org `tekvwa.org`, billing account `01C692-FEF20F-476F05`)
 Region: `africa-south1` (Johannesburg) - closest GCP region to Nigeria, lowest latency for users there.
 
+**Naming note:** the app was renamed to Tekvwa Pro Audit after this infrastructure was already
+provisioned. GCP project IDs are permanent and cannot be renamed, and renaming the Cloud Run
+services (`proaudit-web`/`proaudit-worker`/`proaudit-beat`/`proaudit-migrate`), the Cloud SQL
+*instance* ID (`proaudit-db`), the VPC/subnet/connector, or the service account would mean
+recreating each of them - including a new Cloud Run URL - purely for a cosmetic identifier match.
+Those names deliberately still say "proaudit" for that reason. What *did* get renamed to match the
+new name: the Cloud SQL *database* (`tekvwa_pro_audit`, a plain `ALTER DATABASE` rename) and the
+two GCS buckets (recreated under the new names, since GCS has no in-place rename and both were
+still empty).
+
 ---
 
 ## 1. What has been provisioned
@@ -28,8 +38,8 @@ Region: `africa-south1` (Johannesburg) - closest GCP region to Nigeria, lowest l
 | Cloud SQL | `proaudit-db` (Postgres 15, private IP only, `db-custom-2-8192`) | PITR + daily backups enabled, 14 backups retained |
 | Memorystore Redis | `proaudit-redis` (Basic tier, 1GB, Redis 7) | Used for cache + Celery broker/backend |
 | Artifact Registry | `proaudit-repo` (Docker, `africa-south1`) | Container image storage |
-| GCS bucket | `tekvwarho-proaudit-files` | Application file storage (versioned) |
-| GCS bucket | `tekvwarho-proaudit-db-backups` | For manual/ad-hoc DB dump storage (versioned) |
+| GCS bucket | `tekvwa-pro-audit-files` | Application file storage (versioned) |
+| GCS bucket | `tekvwa-pro-audit-db-backups` | For manual/ad-hoc DB dump storage (versioned) |
 | Service account | `proaudit-run-sa@tekvwarho-proaudit.iam.gserviceaccount.com` | Cloud Run runtime identity — `cloudsql.client`, `secretmanager.secretAccessor`, `storage.objectAdmin`, `redis.editor` |
 | Secret Manager secrets | see table below | |
 
@@ -85,7 +95,7 @@ cd /Users/efeobukohwo/Developer/TekVwarho-ProAudit
 ./deploy/gcp/bootstrap.sh
 ```
 
-This creates the `proaudit_app` DB user + `tekvwarho_proaudit` database on Cloud SQL, resolves the
+This creates the `proaudit_app` DB user + `tekvwa_pro_audit` database on Cloud SQL, resolves the
 Cloud SQL/Redis private IPs, stores the derived connection strings in Secret Manager, runs
 `alembic upgrade head` via a Cloud Run Job (`proaudit-migrate`) to build the schema, then deploys:
 

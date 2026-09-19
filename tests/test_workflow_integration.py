@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Comprehensive Workflow Integration Tests
+Tekvwa Pro Audit - Comprehensive Workflow Integration Tests
 
 End-to-end workflow tests covering:
 - Invoice to payment with FX

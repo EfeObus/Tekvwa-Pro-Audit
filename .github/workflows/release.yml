@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Release Workflow
+# Tekvwa Pro Audit - Release Workflow
 # Creates releases with changelog and Docker images
 # =============================================
 
@@ -85,7 +85,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body: |
-            ## TekVwarho ProAudit v${{ steps.version.outputs.VERSION }}
+            ## Tekvwa Pro Audit v${{ steps.version.outputs.VERSION }}
             
             ### 🐳 Docker Image
             ```bash

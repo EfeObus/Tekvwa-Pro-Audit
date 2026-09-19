@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Dashboard Service
+Tekvwa Pro Audit - Dashboard Service
 
 Provides dashboard data for different user types:
 1. Platform Staff Dashboards (Super Admin, Admin, IT, CSR, Marketing)

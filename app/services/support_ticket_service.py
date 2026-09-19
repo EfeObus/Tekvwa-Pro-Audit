@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Support Ticket Service
+Tekvwa Pro Audit - Support Ticket Service
 
 Service layer for managing support tickets.
 Available to customer service and super admin roles.

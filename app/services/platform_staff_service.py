@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Platform Staff Management Service
+Tekvwa Pro Audit - Platform Staff Management Service
 
 Service for Super Admin to create, manage, and configure platform staff accounts.
 

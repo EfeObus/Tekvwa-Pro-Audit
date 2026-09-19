@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Execution Service
+Tekvwa Pro Audit - Audit Execution Service
 
 Comprehensive audit execution service that:
 1. Connects to all data sources (accounting, payroll, inventory, transactions, etc.)

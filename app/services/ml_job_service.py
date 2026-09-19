@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - ML Job Service
+Tekvwa Pro Audit - ML Job Service
 
 Service layer for managing ML jobs and models.
 Super Admin only feature for platform ML operations.

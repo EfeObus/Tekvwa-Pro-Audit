@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - WebSocket Router
+Tekvwa Pro Audit - WebSocket Router
 
 Real-time notification endpoints via WebSocket.
 

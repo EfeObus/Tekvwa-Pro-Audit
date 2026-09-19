@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Category Schemas
+Tekvwa Pro Audit - Category Schemas
 
 Pydantic schemas for category management with WREN classification.
 """

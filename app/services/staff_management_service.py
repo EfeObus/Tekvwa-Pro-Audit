@@ -1,7 +1,7 @@
 """
-TekVwarho ProAudit - Staff Management Service
+Tekvwa Pro Audit - Staff Management Service
 
-Service for managing platform staff (internal TekVwarho employees).
+Service for managing platform staff (internal Tekvwa employees).
 Handles onboarding, deactivation, and role management.
 """
 
@@ -493,14 +493,14 @@ class StaffManagementService:
     # PLATFORM TEST ENTITY FOR STAFF
     # ===========================================
     
-    PLATFORM_ORG_SLUG = "tekvwarho-demo"
-    PLATFORM_ENTITY_NAME = "TekVwarho Demo Business"
+    PLATFORM_ORG_SLUG = "tekvwa-demo"
+    PLATFORM_ENTITY_NAME = "Tekvwa Demo Business"
     
     async def get_or_create_platform_test_entity(self) -> "BusinessEntity":
         """
         Get or create the platform test organization and entity for staff testing.
         
-        This creates a verified "TekVwarho Demo" organization with a test business
+        This creates a verified "Tekvwa Demo" organization with a test business
         entity that platform staff can use to test all app features without needing
         to create their own business.
         
@@ -521,7 +521,7 @@ class StaffManagementService:
         if not demo_org:
             # Create demo organization
             demo_org = Organization(
-                name="TekVwarho Demo",
+                name="Tekvwa Demo",
                 slug=self.PLATFORM_ORG_SLUG,
                 organization_type=OrganizationType.SME,
                 email="info@tekvwa.org",

@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Terms and Conditions
+# Tekvwa Pro Audit - Terms and Conditions
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -8,7 +8,7 @@
 
 ## IMPORTANT NOTICE
 
-PLEASE READ THESE TERMS AND CONDITIONS CAREFULLY BEFORE USING TEKVWARHO PROAUDIT. BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT AGREE TO ALL THE TERMS AND CONDITIONS, DO NOT USE THE SERVICE.
+PLEASE READ THESE TERMS AND CONDITIONS CAREFULLY BEFORE USING TEKVWA PRO AUDIT. BY ACCESSING OR USING THE SERVICE, YOU AGREE TO BE BOUND BY THESE TERMS. IF YOU DO NOT AGREE TO ALL THE TERMS AND CONDITIONS, DO NOT USE THE SERVICE.
 
 ---
 
@@ -26,7 +26,7 @@ These Terms and Conditions ("Terms") constitute a legally binding agreement betw
 
 ### 1.2 Acceptance
 
-By creating an account, accessing, or using TekVwarho ProAudit (the "Service"), you:
+By creating an account, accessing, or using Tekvwa Pro Audit (the "Service"), you:
 - Confirm you have read and understood these Terms
 - Agree to be legally bound by these Terms
 - Represent that you have the authority to enter into this agreement
@@ -54,7 +54,7 @@ Continued use after modifications constitutes acceptance of the revised Terms.
 | **Intellectual Property** | Patents, trademarks, copyrights, trade secrets, and related rights |
 | **NRS** | Nigeria Revenue Service |
 | **Personal Data** | Information relating to an identified or identifiable person |
-| **Service** | The TekVwarho ProAudit platform, including all features and functionalities |
+| **Service** | The Tekvwa Pro Audit platform, including all features and functionalities |
 | **Subscription** | A paid plan providing access to Service features |
 | **User Data** | All data you input, upload, or generate using the Service |
 
@@ -64,7 +64,7 @@ Continued use after modifications constitutes acceptance of the revised Terms.
 
 ### 3.1 Service Overview
 
-TekVwarho ProAudit is a cloud-based tax compliance and business management platform designed for Nigerian businesses. The Service includes:
+Tekvwa Pro Audit is a cloud-based tax compliance and business management platform designed for Nigerian businesses. The Service includes:
 
 - **E-Invoicing:** NRS-compliant invoice generation with IRN and QR codes
 - **Tax Compliance:** VAT, PAYE, WHT, and CIT calculation and tracking
@@ -207,7 +207,7 @@ While we provide compliance tools, you remain responsible for:
 - Payment of taxes owed
 - Compliance with all applicable tax laws
 
-**DISCLAIMER:** TekVwarho ProAudit is a compliance tool, not a replacement for professional tax advice. Consult qualified tax professionals for complex matters.
+**DISCLAIMER:** Tekvwa Pro Audit is a compliance tool, not a replacement for professional tax advice. Consult qualified tax professionals for complex matters.
 
 ---
 
@@ -328,7 +328,7 @@ THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIN
 
 ### 11.2 No Tax Advice
 
-**IMPORTANT:** TekVwarho ProAudit is a software tool, not a licensed tax advisor. We do NOT provide:
+**IMPORTANT:** Tekvwa Pro Audit is a software tool, not a licensed tax advisor. We do NOT provide:
 - Tax advice or tax planning services
 - Legal advice
 - Accounting advice
@@ -550,7 +550,7 @@ Lagos, Nigeria
 
 ## 19. Acknowledgment
 
-BY USING TEKVWARHO PROAUDIT, YOU ACKNOWLEDGE THAT YOU HAVE READ THESE TERMS AND CONDITIONS, UNDERSTAND THEM, AND AGREE TO BE BOUND BY THEM.
+BY USING TEKVWA PRO AUDIT, YOU ACKNOWLEDGE THAT YOU HAVE READ THESE TERMS AND CONDITIONS, UNDERSTAND THEM, AND AGREE TO BE BOUND BY THEM.
 
 ---
 

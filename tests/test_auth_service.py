@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Auth Service Tests
+Tekvwa Pro Audit - Auth Service Tests
 
 Unit tests for authentication service.
 """

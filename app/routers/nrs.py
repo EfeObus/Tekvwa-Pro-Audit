@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - NRS (Nigeria Revenue Service) Router
+Tekvwa Pro Audit - NRS (Nigeria Revenue Service) Router
 
 API endpoints for NRS Invoice Reporting System integration.
 Provides:

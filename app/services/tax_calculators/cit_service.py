@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - CIT Calculator Service
+Tekvwa Pro Audit - CIT Calculator Service
 
 Company Income Tax (CIT) calculation service for Nigerian tax compliance.
 

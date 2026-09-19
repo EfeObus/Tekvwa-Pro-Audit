@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transaction Schemas
+Tekvwa Pro Audit - Transaction Schemas
 
 Pydantic schemas for transaction (expense/income) recording.
 """

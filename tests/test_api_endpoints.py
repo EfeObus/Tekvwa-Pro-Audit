@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-API Endpoint Test Suite for TekVwarho ProAudit
+API Endpoint Test Suite for Tekvwa Pro Audit
 Tests actual HTTP endpoints for all 5 features.
 """
 
@@ -246,7 +246,7 @@ def main():
     """Run all endpoint tests"""
     print("\n" + "=" * 60)
     print("API ENDPOINT TEST SUITE")
-    print("TekVwarho ProAudit - 5 Accounting Features")
+    print("Tekvwa Pro Audit - 5 Accounting Features")
     print("=" * 60)
     print(f"Testing against: {BASE_URL}")
     

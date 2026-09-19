@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SKU Context Middleware
+Tekvwa Pro Audit - SKU Context Middleware
 
 Middleware to inject SKU tier context into request state.
 This allows templates and API responses to access tier information.

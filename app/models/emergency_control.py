@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Emergency Control Models
+Tekvwa Pro Audit - Emergency Control Models
 
 Models for platform emergency controls including:
 - Kill switches (platform-wide and feature-specific)

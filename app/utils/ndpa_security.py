@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - NDPA Security Module
+Tekvwa Pro Audit - NDPA Security Module
 
 Nigeria Data Protection Act (2023/2026) Compliant Security Features
 

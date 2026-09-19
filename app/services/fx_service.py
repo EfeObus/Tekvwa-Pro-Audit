@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Foreign Exchange (FX) Service
+Tekvwa Pro Audit - Foreign Exchange (FX) Service
 
 Comprehensive multi-currency support including:
 - Exchange rate management with Redis caching
@@ -8,7 +8,7 @@ Comprehensive multi-currency support including:
 - FX exposure reporting
 - IAS 21 compliance for Nigerian businesses
 
-Author: TekVwarho ProAudit Team
+Author: Tekvwa Pro Audit Team
 Date: January 2026
 """
 

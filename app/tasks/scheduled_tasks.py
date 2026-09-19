@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Background Tasks
+Tekvwa Pro Audit - Background Tasks
 
 Celery-compatible background task definitions.
 For production, use Celery with Redis/RabbitMQ.

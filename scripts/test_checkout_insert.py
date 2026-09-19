@@ -1,7 +1,7 @@
 """Test that payment_transactions insert works correctly."""
 import asyncio
 import sys
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 from app.database import async_session_maker
 from sqlalchemy import text

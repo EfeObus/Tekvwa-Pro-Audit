@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Notification Model
+Tekvwa Pro Audit - Notification Model
 
 Model for storing user notifications.
 

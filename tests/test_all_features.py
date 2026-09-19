@@ -15,7 +15,7 @@ from decimal import Decimal
 from uuid import uuid4
 
 # Add parent directory to path
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 
 def test_imports():
@@ -422,7 +422,7 @@ def main():
     """Run all tests"""
     print("\n" + "=" * 60)
     print("COMPREHENSIVE FEATURE TEST SUITE")
-    print("TekVwarho ProAudit - 5 Accounting Features")
+    print("Tekvwa Pro Audit - 5 Accounting Features")
     print("=" * 60 + "\n")
     
     all_passed = True

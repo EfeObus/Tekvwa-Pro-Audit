@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - API Integration Tests
+Tekvwa Pro Audit - API Integration Tests
 
 Integration tests for REST API endpoints.
 """

@@ -1,11 +1,11 @@
 """
-TekVwarho ProAudit - SKU (Stock Keeping Unit) Models
+Tekvwa Pro Audit - SKU (Stock Keeping Unit) Models
 
 Commercial product tier definitions for:
-- ProAudit Core (SME)
-- ProAudit Professional (Mid-Market)
-- ProAudit Enterprise (Large Organizations)
-- ProAudit Intelligence (Add-on for ML/AI features)
+- Pro Audit Core (SME)
+- Pro Audit Professional (Mid-Market)
+- Pro Audit Enterprise (Large Organizations)
+- Pro Audit Intelligence (Add-on for ML/AI features)
 
 Nigerian Market Pricing (Naira)
 """
@@ -510,7 +510,7 @@ class PaymentTransaction(BaseModel):
         nullable=False,
         unique=True,
         index=True,
-        comment="TekVwarho payment reference (TVP-XXXXX)"
+        comment="Tekvwa payment reference (TVP-XXXXX)"
     )
     paystack_reference: Mapped[Optional[str]] = mapped_column(
         String(100),

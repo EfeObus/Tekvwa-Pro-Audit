@@ -1,11 +1,11 @@
-# TekVwarho ProAudit - System Architecture Documentation
+# Tekvwa Pro Audit - System Architecture Documentation
 
 > **Document Version:** 1.2  
 > **Last Updated:** January 27, 2026
 
 ## Overview
 
-TekVwarho ProAudit is a **world-class Nigerian tax compliance and business management platform** built for the 2026 Tax Reform Era. It implements NTAA 2025 (Nigerian Tax Administration Act) compliance standards and integrates with FIRS (Federal Inland Revenue Service) systems.
+Tekvwa Pro Audit is a **world-class Nigerian tax compliance and business management platform** built for the 2026 Tax Reform Era. It implements NTAA 2025 (Nigerian Tax Administration Act) compliance standards and integrates with FIRS (Federal Inland Revenue Service) systems.
 
 ---
 
@@ -56,7 +56,7 @@ TekVwarho ProAudit is a **world-class Nigerian tax compliance and business manag
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        TekVwarho ProAudit Platform                           │
+│                        Tekvwa Pro Audit Platform                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                   │
@@ -447,7 +447,7 @@ The Budget Management module connects variance analysis to actuals:
 ## File Structure
 
 ```
-TekVwarho ProAudit/
+Tekvwa-Pro-Audit/
 ├── main.py                 # FastAPI application entry
 ├── app/
 │   ├── config.py          # Environment configuration
@@ -575,4 +575,4 @@ The reports router (`/api/v1/entities/{id}/reports/`) handles:
 
 ---
 
-*This documentation provides a comprehensive overview of the TekVwarho ProAudit system architecture, showing how all components connect and interact to deliver a world-class Nigerian tax compliance platform.*
+*This documentation provides a comprehensive overview of the Tekvwa Pro Audit system architecture, showing how all components connect and interact to deliver a world-class Nigerian tax compliance platform.*

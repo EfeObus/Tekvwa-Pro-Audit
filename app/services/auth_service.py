@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Authentication Service
+Tekvwa Pro Audit - Authentication Service
 
 Business logic for user authentication and registration.
 """

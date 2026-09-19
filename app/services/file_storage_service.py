@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - File Storage Service
+Tekvwa Pro Audit - File Storage Service
 
 File storage service for document management.
 

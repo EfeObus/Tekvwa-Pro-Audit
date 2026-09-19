@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Trail Router
+Tekvwa Pro Audit - Audit Trail Router
 
 API endpoints for audit logs, compliance tracking, and Audit Vault.
 
@@ -220,7 +220,7 @@ async def get_vault_info(entity_id: uuid.UUID):
     Returns information about NTAA 2025 compliant record keeping features.
     """
     return {
-        "name": "TekVwarho ProAudit Audit Vault",
+        "name": "Tekvwa Pro Audit Audit Vault",
         "version": "1.0.0",
         "compliance_standard": "NTAA 2025",
         "features": [

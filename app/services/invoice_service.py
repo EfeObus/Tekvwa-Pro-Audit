@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Invoice Service
+Tekvwa Pro Audit - Invoice Service
 
 Business logic for invoice management with NRS e-invoicing support.
 Includes full GL integration for double-entry accounting.

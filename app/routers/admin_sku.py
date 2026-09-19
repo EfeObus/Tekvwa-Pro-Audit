@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin SKU Management Router
+Tekvwa Pro Audit - Admin SKU Management Router
 
 Platform staff endpoints for managing tenant SKUs.
 Only accessible to SUPER_ADMIN and ADMIN platform roles.

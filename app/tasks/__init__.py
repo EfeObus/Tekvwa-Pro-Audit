@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Background Tasks Package
+Tekvwa Pro Audit - Background Tasks Package
 
 Celery background tasks.
 """

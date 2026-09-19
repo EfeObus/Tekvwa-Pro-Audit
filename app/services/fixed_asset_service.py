@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Fixed Asset Register Service
+Tekvwa Pro Audit - Fixed Asset Register Service
 
 Business logic for fixed asset management, depreciation, and capital gains.
 

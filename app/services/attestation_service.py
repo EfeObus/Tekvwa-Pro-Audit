@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Third-Party Attestation Service
+Tekvwa Pro Audit - Third-Party Attestation Service
 
 This module provides audit attestation workflows for:
 - External auditor read-only access management
@@ -260,7 +260,7 @@ class ThirdPartyAttestationService:
     - Complete audit trail
     """
     
-    def __init__(self, secret_key: str = "tekvwarho-proaudit-2026"):
+    def __init__(self, secret_key: str = "tekvwa-pro-audit-2026"):
         self.secret_key = secret_key
         self._workflows: Dict[str, AttestationWorkflow] = {}
         self._access_grants: Dict[str, AuditorAccessGrant] = {}
@@ -689,5 +689,5 @@ class ThirdPartyAttestationService:
                 "text": workflow.audit_opinion_text,
             },
             "certificate_hash": certificate_hash,
-            "verification_url": f"https://proaudit.tekvwarho.ng/verify/{certificate_hash[:16]}",
+            "verification_url": f"https://proaudit.tekvwa.org/verify/{certificate_hash[:16]}",
         }

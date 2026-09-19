@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Dashboard API Router
+Tekvwa Pro Audit - Dashboard API Router
 
 World-class organizational dashboards with NTAA 2025 compliance.
 

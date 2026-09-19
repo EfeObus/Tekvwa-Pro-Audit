@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Vendors Router
+Tekvwa Pro Audit - Vendors Router
 
 API endpoints for vendor management with TIN verification.
 """

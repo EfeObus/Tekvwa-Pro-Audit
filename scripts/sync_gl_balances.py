@@ -6,7 +6,7 @@ the corresponding GL account current_balance values.
 from sqlalchemy import create_engine, text
 
 # Direct database connection
-engine = create_engine('postgresql://localhost:5432/tekvwarho_proaudit')
+engine = create_engine('postgresql://localhost:5432/tekvwa_pro_audit')
 
 def sync_gl_balances():
     with engine.connect() as conn:

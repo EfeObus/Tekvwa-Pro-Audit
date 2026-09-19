@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Budget Management Router
+Tekvwa Pro Audit - Budget Management Router
 
 API endpoints for budget planning, monitoring, and variance analysis.
 

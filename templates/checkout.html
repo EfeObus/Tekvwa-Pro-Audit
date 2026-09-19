@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Checkout - TekVwarho ProAudit{% endblock %}
+{% block title %}Checkout - Tekvwa Pro Audit{% endblock %}
 
 {% block head %}
 <style>
@@ -759,7 +759,7 @@ function checkoutPage() {
         getTierName() {
             const tier = this.pricingData[this.selectedTier];
             if (tier) {
-                return tier.name.replace('ProAudit ', '');
+                return tier.name.replace('Pro Audit ', '');
             }
             const names = {
                 'core': 'Core',

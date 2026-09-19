@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Trail Service
+Tekvwa Pro Audit - Audit Trail Service
 
 Comprehensive audit logging for compliance.
 """

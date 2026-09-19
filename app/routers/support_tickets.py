@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Support Tickets Router
+Tekvwa Pro Audit - Support Tickets Router
 
 API endpoints for managing support tickets.
 Available to customer service and super admin roles.

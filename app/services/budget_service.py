@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Budget Management Service
+Tekvwa Pro Audit - Budget Management Service
 
 Comprehensive service for budget planning, monitoring, and variance analysis.
 Includes:

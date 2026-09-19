@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Nigeria 2026 Tax Compliance Requirements
+# Tekvwa Pro Audit - Nigeria 2026 Tax Compliance Requirements
 
 **Document Version:** 2.1  
 **Date:** January 6, 2026  
@@ -28,7 +28,7 @@
 
 ## Executive Summary
 
-This document outlines the key compliance requirements from Nigeria's 2026 Tax Reform that TekVwarho ProAudit must implement. The reforms represent significant changes to Corporate Income Tax, Value Added Tax, Personal Income Tax (PAYE), Withholding Tax, and introduce mandatory e-invoicing.
+This document outlines the key compliance requirements from Nigeria's 2026 Tax Reform that Tekvwa Pro Audit must implement. The reforms represent significant changes to Corporate Income Tax, Value Added Tax, Personal Income Tax (PAYE), Withholding Tax, and introduce mandatory e-invoicing.
 
 ---
 
@@ -438,7 +438,7 @@ When WHT is deducted, the payer must issue a WHT credit note containing:
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  1. CREATE INVOICE                                              │
-│     └─► Business creates invoice in TekVwarho                   │
+│     └─► Business creates invoice in Tekvwa                   │
 │                                                                 │
 │  2. VALIDATE & SIGN                                             │
 │     └─► System validates all required fields                    │

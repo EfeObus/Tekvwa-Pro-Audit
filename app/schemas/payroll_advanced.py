@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Payroll Schemas
+Tekvwa Pro Audit - Advanced Payroll Schemas
 
 Pydantic schemas for world-class payroll features:
 - Compliance Status Engine

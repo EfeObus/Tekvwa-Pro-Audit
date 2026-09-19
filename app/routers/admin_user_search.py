@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin User Search API Router
+Tekvwa Pro Audit - Admin User Search API Router
 
 Cross-tenant user search endpoints for Super Admin functionality.
 All endpoints require Super Admin authentication.

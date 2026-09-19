@@ -13,7 +13,7 @@ def main():
     # Login
     login_resp = requests.post(f"{BASE_URL}/auth/login", json={
         "email": "info@tekvwa.org",
-        "password": "SuperAdmin@TekVwarho2026!"
+        "password": "SuperAdmin@Tekvwa2026!"
     })
     token = login_resp.json()["tokens"]["access_token"]
     headers = {"Authorization": f"Bearer {token}"}

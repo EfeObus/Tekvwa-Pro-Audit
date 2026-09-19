@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Upsell Router
+Tekvwa Pro Audit - Upsell Router
 
 API endpoints for managing upsell opportunities.
 Super Admin only feature for revenue expansion tracking.

@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "tekvwarho-proaudit-admin-api",
-    "name": "TekVwarho ProAudit - Super Admin Dashboard API",
-    "description": "Complete API collection for the TekVwarho ProAudit Super Admin Dashboard. Includes all 50+ endpoints for platform management, security, tenant administration, and system monitoring.\n\n## Authentication\nAll endpoints require Super Admin authentication via JWT Bearer token or HTTP-only cookie.\n\n## Base URL\n- Development: `http://localhost:5120`\n- Production: `https://api.tekvwarho.com`\n\n## Super Admin Credentials (Dev)\n- Email: `info@tekvwa.org`\n- Password: `SuperAdmin@TekVwarho2026!`",
+    "_postman_id": "tekvwa-pro-audit-admin-api",
+    "name": "Tekvwa Pro Audit - Super Admin Dashboard API",
+    "description": "Complete API collection for the Tekvwa Pro Audit Super Admin Dashboard. Includes all 50+ endpoints for platform management, security, tenant administration, and system monitoring.\n\n## Authentication\nAll endpoints require Super Admin authentication via JWT Bearer token or HTTP-only cookie.\n\n## Base URL\n- Development: `http://localhost:5120`\n- Production: `https://api.tekvwa.com`\n\n## Super Admin Credentials (Dev)\n- Email: `info@tekvwa.org`\n- Password: `SuperAdmin@Tekvwa2026!`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"
   },
@@ -89,7 +89,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"info@tekvwa.org\",\n    \"password\": \"SuperAdmin@TekVwarho2026!\"\n}"
+              "raw": "{\n    \"email\": \"info@tekvwa.org\",\n    \"password\": \"SuperAdmin@Tekvwa2026!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/login",
@@ -364,7 +364,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"platform_name\": \"TekVwarho ProAudit\",\n    \"support_email\": \"info@tekvwa.org\",\n    \"default_currency\": \"NGN\",\n    \"default_timezone\": \"Africa/Lagos\",\n    \"maintenance_mode\": false\n}"
+              "raw": "{\n    \"platform_name\": \"Tekvwa Pro Audit\",\n    \"support_email\": \"info@tekvwa.org\",\n    \"default_currency\": \"NGN\",\n    \"default_timezone\": \"Africa/Lagos\",\n    \"maintenance_mode\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings/general",
@@ -510,7 +510,7 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email_enabled\": true,\n    \"smtp_host\": \"smtp.mailgun.org\",\n    \"smtp_port\": 587,\n    \"smtp_user\": \"info@tekvwa.org\",\n    \"smtp_password\": \"your-smtp-password\",\n    \"from_email\": \"info@tekvwa.org\",\n    \"from_name\": \"TekVwarho ProAudit\"\n}"
+              "raw": "{\n    \"email_enabled\": true,\n    \"smtp_host\": \"smtp.mailgun.org\",\n    \"smtp_port\": 587,\n    \"smtp_user\": \"info@tekvwa.org\",\n    \"smtp_password\": \"your-smtp-password\",\n    \"from_email\": \"info@tekvwa.org\",\n    \"from_name\": \"Tekvwa Pro Audit\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/admin/settings/notifications",

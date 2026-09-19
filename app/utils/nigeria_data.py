@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Nigeria States and LGAs Data
+Tekvwa Pro Audit - Nigeria States and LGAs Data
 
 Authoritative data for all 36 Nigerian states plus FCT,
 and their respective Local Government Areas (LGAs).

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Views Router
+Tekvwa Pro Audit - Views Router
 
 Server-side rendered pages using Jinja2 templates.
 Authentication is persistent across all pages via HTTP-only cookies.

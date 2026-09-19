@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - FastAPI Application Entry Point
+Tekvwa Pro Audit - FastAPI Application Entry Point
 
 This is the main entry point for the FastAPI application.
 """
@@ -825,7 +825,7 @@ app.include_router(admin_emergency.router, prefix="/api/v1", tags=["Admin - Emer
 # Admin User Search (Cross-Tenant User Discovery)
 app.include_router(admin_user_search.router, prefix="/api/v1", tags=["Admin - User Search"])
 
-# Admin Platform Staff Management (Internal TekVwarho Staff)
+# Admin Platform Staff Management (Internal Tekvwa Staff)
 app.include_router(admin_platform_staff.router, prefix="/api/v1", tags=["Admin - Platform Staff"])
 
 # Admin Organization Verification (CAC/TIN Document Review)

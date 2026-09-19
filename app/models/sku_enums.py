@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SKU Enums
+Tekvwa Pro Audit - SKU Enums
 
 Re-exports SKU enums from app.config.sku_config for use in models.
 The enums are defined in sku_config to avoid circular imports.
@@ -19,7 +19,7 @@ from enum import Enum
 
 class SKUTier(str, Enum):
     """
-    Commercial SKU tiers for TekVwarho ProAudit.
+    Commercial SKU tiers for Tekvwa Pro Audit.
     
     Pricing in Nigerian Naira (₦):
     - CORE: ₦25,000 - ₦75,000/month

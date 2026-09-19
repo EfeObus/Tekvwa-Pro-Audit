@@ -1,5 +1,5 @@
 """
-Advanced Accounting Models for TekVwarho ProAudit
+Advanced Accounting Models for Tekvwa Pro Audit
 Implements: Dimensional Accounting, 3-Way Matching, WHT Vault, Budget Management
 
 Nigerian Tax Reform 2026 Compliant

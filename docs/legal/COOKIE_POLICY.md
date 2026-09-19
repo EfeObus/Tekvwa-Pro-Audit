@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Cookie Policy
+# Tekvwa Pro Audit - Cookie Policy
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -8,7 +8,7 @@
 
 ## 1. Introduction
 
-This Cookie Policy explains how Tekvwa IT Solutions LTD ("we," "us," or "our") uses cookies and similar tracking technologies when you use TekVwarho ProAudit (the "Service"). This policy should be read in conjunction with our [Privacy Policy](PRIVACY_POLICY.md) and [Terms and Conditions](TERMS_AND_CONDITIONS.md).
+This Cookie Policy explains how Tekvwa IT Solutions LTD ("we," "us," or "our") uses cookies and similar tracking technologies when you use Tekvwa Pro Audit (the "Service"). This policy should be read in conjunction with our [Privacy Policy](PRIVACY_POLICY.md) and [Terms and Conditions](TERMS_AND_CONDITIONS.md).
 
 By using our Service, you consent to the use of cookies as described in this policy. You can manage your cookie preferences as explained in Section 6.
 
@@ -43,11 +43,11 @@ These cookies are required for the Service to function properly. They cannot be 
 
 | Cookie Name | Purpose | Duration | Provider |
 |-------------|---------|----------|----------|
-| `session_id` | Maintains your login session | Session | TekVwarho |
-| `csrf_token` | Prevents cross-site request forgery attacks | Session | TekVwarho |
-| `entity_context` | Remembers which business entity you're working in | Session | TekVwarho |
-| `auth_token` | Authentication token for API requests | 24 hours | TekVwarho |
-| `cookie_consent` | Stores your cookie preferences | 1 year | TekVwarho |
+| `session_id` | Maintains your login session | Session | Tekvwa |
+| `csrf_token` | Prevents cross-site request forgery attacks | Session | Tekvwa |
+| `entity_context` | Remembers which business entity you're working in | Session | Tekvwa |
+| `auth_token` | Authentication token for API requests | 24 hours | Tekvwa |
+| `cookie_consent` | Stores your cookie preferences | 1 year | Tekvwa |
 
 **Legal Basis:** Legitimate interest - these are necessary for the Service to operate.
 
@@ -57,10 +57,10 @@ These cookies enhance your experience by remembering your preferences.
 
 | Cookie Name | Purpose | Duration | Provider |
 |-------------|---------|----------|----------|
-| `user_preferences` | Remembers UI settings (language, theme) | 1 year | TekVwarho |
-| `dashboard_layout` | Saves your dashboard customizations | 1 year | TekVwarho |
-| `recent_entities` | Quick access to recently used entities | 30 days | TekVwarho |
-| `table_settings` | Remembers column preferences in data tables | 1 year | TekVwarho |
+| `user_preferences` | Remembers UI settings (language, theme) | 1 year | Tekvwa |
+| `dashboard_layout` | Saves your dashboard customizations | 1 year | Tekvwa |
+| `recent_entities` | Quick access to recently used entities | 30 days | Tekvwa |
+| `table_settings` | Remembers column preferences in data tables | 1 year | Tekvwa |
 
 **Legal Basis:** Consent - you can disable these without affecting core functionality.
 
@@ -149,7 +149,7 @@ When you first visit our Service, you will see a cookie consent banner allowing 
 You can change your cookie preferences at any time by:
 
 **Option 1: In-App Settings**
-1. Log into TekVwarho ProAudit
+1. Log into Tekvwa Pro Audit
 2. Navigate to Settings → Privacy
 3. Adjust cookie preferences
 4. Click "Save Changes"

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Middleware Package
+Tekvwa Pro Audit - Middleware Package
 
 Security and utility middleware for FastAPI.
 """

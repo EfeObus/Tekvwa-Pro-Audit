@@ -1,10 +1,10 @@
 """
-TekVwarho ProAudit - ML Job Model
+Tekvwa Pro Audit - ML Job Model
 
 Machine Learning job tracking for the platform.
 Tracks ML pipeline jobs, model training, and inference operations.
 
-ML Features in TekVwarho ProAudit:
+ML Features in Tekvwa Pro Audit:
 - Anomaly Detection (Isolation Forest + Autoencoder)
 - Risk Scoring (Gradient Boosting)
 - Benford's Law Analysis

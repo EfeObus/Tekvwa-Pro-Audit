@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Accounting Router
+Tekvwa Pro Audit - Accounting Router
 
 API endpoints for Chart of Accounts and General Ledger operations.
 This is the central accounting API that all financial modules integrate with.

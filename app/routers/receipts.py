@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Receipts Router
+Tekvwa Pro Audit - Receipts Router
 
 API endpoints for receipt upload, OCR processing, and document management.
 """

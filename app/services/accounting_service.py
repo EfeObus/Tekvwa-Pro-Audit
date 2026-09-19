@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Accounting Service
+Tekvwa Pro Audit - Accounting Service
 
 Service layer for Chart of Accounts and General Ledger operations.
 This is the core accounting engine that handles:

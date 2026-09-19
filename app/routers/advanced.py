@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Accounting Router
+Tekvwa Pro Audit - Advanced Accounting Router
 
 API endpoints that serve as aliases/aggregators for advanced accounting features.
 Maps frontend-expected URLs to backend services.

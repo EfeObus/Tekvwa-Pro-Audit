@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Billing Email Service
+Tekvwa Pro Audit - Billing Email Service
 
 Handles all billing-related email notifications.
 Supports transactional emails for:
@@ -30,7 +30,7 @@ class BillingEmailService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.email_service = EmailService()
-        self.company_name = "TekVwarho ProAudit"
+        self.company_name = "Tekvwa Pro Audit"
         self.base_url = getattr(settings, 'base_url', 'http://localhost:5120')
         self.support_email = getattr(settings, 'support_email', 'info@tekvwa.org')
         self.billing_email = getattr(settings, 'billing_email', 'info@tekvwa.org')
@@ -128,7 +128,7 @@ class BillingEmailService:
             </tr>
             <tr>
                 <td>Plan</td>
-                <td>ProAudit {tier.title()}</td>
+                <td>Pro Audit {tier.title()}</td>
             </tr>
             <tr>
                 <td>Amount Paid</td>
@@ -156,7 +156,7 @@ Dear {organization_name} Team,
 Thank you for your payment of {self._format_naira(amount_naira)}.
 
 Payment Reference: {reference}
-Plan: ProAudit {tier.title()}
+Plan: Pro Audit {tier.title()}
 Payment Date: {payment_date.strftime('%B %d, %Y')}
 
 Your subscription is now active.
@@ -246,7 +246,7 @@ Best regards,
         
         <p>Dear {organization_name} Team,</p>
         
-        <p>Your free trial of ProAudit {tier.title()} will expire in <strong>{days_remaining} day{'s' if days_remaining != 1 else ''}</strong>.</p>
+        <p>Your free trial of Pro Audit {tier.title()} will expire in <strong>{days_remaining} day{'s' if days_remaining != 1 else ''}</strong>.</p>
         
         <div class="warning">
             <p><strong>Trial Ends:</strong> {trial_ends_at.strftime('%B %d, %Y')}</p>
@@ -267,7 +267,7 @@ Your Trial is Ending Soon
 
 Dear {organization_name} Team,
 
-Your free trial of ProAudit {tier.title()} will expire in {days_remaining} day(s).
+Your free trial of Pro Audit {tier.title()} will expire in {days_remaining} day(s).
 
 Trial Ends: {trial_ends_at.strftime('%B %d, %Y')}
 
@@ -301,7 +301,7 @@ Best regards,
         
         <p>Dear {organization_name} Team,</p>
         
-        <p>Your free trial of ProAudit {tier.title()} has expired.</p>
+        <p>Your free trial of Pro Audit {tier.title()} has expired.</p>
         
         <div class="danger">
             <p><strong>Grace Period:</strong> {grace_period_days} days</p>
@@ -320,7 +320,7 @@ Your Trial Has Expired
 
 Dear {organization_name} Team,
 
-Your free trial of ProAudit {tier.title()} has expired.
+Your free trial of Pro Audit {tier.title()} has expired.
 
 You have a {grace_period_days}-day grace period to subscribe.
 
@@ -356,8 +356,8 @@ Best regards,
         <p>Your trial period has ended and your account has been downgraded to the Core plan.</p>
         
         <div class="highlight">
-            <p><strong>Previous Plan:</strong> ProAudit {previous_tier.title()}</p>
-            <p><strong>Current Plan:</strong> ProAudit Core</p>
+            <p><strong>Previous Plan:</strong> Pro Audit {previous_tier.title()}</p>
+            <p><strong>Current Plan:</strong> Pro Audit Core</p>
         </div>
         
         <p>Some features may no longer be available. You can upgrade at any time to restore full access.</p>
@@ -376,8 +376,8 @@ Dear {organization_name} Team,
 
 Your trial period has ended and your account has been downgraded to the Core plan.
 
-Previous Plan: ProAudit {previous_tier.title()}
-Current Plan: ProAudit Core
+Previous Plan: Pro Audit {previous_tier.title()}
+Current Plan: Pro Audit Core
 
 You can upgrade at any time to restore full access.
 
@@ -415,7 +415,7 @@ Best regards,
         
         <p>Dear {organization_name} Team,</p>
         
-        <p>Your ProAudit {tier.title()} subscription will automatically renew in <strong>{days_until} days</strong>.</p>
+        <p>Your Pro Audit {tier.title()} subscription will automatically renew in <strong>{days_until} days</strong>.</p>
         
         <div class="highlight">
             <p class="amount">{self._format_naira(amount_naira)}</p>
@@ -434,7 +434,7 @@ Upcoming Subscription Renewal
 
 Dear {organization_name} Team,
 
-Your ProAudit {tier.title()} subscription will automatically renew in {days_until} days.
+Your Pro Audit {tier.title()} subscription will automatically renew in {days_until} days.
 
 Amount: {self._format_naira(amount_naira)}
 Renewal Date: {renewal_date.strftime('%B %d, %Y')}
@@ -473,7 +473,7 @@ Best regards,
         <p>This is a reminder that your subscription payment of <strong>{self._format_naira(amount_naira)}</strong> will be processed on <strong>{renewal_date.strftime('%B %d, %Y')}</strong>.</p>
         
         <div class="highlight">
-            <p><strong>Plan:</strong> ProAudit {tier.title()}</p>
+            <p><strong>Plan:</strong> Pro Audit {tier.title()}</p>
             <p><strong>Amount:</strong> {self._format_naira(amount_naira)}</p>
         </div>
         
@@ -491,7 +491,7 @@ Dear {organization_name} Team,
 
 Your subscription payment of {self._format_naira(amount_naira)} will be processed on {renewal_date.strftime('%B %d, %Y')}.
 
-Plan: ProAudit {tier.title()}
+Plan: Pro Audit {tier.title()}
 
 Please ensure your payment method is up to date.
 
@@ -527,7 +527,7 @@ Best regards,
         <p>Your subscription payment will be processed <strong>tomorrow</strong>.</p>
         
         <div class="warning">
-            <p><strong>Plan:</strong> ProAudit {tier.title()}</p>
+            <p><strong>Plan:</strong> Pro Audit {tier.title()}</p>
             <p><strong>Amount:</strong> {self._format_naira(amount_naira)}</p>
             <p><strong>Charge Date:</strong> {renewal_date.strftime('%B %d, %Y')}</p>
         </div>
@@ -546,7 +546,7 @@ Dear {organization_name} Team,
 
 Your subscription payment will be processed tomorrow.
 
-Plan: ProAudit {tier.title()}
+Plan: Pro Audit {tier.title()}
 Amount: {self._format_naira(amount_naira)}
 Charge Date: {renewal_date.strftime('%B %d, %Y')}
 
@@ -584,7 +584,7 @@ Best regards,
         
         <div class="highlight">
             <p class="amount">{self._format_naira(amount_naira)}</p>
-            <p><strong>Plan:</strong> ProAudit {tier.title()}</p>
+            <p><strong>Plan:</strong> Pro Audit {tier.title()}</p>
             <p><strong>Due Date:</strong> {due_date.strftime('%B %d, %Y')}</p>
         </div>
         
@@ -602,7 +602,7 @@ Dear {organization_name} Team,
 
 Your subscription renewal invoice:
 
-Plan: ProAudit {tier.title()}
+Plan: Pro Audit {tier.title()}
 Amount: {self._format_naira(amount_naira)}
 Due Date: {due_date.strftime('%B %d, %Y')}
 
@@ -812,7 +812,7 @@ Best regards,
         <p>Great news! Your account has been reactivated.</p>
         
         <div class="success">
-            <p><strong>Plan:</strong> ProAudit {tier.title()}</p>
+            <p><strong>Plan:</strong> Pro Audit {tier.title()}</p>
             <p>All your data and features are now available.</p>
         </div>
         
@@ -830,7 +830,7 @@ Dear {organization_name} Team,
 
 Your account has been reactivated.
 
-Plan: ProAudit {tier.title()}
+Plan: Pro Audit {tier.title()}
 
 All your data and features are now available.
 

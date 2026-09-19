@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Query Optimization Utilities
+Tekvwa Pro Audit - Query Optimization Utilities
 
 Performance optimization utilities for database queries including:
 - Eager loading configurations
@@ -7,7 +7,7 @@ Performance optimization utilities for database queries including:
 - Batch processing utilities
 - Index recommendations
 
-Author: TekVwarho ProAudit Team
+Author: Tekvwa Pro Audit Team
 Date: January 2026
 """
 

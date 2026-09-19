@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Celery Configuration
+Tekvwa Pro Audit - Celery Configuration
 
 Celery configuration for background task processing.
 Uses Redis as the message broker and result backend.
@@ -16,7 +16,7 @@ redis_url = getattr(settings, 'redis_url', 'redis://localhost:6379/0')
 
 # Create Celery app
 celery_app = Celery(
-    'tekvwarho_proaudit',
+    'tekvwa_pro_audit',
     broker=redis_url,
     backend=redis_url,
     include=['app.tasks.celery_tasks'],

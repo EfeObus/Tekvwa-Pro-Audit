@@ -9,7 +9,7 @@ This script tests the feature gate implementation by checking:
 
 import asyncio
 import sys
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 from app.config.sku_config import (
     Feature, SKUTier, 
@@ -186,7 +186,7 @@ def test_tier_feature_check():
 
 def main():
     print("\n" + "=" * 60)
-    print("   TekVwarho ProAudit - SKU Enforcement Test Suite")
+    print("   Tekvwa Pro Audit - SKU Enforcement Test Suite")
     print("=" * 60)
     
     test_feature_definitions()

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Notification Service
+Tekvwa Pro Audit - Notification Service
 
 Handles in-app notifications and email alerts.
 Fully integrated with database for persistent notification storage.

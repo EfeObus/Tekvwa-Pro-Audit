@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in TekVwarho ProAudit
+about: Report a bug in Tekvwa Pro Audit
 title: '[BUG] '
 labels: bug
 assignees: ''

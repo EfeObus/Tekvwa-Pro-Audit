@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Data Model & Entity Relationship Diagrams
+# Tekvwa Pro Audit - Data Model & Entity Relationship Diagrams
 
 ## Document Information
 
@@ -28,7 +28,7 @@
 
 ## 1. Overview
 
-TekVwarho ProAudit uses a **multi-tenant, entity-scoped architecture** where:
+Tekvwa Pro Audit uses a **multi-tenant, entity-scoped architecture** where:
 
 - **Organizations** are the top-level tenant boundary
 - **Business Entities** represent individual companies within an organization
@@ -49,7 +49,7 @@ TekVwarho ProAudit uses a **multi-tenant, entity-scoped architecture** where:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                              TEKVWARHO PROAUDIT - DOMAIN MODEL                          │
+│                              TEKVWA PRO AUDIT - DOMAIN MODEL                          │
 └─────────────────────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────┐

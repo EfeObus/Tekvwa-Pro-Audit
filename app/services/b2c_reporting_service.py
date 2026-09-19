@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - B2C Real-time Reporting Service
+Tekvwa Pro Audit - B2C Real-time Reporting Service
 
 Handles automatic reporting of B2C transactions > ₦50,000 to NRS within 24 hours.
 Per the Nigeria Tax Administration Act 2025, high-value B2C transactions must be

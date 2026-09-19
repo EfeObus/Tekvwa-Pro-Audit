@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Inventory Schemas
+Tekvwa Pro Audit - Inventory Schemas
 
 Pydantic schemas for inventory management.
 """

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Expense Claims Service
+Tekvwa Pro Audit - Expense Claims Service
 
 Service for managing expense claims and reimbursements.
 Integrates with M-of-N approval workflow for high-value and FX claims.

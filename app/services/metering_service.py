@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Usage Metering Service
+Tekvwa Pro Audit - Usage Metering Service
 
 Service for tracking and managing usage metrics for billing and limit enforcement.
 Tracks: transactions, users, entities, API calls, OCR pages, storage, ML inferences.

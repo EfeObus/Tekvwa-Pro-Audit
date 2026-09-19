@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Behavioral Analytics Service
+Tekvwa Pro Audit - Behavioral Analytics Service
 
 This module provides behavioral analytics for detecting anomalous patterns:
 - Unusual timing patterns (odd-hour edits, weekend transactions)

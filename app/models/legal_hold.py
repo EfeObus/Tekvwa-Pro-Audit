@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Legal Hold Model
+Tekvwa Pro Audit - Legal Hold Model
 
 Legal holds for compliance and data preservation.
 Used when legal proceedings require data to be preserved and not deleted.

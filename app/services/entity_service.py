@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Entity Service
+Tekvwa Pro Audit - Entity Service
 
 Business logic for business entity management.
 """

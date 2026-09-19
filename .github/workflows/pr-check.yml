@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Pull Request Checks
+# Tekvwa Pro Audit - Pull Request Checks
 # Enhanced checks for PRs including code quality gates
 # =============================================
 
@@ -74,9 +74,9 @@ jobs:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: tekvwarho
-          POSTGRES_PASSWORD: tekvwarho_test
-          POSTGRES_DB: tekvwarho_proaudit_test
+          POSTGRES_USER: tekvwa
+          POSTGRES_PASSWORD: tekvwa_test
+          POSTGRES_DB: tekvwa_pro_audit_test
         ports:
           - 5432:5432
         options: >-
@@ -102,8 +102,8 @@ jobs:
       
       - name: Check for pending migrations
         env:
-          DATABASE_URL: postgresql://tekvwarho:tekvwarho_test@localhost:5432/tekvwarho_proaudit_test
-          DATABASE_URL_ASYNC: postgresql+asyncpg://tekvwarho:tekvwarho_test@localhost:5432/tekvwarho_proaudit_test
+          DATABASE_URL: postgresql://tekvwa:tekvwa_test@localhost:5432/tekvwa_pro_audit_test
+          DATABASE_URL_ASYNC: postgresql+asyncpg://tekvwa:tekvwa_test@localhost:5432/tekvwa_pro_audit_test
           SECRET_KEY: test-secret-key
         run: |
           # Run all migrations
@@ -114,8 +114,8 @@ jobs:
       
       - name: Test migration rollback
         env:
-          DATABASE_URL: postgresql://tekvwarho:tekvwarho_test@localhost:5432/tekvwarho_proaudit_test
-          DATABASE_URL_ASYNC: postgresql+asyncpg://tekvwarho:tekvwarho_test@localhost:5432/tekvwarho_proaudit_test
+          DATABASE_URL: postgresql://tekvwa:tekvwa_test@localhost:5432/tekvwa_pro_audit_test
+          DATABASE_URL_ASYNC: postgresql+asyncpg://tekvwa:tekvwa_test@localhost:5432/tekvwa_pro_audit_test
           SECRET_KEY: test-secret-key
         run: |
           # Downgrade one revision to test rollback

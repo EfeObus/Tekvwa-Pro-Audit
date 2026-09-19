@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Permissions System
+Tekvwa Pro Audit - Permissions System
 
 Comprehensive RBAC permissions for platform staff and organization users.
 

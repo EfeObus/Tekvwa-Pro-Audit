@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - App Package
+Tekvwa Pro Audit - App Package
 
 Nigeria's Premier Tax Compliance & Business Management Platform
 """

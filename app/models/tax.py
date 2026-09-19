@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Tax Models
+Tekvwa Pro Audit - Tax Models
 
 Models for tax tracking (VAT, PAYE, CIT, WHT).
 """

@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Data Processing Agreement (DPA)
+# Tekvwa Pro Audit - Data Processing Agreement (DPA)
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -13,7 +13,7 @@ This Data Processing Agreement ("DPA") is entered into between:
 **Data Controller:** The Customer (you, your business entity)  
 **Data Processor:** Tekvwa IT Solutions LTD (we, us, our)
 
-This DPA supplements our Terms and Conditions and Privacy Policy, and governs the processing of personal data by Tekvwa IT Solutions LTD on behalf of the Customer in connection with the TekVwarho ProAudit Service.
+This DPA supplements our Terms and Conditions and Privacy Policy, and governs the processing of personal data by Tekvwa IT Solutions LTD on behalf of the Customer in connection with the Tekvwa Pro Audit Service.
 
 ---
 
@@ -59,7 +59,7 @@ This DPA applies to all personal data processed by Tekvwa IT Solutions LTD on be
 ### 3.4 Processing Purposes
 
 We process personal data only for:
-- Providing the TekVwarho ProAudit Service
+- Providing the Tekvwa Pro Audit Service
 - Fulfilling legal obligations (e.g., NRS submissions)
 - Customer support and service improvement
 - As otherwise instructed by the Customer

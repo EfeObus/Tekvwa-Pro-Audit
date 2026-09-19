@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Use Cases Document
+# Tekvwa Pro Audit - Use Cases Document
 
 **Document Version:** 1.0  
 **Date:** January 3, 2026  
@@ -46,7 +46,7 @@
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        TekVwarho ProAudit System                        │
+│                        Tekvwa Pro Audit System                        │
 ├─────────────────────────┬─────────────────────────┬────────────────────┤
 │    CORE OPERATIONS      │    TAX COMPLIANCE       │    FINANCIAL       │
 │    ─────────────────    │    ─────────────────    │    PIPELINE        │
@@ -887,4 +887,4 @@ Close Books                Generate Reports            Self-Assessment
 
 ---
 
-*Document maintained by TekVwarho ProAudit Product Team*
+*Document maintained by Tekvwa Pro Audit Product Team*

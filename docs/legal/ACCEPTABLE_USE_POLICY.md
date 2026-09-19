@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Acceptable Use Policy
+# Tekvwa Pro Audit - Acceptable Use Policy
 
 **Effective Date:** January 1, 2026  
 **Last Updated:** January 3, 2026  
@@ -8,7 +8,7 @@
 
 ## 1. Introduction
 
-This Acceptable Use Policy ("AUP") outlines the permitted and prohibited uses of TekVwarho ProAudit (the "Service"). This policy is incorporated into and forms part of our Terms and Conditions.
+This Acceptable Use Policy ("AUP") outlines the permitted and prohibited uses of Tekvwa Pro Audit (the "Service"). This policy is incorporated into and forms part of our Terms and Conditions.
 
 By using the Service, you agree to comply with this AUP. Violation may result in suspension or termination of your account.
 
@@ -18,7 +18,7 @@ By using the Service, you agree to comply with this AUP. Violation may result in
 
 ### 2.1 Authorized Activities
 
-You may use TekVwarho ProAudit to:
+You may use Tekvwa Pro Audit to:
 
 - Record legitimate business income and expenses
 - Generate invoices for actual business transactions

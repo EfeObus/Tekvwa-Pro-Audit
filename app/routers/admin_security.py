@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Security Audit Router
+Tekvwa Pro Audit - Security Audit Router
 
 Super Admin endpoints for security monitoring and audit.
 Includes security alerts, audit logs, active sessions, and IP management.

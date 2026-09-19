@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit Explainability Service
+Tekvwa Pro Audit - Audit Explainability Service
 
 This module provides comprehensive explainability for all tax calculations,
 ensuring every computed figure has:

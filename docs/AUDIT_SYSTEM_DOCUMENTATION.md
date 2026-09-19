@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - World-Class Audit System Documentation
+# Tekvwa Pro Audit - World-Class Audit System Documentation
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -14,7 +14,7 @@
 
 ## Overview
 
-TekVwarho ProAudit implements a **world-class forensic audit system** designed for Nigerian tax compliance and beyond. The system provides enterprise-grade auditing capabilities including:
+Tekvwa Pro Audit implements a **world-class forensic audit system** designed for Nigerian tax compliance and beyond. The system provides enterprise-grade auditing capabilities including:
 
 - **Benford's Law Analysis** - Statistical fraud detection using first/second digit distribution
 - **Z-Score Anomaly Detection** - Identify statistical outliers in transaction data
@@ -383,7 +383,7 @@ async with httpx.AsyncClient() as client:
 AWS_ACCESS_KEY_ID=your_access_key
 AWS_SECRET_ACCESS_KEY=your_secret_key
 AWS_REGION=us-east-1
-WORM_BUCKET_NAME=proaudit-worm-vault
+WORM_BUCKET_NAME=tekvwa-pro-audit-worm-vault
 
 # Audit Settings
 AUDIT_LOG_RETENTION_DAYS=2555  # 7 years

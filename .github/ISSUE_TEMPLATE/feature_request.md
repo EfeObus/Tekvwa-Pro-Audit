@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for TekVwarho ProAudit
+about: Suggest a new feature for Tekvwa Pro Audit
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Comprehensive API Endpoint Tests
+Tekvwa Pro Audit - Comprehensive API Endpoint Tests
 
 Unit tests for API endpoint behavior covering:
 - FX/Exchange Rate endpoints

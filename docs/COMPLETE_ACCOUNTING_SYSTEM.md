@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Complete Accounting System Documentation
+# Tekvwa Pro Audit - Complete Accounting System Documentation
 
 **Version:** 2.5.0  
 **Last Updated:** January 27, 2026  
@@ -1368,7 +1368,7 @@ When a Core tier user attempts to access Professional/Enterprise features:
 ```json
 HTTP 403 Forbidden
 {
-  "detail": "Feature 'multi_currency' requires ProAudit Professional tier. Current tier: Core. Upgrade to access this feature."
+  "detail": "Feature 'multi_currency' requires Pro Audit Professional tier. Current tier: Core. Upgrade to access this feature."
 }
 ```
 

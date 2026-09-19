@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Vendor Model
+Tekvwa Pro Audit - Vendor Model
 
 Vendor model for supply chain management with TIN verification.
 """

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Database Configuration
+Tekvwa Pro Audit - Database Configuration
 
 This module handles database connection setup using SQLAlchemy 2.0 async.
 """

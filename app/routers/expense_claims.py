@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Expense Claims Router
+Tekvwa Pro Audit - Expense Claims Router
 
 API endpoints for expense claims and reimbursements.
 

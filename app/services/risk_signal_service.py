@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Risk Signal Service
+Tekvwa Pro Audit - Risk Signal Service
 
 Service layer for managing risk signals and platform monitoring.
 Super Admin only feature for early warning and risk detection.

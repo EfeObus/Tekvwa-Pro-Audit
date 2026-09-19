@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Project Roadmap
+# Tekvwa Pro Audit - Project Roadmap
 
 **Document Version:** 1.2  
 **Date:** January 27, 2026  
@@ -9,7 +9,7 @@
 
 ## Vision Statement
 
-> By 2027, TekVwarho ProAudit will be Nigeria's most trusted tax compliance platform, serving 100,000+ businesses and recognized as an official NRS-certified solution.
+> By 2027, Tekvwa Pro Audit will be Nigeria's most trusted tax compliance platform, serving 100,000+ businesses and recognized as an official NRS-certified solution.
 
 ---
 

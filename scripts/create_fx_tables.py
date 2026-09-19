@@ -6,7 +6,7 @@ import asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-DATABASE_URL = "postgresql+asyncpg://efeobukohwo:12345@localhost:5432/tekvwarho_proaudit"
+DATABASE_URL = "postgresql+asyncpg://efeobukohwo:12345@localhost:5432/tekvwa_pro_audit"
 
 
 async def create_fx_tables():

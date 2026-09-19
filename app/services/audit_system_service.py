@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Audit System Service
+Tekvwa Pro Audit - Audit System Service
 
 Comprehensive audit system service providing:
 1. Auditor Read-Only Enforcement

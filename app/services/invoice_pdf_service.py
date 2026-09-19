@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Invoice PDF Service
+Tekvwa Pro Audit - Invoice PDF Service
 
 Generates professional PDF invoices for billing transactions.
 Uses ReportLab for PDF generation with Nigerian business formatting.
@@ -102,7 +102,7 @@ class InvoicePDFService:
         self.db = db
         
         # Company details from settings
-        self.company_name = getattr(settings, 'company_name', 'TekVwarho ProAudit')
+        self.company_name = getattr(settings, 'company_name', 'Tekvwa Pro Audit')
         self.company_address = getattr(settings, 'company_address', 'Lagos, Nigeria')
         self.company_email = getattr(settings, 'company_email', 'info@tekvwa.org')
         self.company_phone = getattr(settings, 'company_phone', '+234-XXX-XXX-XXXX')
@@ -191,7 +191,7 @@ class InvoicePDFService:
         vat = amount_naira - subtotal
         
         # Create line items
-        tier_display = f"ProAudit {tier.title()}"
+        tier_display = f"Pro Audit {tier.title()}"
         cycle_display = "Annual" if billing_cycle == "annual" else "Monthly"
         
         line_items = [

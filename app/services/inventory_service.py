@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Inventory Service
+Tekvwa Pro Audit - Inventory Service
 
 Business logic for inventory management, stock tracking, and write-offs.
 

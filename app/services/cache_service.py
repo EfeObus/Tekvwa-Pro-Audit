@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Cache Service
+Tekvwa Pro Audit - Cache Service
 
 Redis-based caching service for performance optimization.
 Provides caching for:
@@ -8,7 +8,7 @@ Provides caching for:
 - Report data
 - User sessions
 
-Author: TekVwarho ProAudit Team
+Author: Tekvwa Pro Audit Team
 Date: January 2026
 """
 

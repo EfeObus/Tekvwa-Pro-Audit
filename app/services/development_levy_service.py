@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Development Levy Service (2026 Reform)
+Tekvwa Pro Audit - Development Levy Service (2026 Reform)
 
 Handles the consolidated 4% Development Levy under the 2026 Act.
 

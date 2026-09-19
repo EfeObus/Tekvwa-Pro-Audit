@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Continuous Integration
+# Tekvwa Pro Audit - Continuous Integration
 # Runs on every push and pull request
 # =============================================
 
@@ -13,9 +13,9 @@ on:
 
 env:
   PYTHON_VERSION: '3.11'
-  POSTGRES_USER: tekvwarho
-  POSTGRES_PASSWORD: tekvwarho_test
-  POSTGRES_DB: tekvwarho_proaudit_test
+  POSTGRES_USER: tekvwa
+  POSTGRES_PASSWORD: tekvwa_test
+  POSTGRES_DB: tekvwa_pro_audit_test
 
 jobs:
   # =============================================
@@ -219,11 +219,11 @@ jobs:
           context: .
           target: production
           push: false
-          tags: tekvwarho-proaudit:${{ github.sha }}
+          tags: tekvwa-pro-audit:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
       - name: Test Docker image
         run: |
-          docker build -t tekvwarho-proaudit:test --target production .
-          docker run --rm tekvwarho-proaudit:test python -c "import app; print('Import successful')"
+          docker build -t tekvwa-pro-audit:test --target production .
+          docker run --rm tekvwa-pro-audit:test python -c "import app; print('Import successful')"

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Chart of Accounts & General Ledger Models
+Tekvwa Pro Audit - Chart of Accounts & General Ledger Models
 
 Complete Double-Entry Accounting System with:
 - Chart of Accounts (Assets, Liabilities, Equity, Revenue, Expenses)

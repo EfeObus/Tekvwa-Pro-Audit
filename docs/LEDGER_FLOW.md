@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Ledger Flow & Audit Trail Diagrams
+# Tekvwa Pro Audit - Ledger Flow & Audit Trail Diagrams
 
 ## Document Information
 
@@ -28,7 +28,7 @@
 
 ## 1. Overview
 
-This document provides visual representations of how data flows through TekVwarho ProAudit, from initial transaction entry through to financial statements and audit trails.
+This document provides visual representations of how data flows through Tekvwa Pro Audit, from initial transaction entry through to financial statements and audit trails.
 
 ### Key Principles
 
@@ -315,7 +315,7 @@ This document provides visual representations of how data flows through TekVwarh
 └─────────────────────────────────────────────────────────────────────────────────────────┘
 
 ┌───────────────────────┐        ┌───────────────────────┐
-│   TekVwarho ProAudit  │───────▶│     NRS GATEWAY       │
+│   Tekvwa Pro Audit  │───────▶│     NRS GATEWAY       │
 │   ─────────────────   │        │   ─────────────────   │
 │   POST /nrs/submit    │        │   • Validate TIN      │
 │   • Invoice data      │        │   • Generate IRN      │
@@ -1070,7 +1070,7 @@ This document provides visual representations of how data flows through TekVwarh
 ┌───────────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                        │
 │  SELLER                          NRS                           BUYER                  │
-│  (TekVwarho ProAudit)            (FIRS)                        (Customer)             │
+│  (Tekvwa Pro Audit)            (FIRS)                        (Customer)             │
 │                                                                                        │
 │  ┌─────────────────┐                                                                  │
 │  │ 1. CREATE       │                                                                  │
@@ -1206,5 +1206,5 @@ This document provides visual representations of how data flows through TekVwarh
 
 ---
 
-*Document generated for TekVwarho ProAudit v1.0*
+*Document generated for Tekvwa Pro Audit v1.0*
 *For internal use, auditor review, and regulatory compliance*

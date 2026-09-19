@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Billing Router
+Tekvwa Pro Audit - Billing Router
 
 API endpoints for billing, subscription management, and payments.
 Uses Paystack as the primary payment provider for Nigerian Naira.
@@ -1710,7 +1710,7 @@ async def download_invoice_pdf(
         
         # Create filename
         invoice_date = transaction.created_at.strftime("%Y%m%d") if transaction.created_at else "invoice"
-        filename = f"TekVwarho_Invoice_{invoice_date}_{transaction.reference[:8].upper()}.pdf"
+        filename = f"Tekvwa_Invoice_{invoice_date}_{transaction.reference[:8].upper()}.pdf"
         
         return StreamingResponse(
             io.BytesIO(pdf_bytes),

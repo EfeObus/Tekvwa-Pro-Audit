@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Payroll Models
+Tekvwa Pro Audit - Payroll Models
 
 Complete payroll system with Nigerian compliance:
 - PAYE (Pay As You Earn) - Personal Income Tax

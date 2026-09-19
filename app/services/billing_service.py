@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Billing Service
+Tekvwa Pro Audit - Billing Service
 
 Service for managing billing, subscriptions, and payments.
 Primary payment provider: Paystack (for Nigerian Naira transactions).
@@ -673,7 +673,7 @@ class PaystackProvider(PaymentProvider):
         API: POST https://api.paystack.co/subscription
         
         Note: Requires customer to have a valid authorization (saved card).
-        For TekVwarho, we use one-time payments for simplicity.
+        For Tekvwa, we use one-time payments for simplicity.
         """
         if self._is_stub:
             return {
@@ -2220,7 +2220,7 @@ class BillingService:
             # Determine tier from plan code or metadata
             tier_str = metadata.get("tier")
             if not tier_str and plan_code:
-                # Extract tier from plan code (e.g., "proaudit_professional_monthly")
+                # Extract tier from plan code (e.g., "pro_audit_professional_monthly")
                 if "professional" in plan_code.lower():
                     tier_str = "professional"
                 elif "enterprise" in plan_code.lower():

@@ -1,36 +1,36 @@
 # =============================================
-# TekVwarho ProAudit - Code Owners
+# Tekvwa Pro Audit - Code Owners
 # Automatic reviewers for pull requests
 # =============================================
 
 # Default reviewers for everything
-* @tekvwarho/core-team
+* @tekvwa/core-team
 
 # Database changes require DBA review
-alembic/ @tekvwarho/dba-team @tekvwarho/core-team
-app/models/ @tekvwarho/dba-team @tekvwarho/core-team
-app/database.py @tekvwarho/dba-team @tekvwarho/core-team
+alembic/ @tekvwa/dba-team @tekvwa/core-team
+app/models/ @tekvwa/dba-team @tekvwa/core-team
+app/database.py @tekvwa/dba-team @tekvwa/core-team
 
 # Security-related changes require security review
-app/services/auth_service.py @tekvwarho/security-team
-app/utils/security.py @tekvwarho/security-team
-app/middleware/ @tekvwarho/security-team
+app/services/auth_service.py @tekvwa/security-team
+app/utils/security.py @tekvwa/security-team
+app/middleware/ @tekvwa/security-team
 
 # Billing and payment changes require finance review
-app/services/billing*.py @tekvwarho/finance-team @tekvwarho/core-team
-app/services/payment*.py @tekvwarho/finance-team @tekvwarho/core-team
-app/routers/billing*.py @tekvwarho/finance-team @tekvwarho/core-team
+app/services/billing*.py @tekvwa/finance-team @tekvwa/core-team
+app/services/payment*.py @tekvwa/finance-team @tekvwa/core-team
+app/routers/billing*.py @tekvwa/finance-team @tekvwa/core-team
 
 # CI/CD changes require DevOps review
-.github/ @tekvwarho/devops-team
-Dockerfile @tekvwarho/devops-team
-docker-compose*.yml @tekvwarho/devops-team
+.github/ @tekvwa/devops-team
+Dockerfile @tekvwa/devops-team
+docker-compose*.yml @tekvwa/devops-team
 
 # Documentation
-docs/ @tekvwarho/docs-team
-*.md @tekvwarho/docs-team
+docs/ @tekvwa/docs-team
+*.md @tekvwa/docs-team
 
 # Configuration changes
-*.toml @tekvwarho/core-team
-*.ini @tekvwarho/core-team
-.env.example @tekvwarho/core-team @tekvwarho/security-team
+*.toml @tekvwa/core-team
+*.ini @tekvwa/core-team
+.env.example @tekvwa/core-team @tekvwa/security-team

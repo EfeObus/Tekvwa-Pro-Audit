@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Organization Settings Router
+Tekvwa Pro Audit - Organization Settings Router
 
 API endpoints for organization settings management.
 

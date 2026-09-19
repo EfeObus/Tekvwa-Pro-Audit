@@ -7,7 +7,7 @@ import sys
 from uuid import UUID
 
 # Add app directory to path
-sys.path.insert(0, '/Users/efeobukohwo/Desktop/TekVwarho ProAudit')
+sys.path.insert(0, '/Users/efeobukohwo/Desktop/Tekvwa Pro Audit')
 
 from sqlalchemy import select, and_
 from app.database import async_session_factory

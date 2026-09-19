@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Tax Calculators Package
+Tekvwa Pro Audit - Tax Calculators Package
 
 Tax calculation services for Nigerian 2026 tax reform.
 

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transaction Service Tests
+Tekvwa Pro Audit - Transaction Service Tests
 
 Unit tests for transaction service.
 """

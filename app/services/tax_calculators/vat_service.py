@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - VAT Calculator Service
+Tekvwa Pro Audit - VAT Calculator Service
 
 VAT calculation and recording service for Nigerian VAT compliance.
 

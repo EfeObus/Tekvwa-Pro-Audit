@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Usage Alert Service
+Tekvwa Pro Audit - Usage Alert Service
 
 Service for monitoring usage limits and sending alerts when approaching or exceeding limits.
 Supports multiple notification channels: email, WebSocket, in-app.

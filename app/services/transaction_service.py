@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Transaction Service
+Tekvwa Pro Audit - Transaction Service
 
 Business logic for transaction (expense/income) recording.
 

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Upsell Service
+Tekvwa Pro Audit - Upsell Service
 
 Service layer for managing upsell opportunities.
 Super Admin only feature for revenue expansion tracking.

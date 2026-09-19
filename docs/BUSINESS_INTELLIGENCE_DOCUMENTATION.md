@@ -1,6 +1,6 @@
 # Business Intelligence & Machine Learning Documentation
 
-## TekVwarho ProAudit - AI-Powered Business Analytics
+## Tekvwa Pro Audit - AI-Powered Business Analytics
 
 **Version:** 2.4.1  
 **Last Updated:** January 2026  
@@ -29,7 +29,7 @@
 
 ## Overview
 
-TekVwarho ProAudit's Business Intelligence suite provides enterprise-grade AI and machine learning capabilities specifically designed for Nigerian businesses and tax compliance requirements. The system offers real-time analytics, predictive modeling, and intelligent document processing.
+Tekvwa Pro Audit's Business Intelligence suite provides enterprise-grade AI and machine learning capabilities specifically designed for Nigerian businesses and tax compliance requirements. The system offers real-time analytics, predictive modeling, and intelligent document processing.
 
 ### Key Capabilities
 
@@ -643,4 +643,4 @@ For issues not covered here:
 
 ---
 
-*© 2026 TekVwarho ProAudit. All rights reserved.*
+*© 2026 Tekvwa Pro Audit. All rights reserved.*

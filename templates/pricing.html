@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Pricing - TekVwarho ProAudit{% endblock %}
+{% block title %}Pricing - Tekvwa Pro Audit{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-12" x-data="pricingPage()" x-init="init()">
@@ -59,7 +59,7 @@
                 </div>
                 {% endif %}
                 <div class="p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.core?.name?.replace('ProAudit ', '') || 'Core'"></h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.core?.name?.replace('Pro Audit ', '') || 'Core'"></h3>
                     <p class="text-gray-600 mb-6" x-text="pricing.core?.tagline || 'Essential accounting for growing businesses'"></p>
                     
                     <div class="mb-8">
@@ -127,7 +127,7 @@
                     {% if sku and sku.tier.value == 'professional' %}Current Plan{% else %}Most Popular{% endif %}
                 </div>
                 <div class="p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.professional?.name?.replace('ProAudit ', '') || 'Professional'"></h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.professional?.name?.replace('Pro Audit ', '') || 'Professional'"></h3>
                     <p class="text-gray-600 mb-6" x-text="pricing.professional?.tagline || 'Full-featured for established businesses'"></p>
                     
                     <div class="mb-8">
@@ -207,7 +207,7 @@
                 </div>
                 {% endif %}
                 <div class="p-8">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.enterprise?.name?.replace('ProAudit ', '') || 'Enterprise'"></h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2" x-text="pricing.enterprise?.name?.replace('Pro Audit ', '') || 'Enterprise'"></h3>
                     <p class="text-gray-600 mb-6" x-text="pricing.enterprise?.tagline || 'Complete solution for large organizations'"></p>
                     
                     <div class="mb-8">
@@ -504,21 +504,21 @@ function pricingPage() {
                 // Set fallback values from sku_config.py
                 this.pricing = {
                     core: {
-                        name: 'ProAudit Core',
+                        name: 'Pro Audit Core',
                         tagline: 'Essential accounting for Nigerian SMEs',
                         monthly_formatted: '₦25,000',
                         annual_formatted: '₦255,000',
                         annual_savings_formatted: '₦45,000'
                     },
                     professional: {
-                        name: 'ProAudit Professional',
+                        name: 'Pro Audit Professional',
                         tagline: 'Full-featured solution for growing businesses',
                         monthly_formatted: '₦150,000',
                         annual_formatted: '₦1,530,000',
                         annual_savings_formatted: '₦270,000'
                     },
                     enterprise: {
-                        name: 'ProAudit Enterprise',
+                        name: 'Pro Audit Enterprise',
                         tagline: 'Compliance-ready platform for large organizations',
                         monthly_formatted: '₦1,000,000',
                         annual_formatted: '₦10,200,000',

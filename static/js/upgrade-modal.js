@@ -1,5 +1,5 @@
 /**
- * TekVwarho ProAudit - Upgrade Modal Component
+ * Tekvwa Pro Audit - Upgrade Modal Component
  * 
  * A global upgrade modal that can be triggered from anywhere in the app.
  * Shows tier comparison and allows quick upgrade initiation.
@@ -116,7 +116,7 @@
                         ${tier.features.length > 4 ? `<li class="text-sm text-blue-600">+${tier.features.length - 4} more features</li>` : ''}
                     </ul>
                     
-                    <button onclick="TekVwarhoUpgrade.goToCheckout('${key}')" 
+                    <button onclick="TekvwaUpgrade.goToCheckout('${key}')" 
                             class="w-full py-3 ${tier.popular ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'} font-semibold rounded-lg transition">
                         Upgrade to ${tier.name}
                     </button>
@@ -126,7 +126,7 @@
 
         return `
             <div id="upgrade-modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" 
-                 onclick="if(event.target === this) TekVwarhoUpgrade.close()">
+                 onclick="if(event.target === this) TekvwaUpgrade.close()">
                 <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                     <!-- Header -->
                     <div class="p-6 border-b border-gray-200">
@@ -135,7 +135,7 @@
                                 <h2 class="text-2xl font-bold text-gray-900">Upgrade Your Plan</h2>
                                 ${featureName ? `<p class="text-gray-600 mt-1"><span class="font-medium">${featureName}</span> requires a higher tier</p>` : ''}
                             </div>
-                            <button onclick="TekVwarhoUpgrade.close()" class="text-gray-400 hover:text-gray-600">
+                            <button onclick="TekvwaUpgrade.close()" class="text-gray-400 hover:text-gray-600">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
@@ -188,7 +188,7 @@
     }
 
     // Global upgrade modal object
-    window.TekVwarhoUpgrade = {
+    window.TekvwaUpgrade = {
         currentTier: null,
         
         /**
@@ -298,7 +298,7 @@
                     <div class="flex-1">
                         <p class="text-sm text-gray-700">${message}</p>
                         <div class="mt-2 flex space-x-2">
-                            <button onclick="TekVwarhoUpgrade.show(); document.getElementById('upgrade-prompt').remove();" 
+                            <button onclick="TekvwaUpgrade.show(); document.getElementById('upgrade-prompt').remove();" 
                                     class="px-3 py-1 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700">
                                 Upgrade Now
                             </button>
@@ -330,7 +330,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const initEl = document.querySelector('[data-sku-tier]');
         if (initEl) {
-            TekVwarhoUpgrade.init(initEl.dataset.skuTier);
+            TekvwaUpgrade.init(initEl.dataset.skuTier);
         }
     });
 })();

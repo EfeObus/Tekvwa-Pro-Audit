@@ -9,9 +9,9 @@
 
 ## Overview
 
-The TekVwarho ProAudit Budget Module provides comprehensive budgeting capabilities including budget creation, multi-level approval workflows, variance analysis, and rolling forecasts. It supports annual, quarterly, and monthly budgeting with flexible allocation methods.
+The Tekvwa Pro Audit Budget Module provides comprehensive budgeting capabilities including budget creation, multi-level approval workflows, variance analysis, and rolling forecasts. It supports annual, quarterly, and monthly budgeting with flexible allocation methods.
 
-> **⚠️ SKU Gating:** This module requires **ProAudit Professional** (₦150,000-400,000/mo) or **Enterprise** (₦1,000,000-5,000,000+/mo) tier. Core tier users will receive a `403 Forbidden` response with upgrade instructions.
+> **⚠️ SKU Gating:** This module requires **Pro Audit Professional** (₦150,000-400,000/mo) or **Enterprise** (₦1,000,000-5,000,000+/mo) tier. Core tier users will receive a `403 Forbidden` response with upgrade instructions.
 
 ### Key Features
 

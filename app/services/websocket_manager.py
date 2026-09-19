@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - WebSocket Manager
+Tekvwa Pro Audit - WebSocket Manager
 
 Real-time notification delivery via WebSockets.
 

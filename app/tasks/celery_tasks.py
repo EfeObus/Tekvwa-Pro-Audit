@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Celery Tasks
+Tekvwa Pro Audit - Celery Tasks
 
 Background tasks for scheduled operations.
 """

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - NRS (FIRS) E-Invoicing Service
+Tekvwa Pro Audit - NRS (FIRS) E-Invoicing Service
 
 Integration with the Federal Inland Revenue Service (FIRS) e-invoicing system.
 
@@ -176,7 +176,7 @@ class NRSApiClient:
             "Accept": "application/json",
             "Authorization": f"Bearer {self.api_key}",
             "X-API-Version": "1.0",
-            "X-Client-ID": "tekvwarho-proaudit",
+            "X-Client-ID": "tekvwa-pro-audit",
         }
     
     def _generate_request_signature(self, payload: Dict[str, Any]) -> str:

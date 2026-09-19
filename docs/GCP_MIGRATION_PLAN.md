@@ -1,4 +1,4 @@
-# TekVwarho ProAudit — Google Cloud Migration Plan
+# Tekvwa Pro Audit — Google Cloud Migration Plan
 
 **Status:** Draft for review
 **Scope:** Move the full stack (app, database, cache/queue, file storage, CI/CD) off Railway onto Google Cloud Platform.

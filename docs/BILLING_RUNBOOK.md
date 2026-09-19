@@ -1,4 +1,4 @@
-# TekVwarho ProAudit - Billing Incident Response Runbook
+# Tekvwa Pro Audit - Billing Incident Response Runbook
 
 > **Document Version:** 1.0  
 > **Effective Date:** January 24, 2026  
@@ -26,7 +26,7 @@
 
 ## Overview
 
-This runbook provides step-by-step procedures for responding to billing-related incidents in TekVwarho ProAudit. The billing system uses **Paystack** as the payment provider and handles subscription management, payment processing, and usage metering.
+This runbook provides step-by-step procedures for responding to billing-related incidents in Tekvwa Pro Audit. The billing system uses **Paystack** as the payment provider and handles subscription management, payment processing, and usage metering.
 
 ### Key Components
 
@@ -96,10 +96,10 @@ This runbook provides step-by-step procedures for responding to billing-related 
 2. **Check Application Logs**
    ```bash
    # Search for payment errors
-   grep -i "payment\|paystack\|billing" /var/log/tekvwarho/app.log | tail -100
+   grep -i "payment\|paystack\|billing" /var/log/tekvwa/app.log | tail -100
    
    # Check for specific transaction
-   grep "TXN_REFERENCE" /var/log/tekvwarho/app.log
+   grep "TXN_REFERENCE" /var/log/tekvwa/app.log
    ```
 
 3. **Verify Paystack API Status**
@@ -137,7 +137,7 @@ This runbook provides step-by-step procedures for responding to billing-related 
 2. Verify webhook secret is correct
 3. Restart billing service if needed:
    ```bash
-   sudo systemctl restart tekvwarho-api
+   sudo systemctl restart tekvwa-api
    ```
 
 **For stuck transactions:**
@@ -166,17 +166,17 @@ This runbook provides step-by-step procedures for responding to billing-related 
 
 1. **Check Webhook Logs**
    ```bash
-   grep "webhook\|paystack" /var/log/tekvwarho/app.log | tail -200
+   grep "webhook\|paystack" /var/log/tekvwa/app.log | tail -200
    ```
 
 2. **Verify Webhook Configuration**
    - Go to Paystack Dashboard → Settings → API Keys & Webhooks
-   - Confirm webhook URL: `https://api.tekvwarho.com/api/v1/billing/webhook/paystack`
+   - Confirm webhook URL: `https://api.tekvwa.com/api/v1/billing/webhook/paystack`
    - Check webhook secret matches environment variable
 
 3. **Test Webhook Endpoint**
    ```bash
-   curl -X POST https://api.tekvwarho.com/api/v1/billing/webhook/paystack \
+   curl -X POST https://api.tekvwa.com/api/v1/billing/webhook/paystack \
      -H "Content-Type: application/json" \
      -H "X-Paystack-Signature: test" \
      -d '{"event": "test"}'
@@ -198,7 +198,7 @@ This runbook provides step-by-step procedures for responding to billing-related 
    PAYSTACK_WEBHOOK_SECRET=new_secret_from_paystack
    
    # Restart service
-   sudo systemctl restart tekvwarho-api
+   sudo systemctl restart tekvwa-api
    ```
 
 **For processing errors:**
@@ -254,7 +254,7 @@ This runbook provides step-by-step procedures for responding to billing-related 
 
 3. **Check Subscription Events**
    ```bash
-   grep "ORG_UUID\|subscription" /var/log/tekvwarho/app.log | tail -50
+   grep "ORG_UUID\|subscription" /var/log/tekvwa/app.log | tail -50
    ```
 
 #### Resolution Steps
@@ -428,7 +428,7 @@ If the entire billing system is down:
 2. **Assess Scope**
    ```bash
    # Check service health
-   curl https://api.tekvwarho.com/health
+   curl https://api.tekvwa.com/health
    
    # Check database connectivity
    psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "SELECT 1"
@@ -441,14 +441,14 @@ If the entire billing system is down:
    ```bash
    # If primary database is down
    # Promote read replica
-   aws rds promote-read-replica --db-instance-identifier tekvwarho-replica
+   aws rds promote-read-replica --db-instance-identifier tekvwa-replica
    
    # Update connection string
-   export DATABASE_URL=postgresql://user:pass@replica:5432/tekvwarho
+   export DATABASE_URL=postgresql://user:pass@replica:5432/tekvwa
    
    # Restart services
-   sudo systemctl restart tekvwarho-api
-   sudo systemctl restart tekvwarho-celery
+   sudo systemctl restart tekvwa-api
+   sudo systemctl restart tekvwa-celery
    ```
 
 4. **Enable Maintenance Mode** (if needed)
@@ -459,7 +459,7 @@ If the entire billing system is down:
    ```
 
 5. **Customer Communication**
-   - Post status update to status.tekvwarho.com
+   - Post status update to status.tekvwa.com
    - Send email to affected customers
    - Update social media if prolonged
 
@@ -506,9 +506,9 @@ groups:
 
 ### Dashboard Links
 
-- Grafana Billing Dashboard: `https://grafana.tekvwarho.com/d/billing`
+- Grafana Billing Dashboard: `https://grafana.tekvwa.com/d/billing`
 - Paystack Dashboard: `https://dashboard.paystack.com`
-- Application Logs: `https://logs.tekvwarho.com/billing`
+- Application Logs: `https://logs.tekvwa.com/billing`
 
 ---
 
@@ -577,7 +577,7 @@ After any P1 or P2 incident, complete the following:
 
 ```bash
 # View recent billing errors
-journalctl -u tekvwarho-api | grep -i "billing\|payment" | tail -50
+journalctl -u tekvwa-api | grep -i "billing\|payment" | tail -50
 
 # Check Celery task queue
 celery -A app.celery_app inspect active

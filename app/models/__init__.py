@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SQLAlchemy Models Package
+Tekvwa Pro Audit - SQLAlchemy Models Package
 
 This package contains all database models for the application.
 """

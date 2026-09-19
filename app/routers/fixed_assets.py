@@ -10,7 +10,7 @@ Fixed Assets Router - API endpoints for Fixed Asset Register.
 SKU Tier: PROFESSIONAL (₦150,000+/mo)
 Feature Flag: FIXED_ASSETS
 
-Author: TekVwarho ProAudit
+Author: Tekvwa Pro Audit
 """
 
 from datetime import date

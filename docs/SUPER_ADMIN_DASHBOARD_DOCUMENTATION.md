@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Super Admin Dashboard is the comprehensive command center for platform administrators of TekVwarho ProAudit. It provides full visibility and control over the multi-tenant SaaS accounting and audit platform, featuring a distinctive Nigerian flag-inspired green-white-green color scheme.
+The Super Admin Dashboard is the comprehensive command center for platform administrators of Tekvwa Pro Audit. It provides full visibility and control over the multi-tenant SaaS accounting and audit platform, featuring a distinctive Nigerian flag-inspired green-white-green color scheme.
 
 ---
 
@@ -774,4 +774,4 @@ For issues or questions regarding the Super Admin Dashboard:
 ---
 
 *Documentation last updated: January 25, 2025*
-*TekVwarho ProAudit - Building Nigeria's Financial Future* 🇳🇬
+*Tekvwa Pro Audit - Building Nigeria's Financial Future* 🇳🇬

@@ -70,7 +70,7 @@ if __name__ == '__main__':
     # Execute via psql
     print(" Executing SQL...")
     result = subprocess.run(
-        ['psql', 'tekvwarho_proaudit', '-f', '/tmp/seed_audit_logs.sql'],
+        ['psql', 'tekvwa_pro_audit', '-f', '/tmp/seed_audit_logs.sql'],
         capture_output=True,
         text=True
     )

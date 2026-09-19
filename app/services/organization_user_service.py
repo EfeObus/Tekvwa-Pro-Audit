@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Organization User Management Service
+Tekvwa Pro Audit - Organization User Management Service
 
 Service for managing users within an organization.
 Handles user invitation, role assignment, and access control.

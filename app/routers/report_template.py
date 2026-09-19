@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Report Template Router
+Tekvwa Pro Audit - Report Template Router
 
 API endpoints for managing report templates:
 - CRUD operations for templates

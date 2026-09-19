@@ -1,5 +1,5 @@
 # =============================================
-# TekVwarho ProAudit - Dockerfile
+# Tekvwa Pro Audit - Dockerfile
 # Multi-stage build for production deployment
 # =============================================
 

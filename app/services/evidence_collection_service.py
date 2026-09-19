@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Evidence Collection Service
+Tekvwa Pro Audit - Evidence Collection Service
 
 Comprehensive evidence collection service providing:
 1. Document Upload & Storage
@@ -518,7 +518,7 @@ class EvidenceCollectionService:
                 "regulatory_reference": regulatory_reference,
                 "audit_trail": {
                     "calculated_by": str(collected_by),
-                    "calculation_engine": "TekVwarho ProAudit v1.0",
+                    "calculation_engine": "Tekvwa Pro Audit v1.0",
                     "precision": "2 decimal places",
                 }
             }

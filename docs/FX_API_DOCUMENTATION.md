@@ -9,7 +9,7 @@
 
 ## Overview
 
-The TekVwarho ProAudit Foreign Exchange module provides comprehensive multi-currency support compliant with **IAS 21 - The Effects of Changes in Foreign Exchange Rates**. This module handles:
+The Tekvwa Pro Audit Foreign Exchange module provides comprehensive multi-currency support compliant with **IAS 21 - The Effects of Changes in Foreign Exchange Rates**. This module handles:
 
 - Exchange rate management and historical rate storage
 - Transaction currency conversion
@@ -18,7 +18,7 @@ The TekVwarho ProAudit Foreign Exchange module provides comprehensive multi-curr
 - FX exposure reporting
 - Period-end revaluation automation
 
-> **⚠️ SKU Gating:** This module requires **ProAudit Professional** (₦150,000-400,000/mo) or **Enterprise** (₦1,000,000-5,000,000+/mo) tier. Core tier users will receive a `403 Forbidden` response with upgrade instructions.
+> **⚠️ SKU Gating:** This module requires **Pro Audit Professional** (₦150,000-400,000/mo) or **Enterprise** (₦1,000,000-5,000,000+/mo) tier. Core tier users will receive a `403 Forbidden` response with upgrade instructions.
 
 ## Functional Currency
 

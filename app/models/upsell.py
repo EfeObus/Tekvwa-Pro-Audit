@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Upsell Opportunity Model
+Tekvwa Pro Audit - Upsell Opportunity Model
 
 Tracks upsell and expansion opportunities for tenants.
 Used by Super Admin to identify revenue growth potential.

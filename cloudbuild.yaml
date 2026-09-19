@@ -1,5 +1,5 @@
 #
-# TekVwarho ProAudit - Cloud Build pipeline
+# Tekvwa Pro Audit - Cloud Build pipeline
 #
 # Builds the container image, runs Alembic migrations via a Cloud Run Job
 # (so it has VPC access to Cloud SQL's private IP), then deploys the web

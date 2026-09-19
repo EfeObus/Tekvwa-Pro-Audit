@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Budget Unit Tests
+Tekvwa Pro Audit - Budget Unit Tests
 
 Comprehensive tests for budget functionality:
 - Budget creation and periods

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Consolidation Unit Tests
+Tekvwa Pro Audit - Consolidation Unit Tests
 
 Comprehensive tests for multi-entity consolidation:
 - IAS 21 currency translation (closing/average/historical rates)

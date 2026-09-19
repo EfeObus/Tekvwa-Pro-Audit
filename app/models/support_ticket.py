@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Support Ticket Model
+Tekvwa Pro Audit - Support Ticket Model
 
 Support ticket system for platform customer service.
 Tracks inquiries, issues, and requests from tenant users.

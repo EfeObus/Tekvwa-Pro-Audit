@@ -1,4 +1,4 @@
-/* TekVwarho ProAudit - Main JavaScript */
+/* Tekvwa Pro Audit - Main JavaScript */
 
 // HTMX Configuration
 document.body.addEventListener('htmx:configRequest', function(evt) {
@@ -67,4 +67,4 @@ document.addEventListener('alpine:init', () => {
     });
 });
 
-console.log('TekVwarho ProAudit initialized');
+console.log('Tekvwa Pro Audit initialized');

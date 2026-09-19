@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Inventory Models
+Tekvwa Pro Audit - Inventory Models
 
 Inventory models for stock tracking and write-offs.
 """

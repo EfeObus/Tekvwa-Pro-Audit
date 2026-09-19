@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Admin Emergency Controls Router
+Tekvwa Pro Audit - Admin Emergency Controls Router
 
 Platform emergency control endpoints for Super Admins only.
 These are CRITICAL security features that should be used with extreme caution.

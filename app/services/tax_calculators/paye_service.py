@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - PAYE Calculator Service
+Tekvwa Pro Audit - PAYE Calculator Service
 
 PAYE (Pay As You Earn) calculation service for Nigerian 2026 tax reform.
 

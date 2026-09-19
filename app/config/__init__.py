@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Configuration Package
+Tekvwa Pro Audit - Configuration Package
 
 Application configuration modules.
 """

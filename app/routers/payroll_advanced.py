@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Advanced Payroll Router
+Tekvwa Pro Audit - Advanced Payroll Router
 
 API endpoints for advanced payroll features:
 - Compliance Status Engine

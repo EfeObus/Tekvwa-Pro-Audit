@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - SKU System Unit Tests
+Tekvwa Pro Audit - SKU System Unit Tests
 
 Tests for the SKU (Stock Keeping Unit) / tier system including:
 - Feature flag enforcement

@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Year-End Closing Router
+Tekvwa Pro Audit - Year-End Closing Router
 
 API endpoints for fiscal year-end closing operations including:
 - Year-end checklist validation

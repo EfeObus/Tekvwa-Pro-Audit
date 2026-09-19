@@ -1,5 +1,5 @@
 """
-TekVwarho ProAudit - Fixed Asset Register Model
+Tekvwa Pro Audit - Fixed Asset Register Model
 
 Fixed Asset Register for tracking capital assets, depreciation, and capital gains.
 
