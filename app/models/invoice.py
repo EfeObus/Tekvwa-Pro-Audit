@@ -262,6 +262,7 @@ class Invoice(BaseModel, AuditMixin):
     )
     nrs_cancelled_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", name="fk_invoices_nrs_cancelled_by"),
         nullable=True,
         comment="Owner who cancelled NRS submission (if any)",
     )
@@ -296,12 +297,14 @@ class Invoice(BaseModel, AuditMixin):
     # Credit Note Tracking
     credit_note_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("credit_notes.id", ondelete="SET NULL", name="fk_invoice_credit_note"),
         nullable=True,
         comment="Reference to credit note if rejected",
     )
     is_credit_note: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     original_invoice_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("invoices.id", ondelete="SET NULL", name="fk_invoice_original", use_alter=True),
         nullable=True,
         comment="Reference to original invoice if this is a credit note",
     )

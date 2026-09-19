@@ -178,11 +178,47 @@ jobs:
             --cov-report=xml \
             --cov-report=html \
             --cov-report=term-missing \
+            --junit-xml=test-results.xml \
             -v \
             --tb=short \
-            -x \
             || true
-      
+          # NOTE (Phase 0 of docs/IMPLEMENTATION_ROADMAP.md): `-x` was removed so the full suite
+          # always runs and the summary step below reports real counts, not just "stopped at test 1".
+          # `|| true` is intentionally still here — CI cannot yet gate on test results (Finding 15.6).
+          # Removing it is Phase 9, Section 9.6, gated on Findings 27-31 being fixed first. Do not
+          # remove it ahead of that section.
+
+      - name: Report test summary (non-blocking — visibility only, does not gate the build)
+        if: always()
+        run: |
+          python -c "
+          import xml.etree.ElementTree as ET
+          import sys
+          try:
+              tree = ET.parse('test-results.xml')
+          except FileNotFoundError:
+              print('::warning::No test-results.xml found — pytest may not have run to completion.')
+              sys.exit(0)
+          root = tree.getroot()
+          suite = root if root.tag == 'testsuite' else root.find('testsuite')
+          tests = suite.get('tests', '0')
+          failures = suite.get('failures', '0')
+          errors = suite.get('errors', '0')
+          skipped = suite.get('skipped', '0')
+          summary = f'### Test Results (visibility only — does not gate this build; see Finding 15.6 in docs/PRODUCTION_AUDIT_2026.md)\n\n'
+          summary += f'| Total | Passed | Failed | Errored | Skipped |\n|---|---|---|---|---|\n'
+          passed = int(tests) - int(failures) - int(errors) - int(skipped)
+          summary += f'| {tests} | {passed} | {failures} | {errors} | {skipped} |\n'
+          if int(failures) > 0 or int(errors) > 0:
+              summary += f'\n**{int(failures)+int(errors)} test(s) currently failing/erroring.** This does not fail the build yet (Finding 15.6) but should not be ignored.\n'
+          import os
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if summary_path:
+              with open(summary_path, 'a') as f:
+                  f.write(summary)
+          print(summary)
+          "
+
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         with:

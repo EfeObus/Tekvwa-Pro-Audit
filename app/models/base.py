@@ -34,6 +34,14 @@ class TimestampMixin:
 class AuditMixin:
     """Mixin that adds audit fields for tracking who created/updated records."""
     
+    # NOTE: deliberately no ForeignKey('users.id') here. This mixin is shared by 16 models, but
+    # only 7 of their tables actually have a matching FK constraint in the live migrated database
+    # (see docs/REMEDIATION_LOG.md, Finding 49) — a migration was written for those 7 specifically,
+    # never for the other 9. Adding the FK here would tell the ORM every subclass has a constraint
+    # that most of them don't, which breaks schema-creation/teardown tooling that trusts this
+    # metadata (confirmed: caused new failures when tried). The 7 that do have it override these
+    # columns individually with an explicit ForeignKey — see ChartOfAccounts, JournalEntry,
+    # RecurringJournalEntry, Employee, PayrollRun, StatutoryRemittance, EmployeeLoan.
     created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         nullable=True,

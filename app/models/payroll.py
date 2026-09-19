@@ -206,7 +206,20 @@ class Employee(BaseModel, AuditMixin):
     """
     
     __tablename__ = "employees"
-    
+
+    # Overrides AuditMixin's created_by_id/updated_by_id — this table's migration added a real
+    # FK to users.id that the mixin doesn't declare (docs/REMEDIATION_LOG.md, Finding 49).
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     # Entity relationship
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -535,7 +548,19 @@ class PayrollRun(BaseModel, AuditMixin):
     """
     
     __tablename__ = "payroll_runs"
-    
+
+    # Overrides AuditMixin's created_by_id/updated_by_id (Finding 49, docs/REMEDIATION_LOG.md).
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
@@ -934,14 +959,26 @@ class StatutoryRemittance(BaseModel, AuditMixin):
     """
     
     __tablename__ = "statutory_remittances"
-    
+
+    # Overrides AuditMixin's created_by_id/updated_by_id (Finding 49, docs/REMEDIATION_LOG.md).
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     payroll_run_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payroll_runs.id", ondelete="SET NULL"),
@@ -1049,14 +1086,23 @@ class EmployeeLoan(BaseModel, AuditMixin):
     """
     
     __tablename__ = "employee_loans"
-    
+
+    # Overrides AuditMixin's created_by_id only — this table's migration added a FK for
+    # created_by_id but NOT updated_by_id (Finding 49, docs/REMEDIATION_LOG.md). updated_by_id
+    # intentionally keeps inheriting the mixin's plain (no-FK) column.
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     employee_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("employees.id", ondelete="CASCADE"),

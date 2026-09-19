@@ -23,7 +23,7 @@ from datetime import datetime
 
 import uuid
 
-from sqlalchemy import Boolean, String, Text, Enum as SQLEnum, DateTime
+from sqlalchemy import Boolean, ForeignKey, String, Text, Enum as SQLEnum, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -190,6 +190,15 @@ class Organization(BaseModel):
     )
     emergency_suspended_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        # Explicit name matches Postgres's own auto-generated name from the original migration
+        # (which used a bare inline ForeignKey with no custom constraint name) — without this,
+        # SQLAlchemy computes a different name and DROP CONSTRAINT fails against a real migrated DB.
+        ForeignKey(
+            "users.id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="organizations_emergency_suspended_by_id_fkey",
+        ),
         nullable=True,
         comment="ID of admin who emergency suspended this organization"
     )

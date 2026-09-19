@@ -216,6 +216,7 @@ class Transaction(BaseModel, AuditMixin):
     # Original category before any changes (for audit trail)
     original_category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("categories.id", ondelete="SET NULL", name="fk_transactions_original_category"),
         nullable=True,
         comment="Original category for audit trail (if changed)",
     )
@@ -264,6 +265,11 @@ class Transaction(BaseModel, AuditMixin):
     category: Mapped[Optional["Category"]] = relationship(
         "Category",
         back_populates="transactions",
+        # Explicit foreign_keys required: this model now has two FKs to categories.id
+        # (category_id and original_category_id, the latter added for Finding 49 —
+        # docs/REMEDIATION_LOG.md). Without this, SQLAlchemy can't infer which one
+        # this navigable relationship should join on.
+        foreign_keys="Transaction.category_id",
     )
     vendor: Mapped[Optional["Vendor"]] = relationship(
         "Vendor",

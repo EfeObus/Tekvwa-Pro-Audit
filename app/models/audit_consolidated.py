@@ -195,6 +195,7 @@ class AuditLog(Base):
     # Organization Context (for multi-tenant queries)
     organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="SET NULL", name="fk_audit_logs_organization"),
         nullable=True,
         index=True,
     )
@@ -218,6 +219,7 @@ class AuditLog(Base):
     # Impersonation Context (if CSR is impersonating)
     impersonated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", name="fk_audit_logs_impersonated_by", use_alter=True),
         nullable=True,
         comment="If action was performed by CSR impersonating user",
     )

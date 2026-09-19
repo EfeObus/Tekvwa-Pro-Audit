@@ -154,14 +154,27 @@ class ChartOfAccounts(BaseModel, AuditMixin):
     """
     
     __tablename__ = "chart_of_accounts"
-    
+
+    # Overrides AuditMixin's created_by_id/updated_by_id: this table's migration added a real
+    # FK to users.id that the mixin doesn't declare (see docs/REMEDIATION_LOG.md, Finding 49).
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     # Account Identification
     account_code: Mapped[str] = mapped_column(
         String(20), nullable=False,
@@ -407,7 +420,19 @@ class JournalEntry(BaseModel, AuditMixin):
     """
     
     __tablename__ = "journal_entries"
-    
+
+    # Overrides AuditMixin's created_by_id/updated_by_id — see ChartOfAccounts above (Finding 49).
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
@@ -739,7 +764,16 @@ class RecurringJournalEntry(BaseModel, AuditMixin):
     """
     
     __tablename__ = "recurring_journal_entries"
-    
+
+    # Overrides AuditMixin's created_by_id only — this table's migration added a FK for
+    # created_by_id but NOT updated_by_id (confirmed via live-DB constraint check, Finding 49).
+    # updated_by_id intentionally keeps inheriting the mixin's plain (no-FK) column.
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
+        nullable=True,
+    )
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),

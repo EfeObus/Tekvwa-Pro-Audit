@@ -226,6 +226,22 @@ from app.models.report_template import (
     ReportTemplateSection,
     ReportGenerationLog,
 )
+# Advanced Payroll Models (Finding 19, docs/PRODUCTION_AUDIT_2026.md — these 11 tables' models
+# previously registered with Base.metadata only incidentally, via app.services.payroll_advanced_service
+# happening to be imported first; explicit import here removes that import-order fragility)
+from app.models.payroll_advanced import (
+    ComplianceSnapshot,
+    PayrollImpactPreview,
+    PayrollException,
+    PayrollDecisionLog,
+    YTDPayrollLedger,
+    OpeningBalanceImport,
+    PayslipExplanation,
+    EmployeeVarianceLog,
+    CostToCompanySnapshot,
+    WhatIfSimulation,
+    GhostWorkerDetection,
+)
 # Core Accounting Models
 from app.models.accounting import (
     ChartOfAccounts,
@@ -455,6 +471,18 @@ __all__ = [
     "ReportTemplate",
     "ReportTemplateSection",
     "ReportGenerationLog",
+    # Advanced Payroll Models
+    "ComplianceSnapshot",
+    "PayrollImpactPreview",
+    "PayrollException",
+    "PayrollDecisionLog",
+    "YTDPayrollLedger",
+    "OpeningBalanceImport",
+    "PayslipExplanation",
+    "EmployeeVarianceLog",
+    "CostToCompanySnapshot",
+    "WhatIfSimulation",
+    "GhostWorkerDetection",
     # Core Accounting Models
     "ChartOfAccounts",
     "FiscalYear",

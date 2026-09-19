@@ -371,6 +371,59 @@ production's; confirm all 11 classes are present on `Base.metadata.tables` regar
 **Document:** Update `docs/DATA_MODEL_ERD.md` if `payroll_advanced.py`'s tables weren't already
 represented there.
 
+### 1.5 Section: Finding 49 (new — discovered during Phase 0's baseline run, not one of the audit's original 48) — reconcile every real DB foreign-key constraint the ORM doesn't know about
+
+**Understand:** Phase 0's baseline test run surfaced a new, systemic defect: a permanent
+`information_schema`-vs-`Base.metadata` diagnostic script found **93 real FK constraints in a fully
+migrated database with no matching declaration on any SQLAlchemy model**, across three root causes
+(table never registered — Finding 19, already covered by §1.4; column entirely missing from the
+model; column present but its `ForeignKey()` never declared). Full investigation, the exact list of
+affected columns, a documented false-start (a naive fix to the shared `AuditMixin` that made things
+worse before being caught and reverted), and the fix for 57 of the 93 are recorded in full in
+`docs/REMEDIATION_LOG.md`'s Phase 0 entry — this section is the remaining 51.
+
+**This section is now a precondition for §1.3** (switching `tests/conftest.py` to build its schema
+via Alembic): with 51 mismatches still spread across 29 tables, `Base.metadata.create_all()`/
+`drop_all()` will continue to fail unpredictably depending on which tables a given test touches. §1.3
+should not be considered safe to ship until this section is ✅.
+
+**Implement, per table — this is 29 individually-verified edits, not a bulk find-and-replace:**
+- [ ] For each of the 29 tables listed in `docs/REMEDIATION_LOG.md`'s Finding 49 entry: read the exact
+      migration that added the column (type, nullable, default, `ondelete` behavior), add the matching
+      `Mapped[...] = mapped_column(...)` declaration to the corresponding model with an explicit
+      `ForeignKey(...)` — do not guess the type from the column name; confirm it from the migration
+      every time, the same standard already applied to the 57 fixed in Phase 0
+- [ ] For any column referencing a table that is itself not yet in `Base.metadata` (double-check none
+      remain after §1.4 — the drift script will confirm this directly), fix the registration gap first
+- [ ] Watch specifically for the two secondary-bug patterns Phase 0 already found once each: a
+      migration-created constraint with a Postgres-default name that doesn't match this codebase's
+      configured `naming_convention` (needs an explicit `name=`), and a table gaining a second FK to
+      the same target table (needs `foreign_keys=` added to any existing `relationship()` between them)
+- [ ] Promote the scratch diagnostic script into `scripts/check_fk_drift.py` as part of this section,
+      not as an afterthought — it's what makes every one of these 29 edits verifiable rather than
+      hopeful
+
+**Test, per table:**
+- [ ] Round-trip: create a row with the new column set to a real referenced ID, commit, re-fetch,
+      assert it persists
+- [ ] Constraint enforcement: attempt to set the column to a non-existent referenced ID, assert the
+      database (not just application-level validation) rejects it
+- [ ] Re-run `scripts/check_fk_drift.py` after each batch of tables — confirm the remaining-mismatch
+      count only ever decreases, never regresses (this would have caught the `AuditMixin` false-start
+      immediately, before it reached a full test-suite run)
+
+**Test, for the whole section:** re-run the full test suite against a real `alembic upgrade head`
+database (not yet via `conftest.py` — §1.3 hasn't shipped until this section is done) and confirm the
+`DependentObjectsStillExistError`/`UndefinedObjectError`/`AmbiguousForeignKeysError` failure family is
+completely gone, leaving only already-catalogued failures (Finding 1's enum casing, Findings 27/28/30/31,
+etc.) — each routed to its own phase, not re-investigated here.
+
+**Deploy:** Same as §1.1 — purely additive at the ORM layer for the 51 columns whose constraints
+already exist in production (confirmed via the same `alembic revision --autogenerate` no-op check
+used for the first 57); no migration required for those. Any table where the *column itself* turns
+out to be missing in production (not just unmodeled) is a different, more serious situation — confirm
+this isn't the case for any of the 29 before treating this section as ORM-only.
+
 ### Phase 1 Completion Gate specifics
 
 Beyond the standard PCG: explicitly confirm that the "15-table gap" the audit opened as Open Question
@@ -1509,6 +1562,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 46 | P2 | 8 | 8.2 | ⬜ |
 | 47 | P2 | 8 | 8.3 | ⬜ |
 | 48 | P3 | 8 | 8.4 | ⬜ |
+| 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; see `docs/REMEDIATION_LOG.md`) | 🟨 |
 
 **Note on Findings 12, 25, and 34 — not yet assigned a dedicated section above, added here for
 completeness rather than left off the table entirely:**
@@ -1532,4 +1586,5 @@ the detailed one, and they must agree.
 
 | Date | Change |
 |---|---|
-| 2026-09-19 | Initial roadmap created from `docs/PRODUCTION_AUDIT_2026.md` (48 findings) and `docs/AUDIT_CHECKLIST.md`. Phase 0 baseline not yet executed — commit hash and test-suite baseline numbers to be recorded here once Phase 0 actually runs. |
+| 2026-09-19 | Initial roadmap created from `docs/PRODUCTION_AUDIT_2026.md` (48 findings) and `docs/AUDIT_CHECKLIST.md`. |
+| 2026-09-19 | Phase 0 executed. Baseline commit `3f082bc`, tag `pre-remediation-baseline`. Local production Docker build: clean. Cloud Run baseline revision recorded: `proaudit-web-00012-6sb`. Baseline test run against a real `alembic upgrade head` schema surfaced a new, previously-undiscovered systemic finding (Finding 49 — 93 real DB foreign-key constraints with no matching ORM declaration); 57 of 93 fixed and verified in this session (see `docs/REMEDIATION_LOG.md` for the full investigation, including a caught-and-reverted false start on `AuditMixin`); the remaining 51 formally scoped as new Phase 1 §1.5, gated ahead of §1.3. Added Phase 1 §1.5 to this roadmap and Finding 49 to §20's traceability table. |

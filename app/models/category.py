@@ -101,6 +101,9 @@ class Category(BaseModel):
     transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction",
         back_populates="category",
+        # Explicit foreign_keys required — see the matching note on Transaction.category
+        # (app/models/transaction.py) for why this became ambiguous.
+        foreign_keys="Transaction.category_id",
     )
     
     def __repr__(self) -> str:
