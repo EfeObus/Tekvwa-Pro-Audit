@@ -821,6 +821,96 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — bank_reconciliations, the deepest single-table case found so far (2026-09-20)
+
+Tier 1 severe (27 `ADD_DROP`), and confirmed by far the worst individual table in this remediation
+pass — worse than the scope document's automated column count alone suggested, because several of
+`app/services/bank_reconciliation_service.py`'s attribute assignments referenced fields that existed
+on **neither** the model **nor** the live DB table, which the autogenerate-diff scoping method used
+to build `docs/FINDING_50_SCOPE.md` cannot detect (it only compares columns the model declares
+against the DB; it has no way to see an attribute set on an instance that isn't mapped at all).
+Root-caused via the full live migration chain (confirmed
+`alembic/versions/20260118_1200_bank_reconciliation_comprehensive.py:283-338` DROPs and recreates
+the table, superseding an earlier, differently-shaped `CREATE TABLE` from
+`20260108_2030_add_bank_reconciliation_expense_claims.py` — so the live shape really is the
+"comprehensive" migration's, not the older one) plus a full `recon.<attr>` grep across the service.
+
+**Confirmed, 100%-certain crash, not just "reachable":** `POST /reconciliations` fails on its very
+first line. The router passes `recon_data.statement_opening_balance` (and three siblings) to
+`BankReconciliationService.create_reconciliation()`, but the real `BankReconciliationCreate` Pydantic
+schema (`app/schemas/bank_reconciliation.py:325-333`) has no such field — only
+`statement_ending_balance`/`ledger_ending_balance`, matching the live DB exactly. This is an
+`AttributeError` on every single call, before the service or the DB is ever reached. Comparing all
+three surfaces (DB, model, schema) showed the **schema and DB already agreed** with each other; the
+**model** was the odd one out — direction (B), model migrated to match DB/schema, not the reverse.
+
+**Also found:** two full, separately-defined `ReconciliationStatus` enum classes in
+`app/models/bank_reconciliation.py` (one at the original location, a second one later in the file
+silently shadowing it at module level). Every real reference to `ReconciliationStatus.IN_REVIEW`/
+`.REJECTED` in the service resolved to the second, shadowing definition, which had neither member —
+confirmed crashing `submit_for_review()` and `reject_reconciliation()` with `AttributeError` on every
+call. `app/schemas/bank_reconciliation.py` independently declares its own `ReconciliationStatus` with
+`PENDING_REVIEW` (not `IN_REVIEW`) as the "awaiting approval" member — used that as the tie-breaker,
+merged the two model classes into one (`DRAFT`/`IN_PROGRESS`/`PENDING_REVIEW`/`APPROVED`/`REJECTED`/
+`COMPLETED`), and renamed the service's `IN_REVIEW` references to `PENDING_REVIEW` to match. `LOCKED`
+(from the original definition) had zero references anywhere and was dropped rather than kept
+speculatively.
+
+**Full column/field disposition:**
+- **Model → DB (this table's real, correct shape already existed in the DB; the model needed to
+  catch up):** `entity_id` (`NOT NULL`, no default — every prior insert attempt would have violated
+  it even if it had gotten past the `AttributeError`), `statement_ending_balance`/
+  `ledger_ending_balance` (replacing the phantom opening/closing quartet), `prepared_by_id`/
+  `prepared_at`/`reviewed_by_id`/`reviewed_at` (genuinely dormant — no code path sets them, added to
+  the model for parity only), `total_emtl`/`total_stamp_duty`/`total_vat_on_charges`/
+  `total_wht_deducted` (dormant), `total_transactions`/`matched_transactions`/
+  `unmatched_bank_transactions`/`unmatched_book_transactions`/`auto_matched_count`/
+  `manual_matched_count` (the first two *are* set, by `_update_reconciliation_statistics()` — see
+  below), `rejection_reason` (already existed in the DB; the service already used the right name).
+- **DB → migrated (genuinely new — existed on neither side, but real service code sets or reads
+  them):** `reference`, `submitted_at`/`submitted_by_id`, `rejected_at`/`rejected_by_id`,
+  `reopened_at`/`reopened_by_id`, `approval_notes`, `completed_at`/`completed_by_id` (model-only
+  before this fix — `complete_reconciliation()`'s assignments to them were silently lost on every
+  commit), `outstanding_items` (declared on the model, unused, added to the DB for parity),
+  `created_by_id`/`updated_by_id` (from `AuditMixin`, dormant, no FK per the mixin's own documented
+  convention). New migration:
+  `alembic/versions/20260920_1245_backfill_bank_reconciliations_column_drift.py`. No backfill was
+  needed for any of these — the table is confirmed structurally unable to hold a single row under
+  the pre-fix code (the `entity_id` `NOT NULL` violation alone guarantees it), so there is no
+  pre-existing data to reconcile against.
+- **Renamed in service code, not added anywhere:** `_update_reconciliation_statistics()` set
+  `recon.unmatched_transactions`, a name that existed on neither the model nor the DB (the DB has
+  `unmatched_bank_transactions`/`unmatched_book_transactions` instead); since this function only ever
+  counts `BankStatementTransaction` rows (no book-side transactions at all), `unmatched_bank_transactions`
+  is the semantically correct target — renamed, `unmatched_book_transactions` stays dormant.
+- **Dependent bug, same table, different file:** `app/services/accounting_service.py`'s
+  `get_bank_account_summary_for_gl()` read `latest_recon.outstanding_deposits`, an attribute that
+  never existed on this model at all (the real field is `deposits_in_transit`, present on both model
+  and DB all along) — would have raised `AttributeError` the first time any bank account actually had
+  a reconciliation row, which was never possible before this fix. Renamed to the real field.
+
+**API surface also updated to match:** `app/schemas/bank_reconciliation.py`'s
+`BankReconciliationCreate`/`Response` gained a `reference` field (previously write-only in intent —
+the service read it in report generation and journal-entry descriptions, but no schema ever exposed a
+way to set it), and `app/routers/bank_reconciliation.py`'s `create_reconciliation` endpoint now passes
+`entity_id` (already available via `get_current_entity_id`, previously never forwarded) and the
+correct `statement_ending_balance`/`ledger_ending_balance`/`reference`/`notes` fields instead of the
+four phantom ones.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for `bank_reconciliations` (only the same cosmetic `NULLABLE`/index-naming/
+`JSON`-vs-`JSONB` residuals seen throughout this session), and a new permanent regression test file
+(`tests/test_bank_reconciliation.py`, `TestBankReconciliationPersistence` — covers
+`create_reconciliation()` end-to-end and the full
+`submit_for_review → reject → reopen → submit_for_review → approve` workflow, which exercises every
+renamed/added workflow field) — 85 tests across `test_bank_reconciliation.py`,
+`test_consolidation.py`, `test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 45 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

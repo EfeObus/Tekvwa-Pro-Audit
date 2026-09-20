@@ -330,6 +330,7 @@ class BankReconciliationCreate(BaseModel):
     period_end: date
     statement_ending_balance: Decimal
     ledger_ending_balance: Decimal
+    reference: Optional[str] = None
     notes: Optional[str] = None
 
     @model_validator(mode="after")
@@ -404,9 +405,10 @@ class BankReconciliationResponse(BaseModel):
     approved_by_id: Optional[UUID] = None
     approved_at: Optional[datetime] = None
     
+    reference: Optional[str] = None
     notes: Optional[str] = None
     rejection_reason: Optional[str] = None
-    
+
     created_at: datetime
     updated_at: datetime
 

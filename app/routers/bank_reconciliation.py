@@ -567,15 +567,15 @@ async def create_reconciliation(
         raise HTTPException(status_code=404, detail="Bank account not found")
     
     reconciliation = await service.create_reconciliation(
+        entity_id=entity_id,
         bank_account_id=recon_data.bank_account_id,
         reconciliation_date=recon_data.reconciliation_date,
         period_start=recon_data.period_start,
         period_end=recon_data.period_end,
-        statement_opening_balance=recon_data.statement_opening_balance,
-        statement_closing_balance=recon_data.statement_closing_balance,
-        book_opening_balance=recon_data.book_opening_balance,
-        book_closing_balance=recon_data.book_closing_balance,
+        statement_ending_balance=recon_data.statement_ending_balance,
+        ledger_ending_balance=recon_data.ledger_ending_balance,
         reference=recon_data.reference,
+        notes=recon_data.notes,
         created_by_id=current_user.id,
     )
     

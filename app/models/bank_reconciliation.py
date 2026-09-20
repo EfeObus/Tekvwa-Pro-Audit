@@ -104,13 +104,28 @@ class MatchConfidenceLevel(str, Enum):
 
 
 class ReconciliationStatus(str, Enum):
-    """Bank reconciliation status."""
+    """
+    Bank reconciliation status.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this file previously declared TWO separate
+    `ReconciliationStatus` classes (this one, and a second one further down that shadowed it
+    at module level). Every real caller of `ReconciliationStatus.IN_REVIEW`/`.REJECTED` in
+    app/services/bank_reconciliation_service.py was actually resolving to the *second*
+    (shadowing) definition, which had neither member — confirmed crashing
+    `submit_for_review()`/`reject_reconciliation()` with AttributeError on every call. Merged
+    into this single definition, matching the real live DB enum type plus every member actually
+    referenced by app/services/bank_reconciliation_service.py and
+    app/schemas/bank_reconciliation.py (whose own `ReconciliationStatus` schema enum already
+    used `PENDING_REVIEW`, not `IN_REVIEW` — service code's `IN_REVIEW` name was renamed to
+    match). `LOCKED` (from the original first definition) had zero references anywhere in the
+    codebase and was dropped rather than carried forward speculatively.
+    """
     DRAFT = "draft"
     IN_PROGRESS = "in_progress"
     PENDING_REVIEW = "pending_review"
-    COMPLETED = "completed"
     APPROVED = "approved"
-    LOCKED = "locked"
+    REJECTED = "rejected"
+    COMPLETED = "completed"
 
 
 class AdjustmentType(str, Enum):
@@ -152,14 +167,6 @@ class ChargeDetectionMethod(str, Enum):
     MANUAL_MATCHED = "manual_matched"
     RECONCILED = "reconciled"
     DISPUTED = "disputed"
-
-
-class ReconciliationStatus(str, Enum):
-    """Bank reconciliation status."""
-    DRAFT = "draft"
-    IN_PROGRESS = "in_progress"
-    COMPLETED = "completed"
-    APPROVED = "approved"
 
 
 # ===========================================
@@ -530,44 +537,58 @@ class BankStatementTransaction(BaseModel):
 class BankReconciliation(BaseModel, AuditMixin):
     """
     Bank reconciliation record for a specific period.
-    
+
     Tracks the reconciliation process and results.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this table's real shape (confirmed via the live
+    migration chain, alembic/versions/20260118_1200_bank_reconciliation_comprehensive.py:283-338)
+    never matched this model at all, and the model's own former
+    statement_opening_balance/statement_closing_balance/book_opening_balance/book_closing_balance
+    quartet didn't exist on the DB or on app/schemas/bank_reconciliation.py's
+    BankReconciliationCreate/Response schemas either -- those use statement_ending_balance/
+    ledger_ending_balance, which is what this model now declares too. entity_id was entirely
+    missing from the model despite being NOT NULL on the live table with no default, and several
+    fields app/services/bank_reconciliation_service.py sets on instances (reference, submitted_at/
+    submitted_by_id, rejected_at/rejected_by_id, reopened_at/reopened_by_id, approval_notes)
+    existed on neither the model nor the DB -- meaning every one of those assignments was silently
+    lost on commit, and POST /reconciliations crashed on its first line
+    (recon_data.statement_opening_balance -- an AttributeError, since that schema never had this
+    field) before even reaching the service. See docs/REMEDIATION_LOG.md for the full account.
     """
-    
+
     __tablename__ = "bank_reconciliations"
-    
+
+    entity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("business_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     bank_account_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("bank_accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     # Reconciliation Period
     reconciliation_date: Mapped[date] = mapped_column(Date, nullable=False)
     period_start: Mapped[date] = mapped_column(Date, nullable=False)
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
-    
-    # Bank Statement Balances
-    statement_opening_balance: Mapped[Decimal] = mapped_column(
+
+    # Balances
+    statement_ending_balance: Mapped[Decimal] = mapped_column(
         Numeric(precision=18, scale=2),
         nullable=False,
     )
-    statement_closing_balance: Mapped[Decimal] = mapped_column(
+    ledger_ending_balance: Mapped[Decimal] = mapped_column(
         Numeric(precision=18, scale=2),
         nullable=False,
     )
-    
-    # Book Balances (from GL)
-    book_opening_balance: Mapped[Decimal] = mapped_column(
-        Numeric(precision=18, scale=2),
-        nullable=False,
-    )
-    book_closing_balance: Mapped[Decimal] = mapped_column(
-        Numeric(precision=18, scale=2),
-        nullable=False,
-    )
-    
+
+    reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
     # Reconciliation Adjustments
     deposits_in_transit: Mapped[Decimal] = mapped_column(
         Numeric(precision=18, scale=2),
@@ -614,15 +635,41 @@ class BankReconciliation(BaseModel, AuditMixin):
         nullable=False,
         comment="Difference after adjustments (should be 0 when reconciled)",
     )
-    
+
+    # Nigerian-specific totals
+    total_emtl: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+    total_stamp_duty: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+    total_vat_on_charges: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+    total_wht_deducted: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+
+    # Statistics
+    total_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    matched_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    unmatched_bank_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    unmatched_book_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    auto_matched_count: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    manual_matched_count: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+
     # Status
     status: Mapped[ReconciliationStatus] = mapped_column(
         SQLEnum(ReconciliationStatus),
         default=ReconciliationStatus.DRAFT,
         nullable=False,
     )
-    
-    # Approval
+
+    # Workflow
+    prepared_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    prepared_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    submitted_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    submitted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    reviewed_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
@@ -639,16 +686,26 @@ class BankReconciliation(BaseModel, AuditMixin):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
+    approval_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rejected_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    rejected_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    rejection_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reopened_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    reopened_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+
     # Notes
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Outstanding Items (JSON for flexibility)
     outstanding_items: Mapped[Optional[dict]] = mapped_column(
         JSON, nullable=True,
         comment="List of outstanding/unreconciled items",
     )
-    
+
     # Relationships
     bank_account: Mapped["BankAccount"] = relationship(
         "BankAccount", back_populates="reconciliations",

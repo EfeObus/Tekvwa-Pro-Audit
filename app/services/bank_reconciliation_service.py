@@ -1414,7 +1414,7 @@ class BankReconciliationService:
         
         recon.total_transactions = total
         recon.matched_transactions = matched
-        recon.unmatched_transactions = total - matched
+        recon.unmatched_bank_transactions = total - matched
         
         await self.db.commit()
     
@@ -1424,39 +1424,39 @@ class BankReconciliationService:
     
     async def create_reconciliation(
         self,
+        entity_id: uuid.UUID,
         bank_account_id: uuid.UUID,
         reconciliation_date: date,
         period_start: date,
         period_end: date,
-        statement_opening_balance: Decimal,
-        statement_closing_balance: Decimal,
-        book_opening_balance: Decimal,
-        book_closing_balance: Decimal,
+        statement_ending_balance: Decimal,
+        ledger_ending_balance: Decimal,
         reference: Optional[str] = None,
+        notes: Optional[str] = None,
         created_by_id: Optional[uuid.UUID] = None,
     ) -> BankReconciliation:
         """
         Create a new bank reconciliation.
-        
+
         Initializes a reconciliation in DRAFT status with computed difference.
         """
         # Calculate initial difference
-        difference = statement_closing_balance - book_closing_balance
-        
+        difference = statement_ending_balance - ledger_ending_balance
+
         recon = BankReconciliation(
+            entity_id=entity_id,
             bank_account_id=bank_account_id,
             reconciliation_date=reconciliation_date,
             period_start=period_start,
             period_end=period_end,
             reference=reference,
-            statement_opening_balance=statement_opening_balance,
-            statement_closing_balance=statement_closing_balance,
-            book_opening_balance=book_opening_balance,
-            book_closing_balance=book_closing_balance,
-            adjusted_bank_balance=statement_closing_balance,
-            adjusted_book_balance=book_closing_balance,
+            statement_ending_balance=statement_ending_balance,
+            ledger_ending_balance=ledger_ending_balance,
+            adjusted_bank_balance=statement_ending_balance,
+            adjusted_book_balance=ledger_ending_balance,
             difference=difference,
             status=ReconciliationStatus.DRAFT,
+            notes=notes,
             created_by_id=created_by_id,
         )
         self.db.add(recon)
@@ -1763,8 +1763,8 @@ class BankReconciliationService:
                     book_adjustments -= amount
         
         # Calculate adjusted balances
-        recon.adjusted_bank_balance = recon.statement_closing_balance + bank_adjustments
-        recon.adjusted_book_balance = recon.book_closing_balance + book_adjustments
+        recon.adjusted_bank_balance = recon.statement_ending_balance + bank_adjustments
+        recon.adjusted_book_balance = recon.ledger_ending_balance + book_adjustments
         recon.difference = recon.adjusted_bank_balance - recon.adjusted_book_balance
         
         # Store adjustment totals
@@ -1819,9 +1819,9 @@ class BankReconciliationService:
         account = account_result.scalar_one_or_none()
         if account:
             account.last_reconciled_date = recon.reconciliation_date
-            account.last_reconciled_balance = recon.statement_closing_balance
-            account.current_balance = recon.statement_closing_balance
-        
+            account.last_reconciled_balance = recon.statement_ending_balance
+            account.current_balance = recon.statement_ending_balance
+
         await self.db.commit()
         await self.db.refresh(recon)
         return recon
@@ -1859,7 +1859,7 @@ class BankReconciliationService:
                 "Difference must be zero."
             )
         
-        recon.status = ReconciliationStatus.IN_REVIEW
+        recon.status = ReconciliationStatus.PENDING_REVIEW
         recon.submitted_at = datetime.utcnow()
         recon.submitted_by_id = submitted_by_id
         if notes:
@@ -1878,13 +1878,13 @@ class BankReconciliationService:
         """
         Approve a reconciliation that's in review.
         
-        Requires IN_REVIEW or COMPLETED status.
+        Requires PENDING_REVIEW or COMPLETED status.
         """
         recon = await self.get_reconciliation(reconciliation_id)
         if not recon:
             raise ValueError("Reconciliation not found")
         
-        if recon.status not in [ReconciliationStatus.IN_REVIEW, ReconciliationStatus.COMPLETED]:
+        if recon.status not in [ReconciliationStatus.PENDING_REVIEW, ReconciliationStatus.COMPLETED]:
             raise ValueError(
                 f"Cannot approve reconciliation in {recon.status.value} status. "
                 "Must be in_review or completed."
@@ -1903,12 +1903,12 @@ class BankReconciliationService:
         account = account_result.scalar_one_or_none()
         if account:
             account.last_reconciled_date = recon.reconciliation_date
-            account.last_reconciled_balance = recon.statement_closing_balance
-        
+            account.last_reconciled_balance = recon.statement_ending_balance
+
         await self.db.commit()
         await self.db.refresh(recon)
         return recon
-    
+
     async def reject_reconciliation(
         self,
         reconciliation_id: uuid.UUID,
@@ -1918,13 +1918,13 @@ class BankReconciliationService:
         """
         Reject a reconciliation back to draft for corrections.
         
-        Requires IN_REVIEW status.
+        Requires PENDING_REVIEW status.
         """
         recon = await self.get_reconciliation(reconciliation_id)
         if not recon:
             raise ValueError("Reconciliation not found")
         
-        if recon.status != ReconciliationStatus.IN_REVIEW:
+        if recon.status != ReconciliationStatus.PENDING_REVIEW:
             raise ValueError(
                 f"Cannot reject reconciliation in {recon.status.value} status. "
                 "Must be in_review."
@@ -2274,10 +2274,8 @@ class BankReconciliationService:
                 "account_name": account.account_name if account else None,
             },
             "balances": {
-                "statement_opening": float(recon.statement_opening_balance),
-                "statement_closing": float(recon.statement_closing_balance),
-                "book_opening": float(recon.book_opening_balance),
-                "book_closing": float(recon.book_closing_balance),
+                "statement_ending": float(recon.statement_ending_balance),
+                "ledger_ending": float(recon.ledger_ending_balance),
                 "adjusted_bank": float(recon.adjusted_bank_balance),
                 "adjusted_book": float(recon.adjusted_book_balance),
                 "difference": float(recon.difference),

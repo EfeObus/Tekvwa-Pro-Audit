@@ -1892,7 +1892,7 @@ Fixed Asset Register Summary as at {as_of_date.strftime('%B %d, %Y')}:
             if latest_recon:
                 if last_reconciled is None or latest_recon.reconciliation_date > last_reconciled:
                     last_reconciled = latest_recon.reconciliation_date
-                outstanding_deposits += Decimal(str(latest_recon.outstanding_deposits or 0))
+                outstanding_deposits += Decimal(str(latest_recon.deposits_in_transit or 0))
                 outstanding_checks += Decimal(str(latest_recon.outstanding_checks or 0))
         
         return BankAccountSummaryForGL(
