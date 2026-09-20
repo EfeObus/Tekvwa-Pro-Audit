@@ -386,8 +386,10 @@ present before this fix too), and a new permanent regression test
 `ApprovalWorkflowService.create_workflow` end-to-end through the real service layer — the same 72
 tests across `test_workflow_integration.py`/`test_consolidation.py`/`test_budget.py` all pass.
 
-**Status:** ✅ Fixed, verified, deployed (see the deploy entry following this one). 60 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `a11b8d3`, build
+`e20d0eda-5029-4a1d-9cd6-00d3c1381625` — `verify-migration-applied` confirmed
+`68893a772b64 (head)`, `proaudit-web-00016-vk8` live, health check passing). 60 of the original 66
+Finding-50 tables remain.
 
 ---
 
