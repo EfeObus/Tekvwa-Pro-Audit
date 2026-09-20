@@ -132,6 +132,8 @@ class BankAccountBase(BaseModel):
     gl_account_name: Optional[str] = Field(None, max_length=100)
     is_primary: bool = Field(default=False)
     opening_balance: Decimal = Field(default=Decimal("0.00"))
+    opening_balance_date: Optional[date] = None
+    notes: Optional[str] = None
 
 
 class BankAccountCreate(BankAccountBase):

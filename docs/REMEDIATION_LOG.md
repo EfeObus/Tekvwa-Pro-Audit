@@ -914,6 +914,61 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — bank_accounts, same class of bug as bank_reconciliations (2026-09-20)
+
+Tier 2 (12 `ADD_DROP`), same table family as the previous entry and the same underlying pattern:
+`POST /accounts` crashed on its first line (`account_data.opening_balance_date`/`.notes` —
+`AttributeError`, neither existed on `BankAccountCreate`), and `create_bank_account()` would then
+have hit a second crash passing `sort_code=` to the `BankAccount` constructor — a field
+`app/schemas/bank_reconciliation.py`'s `BankAccountBase` already declared (along with `swift_code`/
+`iban`/`branch_name`/`branch_address`), none of which existed on the model or the live table. Root
+cause: the comprehensive migration
+(`alembic/versions/20260118_1200_bank_reconciliation_comprehensive.py:119-149`) had DDL for exactly
+these columns, but gated it behind `IF NOT EXISTS (SELECT ... table_name = 'bank_accounts')`, which
+never fired since the table already existed from the earlier
+`20260108_2030_add_bank_reconciliation_expense_claims.py` migration — so this intended shape never
+reached production. Confirmed via the same full-migration-chain-replay + live-table-introspection
+method used for `bank_reconciliations` (not by reading migration files in isolation, since the
+`IF NOT EXISTS` guard makes that unreliable here).
+
+`create_bank_account()` is the only `BankAccount(...)` construction site anywhere in the codebase —
+same "confirmed structurally unable to hold a row" guarantee as `bank_reconciliations`, so no
+backfill was needed for any column added here.
+
+**Model → DB (model already had these; DB needed to catch up):** `gl_account_name`,
+`opening_balance`/`opening_balance_date`, `is_primary`, `notes`, `api_enabled`/`api_credentials`
+(both dormant — declared, never set anywhere), `created_by_id`/`updated_by_id` (from `AuditMixin`,
+dormant before this fix — `create_bank_account()` already passed `created_by_id`, silently lost on
+every commit), `last_sync_at` (dormant).
+
+**Genuinely new (existed on neither side, but the schema/service need them):** `sort_code`,
+`swift_code`, `iban`, `branch_name`, `branch_address`. Migration:
+`alembic/versions/20260920_1300_backfill_bank_accounts_column_drift.py`.
+
+**DB → model (DB already had these with no model equivalent):** `mono_auth_code`,
+`stitch_payment_consent_id` — both dormant, no code path sets them.
+
+**Also fixed:** `create_bank_account()`'s signature gained `gl_account_name`/`swift_code`/`iban`/
+`branch_name`/`branch_address`/`is_primary` parameters (the schema already offered `is_primary` to
+API callers, but the router never forwarded it — always silently defaulted to `False` regardless of
+what was requested), and `app/routers/bank_reconciliation.py`'s `create_bank_account` endpoint now
+forwards all of them. `app/schemas/bank_reconciliation.py`'s `BankAccountBase` gained
+`opening_balance_date`/`notes` (previously accepted by neither side — `notes` and
+`opening_balance_date` were being read off the create schema by the router despite never being
+declared on it).
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for `bank_accounts` (only the usual cosmetic `NULLABLE`/enum-vs-`VARCHAR`/
+unique-constraint-naming residuals), and a new permanent regression test
+(`TestBankAccountPersistence` in `tests/test_bank_reconciliation.py`, exercising every new field via
+`create_bank_account()`) — 86 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
+`test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 44 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

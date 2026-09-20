@@ -1,5 +1,5 @@
 """
-Regression coverage for Finding 50's bank_reconciliations column drift
+Regression coverage for Finding 50's bank_accounts/bank_reconciliations column drift
 (docs/FINDING_50_SCOPE.md, docs/REMEDIATION_LOG.md).
 
 Before this fix, POST /reconciliations crashed on its first line
@@ -7,7 +7,8 @@ Before this fix, POST /reconciliations crashed on its first line
 service-level call would have violated the live table's NOT NULL entity_id constraint, since
 the model never declared entity_id at all. submit_for_review()/reject_reconciliation() also
 referenced ReconciliationStatus.IN_REVIEW, a member that existed on neither of the file's two
-(duplicate, shadowing) enum definitions.
+(duplicate, shadowing) enum definitions. POST /accounts had the same class of bug: crashing on
+account_data.opening_balance_date/.notes before ever reaching the service.
 """
 from datetime import date
 from decimal import Decimal
@@ -34,6 +35,51 @@ async def _make_bank_account(db_session: AsyncSession, entity: BusinessEntity) -
     await db_session.commit()
     await db_session.refresh(account)
     return account
+
+
+class TestBankAccountPersistence:
+    """
+    Regression coverage for Finding 50's BankAccount column drift.
+
+    Before this fix, POST /accounts crashed on its first line
+    (account_data.opening_balance_date/.notes -- AttributeError, neither existed on
+    BankAccountCreate), and create_bank_account() would then have hit a second crash passing
+    sort_code= to the BankAccount constructor -- a field the request schema declared (along with
+    swift_code/iban/branch_name/branch_address) that existed on neither the model nor the DB.
+    """
+
+    async def test_create_bank_account_with_full_schema_fields(
+        self, db_session: AsyncSession, test_entity: BusinessEntity, test_user: User,
+    ):
+        service = get_bank_reconciliation_service(db_session)
+
+        account = await service.create_bank_account(
+            entity_id=test_entity.id,
+            bank_name="GTBank",
+            account_name="Operating Account",
+            account_number="0123456789",
+            opening_balance=Decimal("10000.00"),
+            opening_balance_date=date(2026, 9, 1),
+            sort_code="123456",
+            swift_code="GTBINGLA",
+            iban="NG21GTB0123456789012",
+            branch_name="Victoria Island",
+            branch_address="1 Ahmadu Bello Way, Lagos",
+            is_primary=True,
+            notes="Primary operating account",
+            created_by_id=test_user.id,
+        )
+
+        assert account.id is not None
+        assert account.entity_id == test_entity.id
+        assert account.sort_code == "123456"
+        assert account.swift_code == "GTBINGLA"
+        assert account.iban == "NG21GTB0123456789012"
+        assert account.branch_name == "Victoria Island"
+        assert account.is_primary is True
+        assert account.opening_balance == Decimal("10000.00")
+        assert account.current_balance == Decimal("10000.00")
+        assert account.notes == "Primary operating account"
 
 
 class TestBankReconciliationPersistence:

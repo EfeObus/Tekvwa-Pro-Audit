@@ -176,9 +176,19 @@ class ChargeDetectionMethod(str, Enum):
 class BankAccount(BaseModel, AuditMixin):
     """
     Bank account for reconciliation purposes.
-    
+
     Links to the Chart of Accounts (GL) for proper accounting integration.
     Supports Nigerian banking APIs: Mono, Okra, Stitch.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): POST /accounts crashed on its first line
+    (account_data.opening_balance_date/.notes -- AttributeError, neither existed on
+    BankAccountCreate) before ever reaching this model, and the service's own
+    create_bank_account() would then have hit a second crash passing sort_code= to this
+    constructor -- a field the schema declares (app/schemas/bank_reconciliation.py's
+    BankAccountBase also declares swift_code/iban/branch_name/branch_address, none of which
+    existed here either). Added below, matching the schema and the comprehensive migration's
+    original (never-applied, since the table already existed) intended shape. mono_auth_code/
+    stitch_payment_consent_id existed on the live DB with no model equivalent at all.
     """
     
     __tablename__ = "bank_accounts"
@@ -204,7 +214,12 @@ class BankAccount(BaseModel, AuditMixin):
         String(10), nullable=True,
         comment="CBN bank code for electronic transfers",
     )
-    
+    sort_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    swift_code: Mapped[Optional[str]] = mapped_column(String(11), nullable=True)
+    iban: Mapped[Optional[str]] = mapped_column(String(34), nullable=True)
+    branch_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    branch_address: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     # GL Integration
     gl_account_code: Mapped[Optional[str]] = mapped_column(
         String(20), nullable=True,
@@ -238,17 +253,19 @@ class BankAccount(BaseModel, AuditMixin):
     mono_account_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     mono_connected: Mapped[bool] = mapped_column(Boolean, default=False)
     mono_last_sync: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    
+    mono_auth_code: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     # Okra API (https://okra.ng)
     okra_account_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     okra_record_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     okra_connected: Mapped[bool] = mapped_column(Boolean, default=False)
     okra_last_sync: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    
+
     # Stitch API (https://stitch.money)
     stitch_account_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     stitch_connected: Mapped[bool] = mapped_column(Boolean, default=False)
     stitch_last_sync: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    stitch_payment_consent_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
     # Sync Settings
     auto_sync_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

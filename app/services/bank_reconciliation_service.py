@@ -121,8 +121,14 @@ class BankReconciliationService:
         opening_balance: Decimal = Decimal("0.00"),
         opening_balance_date: Optional[date] = None,
         gl_account_code: Optional[str] = None,
+        gl_account_name: Optional[str] = None,
         bank_code: Optional[str] = None,
         sort_code: Optional[str] = None,
+        swift_code: Optional[str] = None,
+        iban: Optional[str] = None,
+        branch_name: Optional[str] = None,
+        branch_address: Optional[str] = None,
+        is_primary: bool = False,
         notes: Optional[str] = None,
         created_by_id: Optional[uuid.UUID] = None,
         # API integration fields
@@ -132,7 +138,7 @@ class BankReconciliationService:
     ) -> BankAccount:
         """
         Create a new bank account for reconciliation.
-        
+
         Supports Nigerian banks with optional API integrations (Mono, Okra, Stitch).
         """
         account = BankAccount(
@@ -146,8 +152,14 @@ class BankReconciliationService:
             opening_balance_date=opening_balance_date or date.today(),
             current_balance=opening_balance,
             gl_account_code=gl_account_code,
+            gl_account_name=gl_account_name,
             bank_code=bank_code,
             sort_code=sort_code,
+            swift_code=swift_code,
+            iban=iban,
+            branch_name=branch_name,
+            branch_address=branch_address,
+            is_primary=is_primary,
             notes=notes,
             created_by_id=created_by_id,
             mono_account_id=mono_account_id,
