@@ -560,8 +560,10 @@ no DDL, as expected for a pure ORM-level construct), and a new permanent regress
 through the real service and approves it, exercising both bugs' fixes end-to-end — 76 tests across
 the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 56 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `5a04e7c`, build
+`d45d951e-203b-45cc-8de4-1923cacee70a` — `verify-migration-applied` confirmed
+`5f429b0ba4cf (head)`, `proaudit-web-00020-9t4` live, health check passing). 56 of the original 66
+Finding-50 tables remain.
 
 ---
 
