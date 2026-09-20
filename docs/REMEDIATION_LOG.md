@@ -1210,7 +1210,10 @@ regression test file (`tests/test_fixed_assets.py`) exercising `create_asset()` 
 `test_bank_reconciliation.py`, `test_consolidation.py`, `test_workflow_integration.py`, and
 `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 36 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `78e29aa`, build
+`19f66870-3e4a-49e0-a1fb-3d7c82d9b701` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 3a1c0b05fc35 (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00037-nd7`, `/health` returns 200. 36 of the
 original 66 Finding-50 tables remain.
 
 ---
