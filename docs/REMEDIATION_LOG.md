@@ -350,6 +350,48 @@ remediation requires" section for the options presented to the user.
 
 ---
 
+## First real deploy of this remediation effort (2026-09-19)
+
+Pushed all commits through `b3c2bdc` (Phase 0 + Finding 49 partial fix + Finding 50 scoping) to
+`origin/main`, then ran the actual Cloud Run deploy for the first time this session, per the user's
+standing instruction to push and deploy each session rather than leave verified work sitting local.
+
+**Found and fixed two real infrastructure bugs in the process, neither related to the application code
+itself:**
+1. Cloud Build's service account (the default Compute Engine SA,
+   `966191721117-compute@developer.gserviceaccount.com`) had zero project-level IAM roles — likely
+   because this project was created under GCP's current policy of not auto-granting Editor to default
+   service accounts. Fixed by the user granting it `roles/cloudbuild.builds.builder`, `roles/run.admin`,
+   `roles/artifactregistry.writer`, `roles/iam.serviceAccountUser` (one-time project setup, not needed
+   again).
+2. `cloudbuild.yaml` used Cloud Build's `$SHORT_SHA` substitution, which is only populated when a build
+   is triggered from a linked git repo trigger — this repo has no trigger configured (confirmed via
+   `gcloud builds triggers list` — 0 items), so a plain local `gcloud builds submit` left it empty,
+   producing an unparseable image tag. Fixed (commit `564199e`) by adding an explicit `_TAG`
+   substitution, always passed as the real commit's short SHA at submit time.
+3. `gcr.io/google-cloud-sdk/slim` (the builder image used for every `gcloud`-running step) no longer
+   resolves — confirmed via a plain anonymous `docker pull` returning a 403 (Container Registry's legacy
+   paths have been migrating to Artifact Registry mirrors). Fixed (commit `0a5ca1c`) by switching to
+   `gcr.io/google.com/cloudsdktool/cloud-sdk:slim`, verified pullable.
+
+**Result:** build `a9d58615-fd35-4a5f-a9fc-7e5b36307262` — SUCCESS. Migration job ran (no-op, as
+expected — every model fix through this point was verified DDL-neutral in Phase 0/1.5, so there was
+nothing new for Alembic to apply). All three services redeployed:
+`proaudit-web` now on revision `proaudit-web-00013-bw6` (100% traffic, up from the Phase 0 baseline
+`proaudit-web-00012-6sb`), plus `proaudit-worker` and `proaudit-beat` worker pools. Smoke test:
+`GET /health` on the live URL (`https://proaudit-web-kipujaq7xa-bq.a.run.app/health`) returns `200`.
+
+**What actually shipped to production in this deploy:** Finding 19 (payroll_advanced.py registration,
+fully closed), 58 of Finding 49's 93 mismatches (57 from Phase 0 + `budget_periods.tenant_id`), and the
+CI visibility fix. Finding 50 is documentation only in this deploy — no model or router code for it has
+been touched yet, so none of its confirmed-broken features (e.g. `POST /intercompany`) are any better or
+worse than before.
+
+**New rollback target for anything from this point forward:** `proaudit-web-00013-bw6`.
+`proaudit-web-00012-6sb` remains the rollback target for anything pre-dating this deploy.
+
+---
+
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
 straightforward — the original audit's own instruction against skipping "simple" work applies equally
 here.)*
