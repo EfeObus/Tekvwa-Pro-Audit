@@ -393,10 +393,11 @@ not a larger historical backlog — confirmed, not inferred, before concluding t
    three service deploy steps (`proaudit-web`/`proaudit-worker`/`proaudit-beat`) now wait on this new
    step, not directly on `run-migrations`.
 
-**Not yet done:** a real end-to-end Cloud Build run exercising the new `verify-migration-applied`
-step hasn't happened yet (this fix was written and manually dry-run command-by-command against
-production directly, not yet through an actual `gcloud builds submit`) — see whether the next real
-deploy in this log confirms it end-to-end.
+**Validated end-to-end** (commit `aea6f10`, build `dd2c5dea-77ae-40b2-92c2-563a455dd1ef`): a real
+`gcloud builds submit` run (not a manual dry-run) shows `verify-migration-applied` printing
+`Post-migration state: 5300207c437e (head)` and proceeding to the three service deploys without
+hitting the `FAILED` branch. `proaudit-web` now on revision `proaudit-web-00015-bdb` (100% traffic),
+`GET /health` returns `200`. The fix works in the real pipeline, not just when run by hand.
 
 **Why this belongs in this log despite being infrastructure, not application code:** it directly
 undermines the safety story this whole remediation effort depends on — every "verified DDL-neutral,
