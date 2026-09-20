@@ -507,28 +507,28 @@ class BankReconciliationService:
                 bank_reference=txn_data.get("bank_reference"),
                 debit_amount=debit,
                 credit_amount=credit,
-                running_balance=txn_data.get("balance"),
+                balance=txn_data.get("balance"),
                 source=source,
                 match_status=MatchStatus.UNMATCHED,
             )
-            
+
             # Auto-detect Nigerian charges
             if auto_detect_charges:
                 charge_info = self._detect_nigerian_charge(txn_data["description"], debit)
                 if charge_info:
                     txn.is_bank_charge = True
-                    txn.charge_type = charge_info.get("charge_type")
-                    txn.charge_detection_method = ChargeDetectionMethod.AUTO
-                    
+                    txn.detected_charge_type = charge_info.get("charge_type")
+                    txn.charge_detection_method = ChargeDetectionMethod.NARRATION_PATTERN
+
                     # Set specific charge flags
                     if charge_info.get("is_emtl"):
                         txn.is_emtl = True
                     if charge_info.get("is_stamp_duty"):
                         txn.is_stamp_duty = True
                     if charge_info.get("is_vat"):
-                        txn.is_vat = True
+                        txn.is_vat_charge = True
                     if charge_info.get("is_wht"):
-                        txn.is_wht = True
+                        txn.is_wht_deduction = True
                     
                     charge_count += 1
             

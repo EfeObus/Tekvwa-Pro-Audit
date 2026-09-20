@@ -1002,6 +1002,71 @@ no migration. `proaudit-web` latest revision `proaudit-web-00033-25n`, `/health`
 
 ---
 
+## Finding 50 progress — bank_statement_transactions, worst competing-call-sites case yet (2026-09-20)
+
+Tier 2 (11 `ADD_DROP`), but far worse in practice than that count suggested: all 4 real
+construction sites of `BankStatementTransaction` — `app/services/bank_integration_service.py`'s
+Mono, Okra, and Stitch importers, and `app/services/bank_reconciliation_service.py`'s
+`import_statement_transactions()` — each passed at least one keyword argument that existed on
+neither the model nor the live table, and each imagined a *different* subset of fields, so every
+real bank-statement import path has always crashed with `TypeError` before ever reaching the DB.
+Same "confirmed structurally unable to hold a row" guarantee as `bank_reconciliations`/
+`bank_accounts` — no backfill needed for anything added here.
+
+**DB → model (DB already had these; Mono/Okra/Stitch importers already used the right names):**
+`bank_account_id` (`NOT NULL` — the single biggest gap, missing from the model entirely),
+`narration`, `transaction_type`, `channel`, `posted_date`, `reversal_reason`, `source`,
+`external_id`. Also relaxed `statement_id` to nullable (matching the live
+`ON DELETE SET NULL`/no-`NOT NULL` column — the model had it backwards as `NOT NULL`/`CASCADE`),
+and relaxed `raw_narration`/`description` to nullable (none of the 4 call sites reliably set
+either).
+
+**Genuinely new (existed on neither side, needed by `import_statement_transactions()`):**
+`description` (a cleaned, user-facing description distinct from `raw_narration`),
+`reconciliation_id`/`import_id` (link an imported transaction back to a reconciliation or import
+batch — the DB's existing `statement_id` doesn't cover either concept), `charge_detection_method`.
+Migration: `alembic/versions/20260920_1315_backfill_bank_statement_transactions_col.py`.
+
+**Model → DB, direction (A) — the reverse of every other field above:** `match_status` (the
+model's existing richer status enum: `UNMATCHED`/`SUGGESTED`/`AUTO_MATCHED`/`MANUAL_MATCHED`/
+`PARTIALLY_MATCHED`/`RECONCILED`/`EXCLUDED`) had no DB equivalent at all — the live table instead
+has a plain `is_matched` boolean. `match_status` has 10+ real call sites in
+`bank_reconciliation_service.py` (filtering, grouping for statistics, explicit state
+transitions) vs. 3 boolean-only call sites for `is_matched` in `app/services/matching_engine.py`
+— migrated the DB to the richer design and rewrote `matching_engine.py`'s 3 usages onto
+`match_status` (`== False` → `== MatchStatus.UNMATCHED`, a manual-engine match → `AUTO_MATCHED`,
+unmatch → back to `UNMATCHED`). `is_matched` itself stays in the DB, unmapped, per this session's
+additive-only policy — nothing references it any more.
+
+**Dependent bugs found and fixed while making `import_statement_transactions()` actually
+callable:**
+- `running_balance=` → the model/DB field is `balance`; renamed at the one call site that used it.
+- `txn.charge_type` / `txn.is_vat` / `txn.is_wht` → renamed to the real field names
+  `detected_charge_type` / `is_vat_charge` / `is_wht_deduction`.
+- `ChargeDetectionMethod.AUTO` — didn't exist on either version of this enum.
+  `app/models/bank_reconciliation.py`'s own `ChargeDetectionMethod` had a corrupted member set
+  (`NARRATION_REGEX`/`AMOUNT_EXACT`/`AMOUNT_RANGE`/`COMBINED`/`UNMATCHED`/`AUTO_MATCHED`/
+  `MANUAL_MATCHED`/`RECONCILED` — the last four apparently copy-pasted from `MatchStatus` and
+  conceptually unrelated to "how was this charge detected"). Replaced with
+  `app/schemas/bank_reconciliation.py`'s own, already-correct, independently-declared
+  `ChargeDetectionMethod` (`NARRATION_PATTERN`/`EXACT_AMOUNT`/`AMOUNT_RANGE`/`KEYWORD_MATCH`/
+  `COMBINED`), and updated the one call site to `NARRATION_PATTERN`, matching what that code path
+  (regex/keyword matching against the transaction description) actually does.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for `bank_statement_transactions` (only the deliberate, intentional
+`is_matched` residual described above, plus the usual cosmetic `NULLABLE`/enum-vs-`VARCHAR`/
+index-naming residuals), and a new permanent regression test
+(`TestBankStatementTransactionPersistence` in `tests/test_bank_reconciliation.py`) exercising
+`import_statement_transactions()` end-to-end including automatic Nigerian-charge detection —
+88 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
+`test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 42 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

@@ -24,6 +24,7 @@ from app.models.bank_reconciliation import (
     BankStatementTransaction,
     MatchConfidenceLevel,
     MatchingRule,
+    MatchStatus,
     MatchType,
 )
 from app.models.transaction import Transaction
@@ -203,7 +204,7 @@ class MatchingEngine:
             select(BankStatementTransaction).where(
                 and_(
                     BankStatementTransaction.bank_account_id == bank_account_id,
-                    BankStatementTransaction.is_matched == False,
+                    BankStatementTransaction.match_status == MatchStatus.UNMATCHED,
                     BankStatementTransaction.transaction_date >= period_start,
                     BankStatementTransaction.transaction_date <= period_end,
                 )
@@ -736,7 +737,7 @@ class MatchingEngine:
             # Update bank transaction
             bank_txn = self._bank_transactions.get(match.bank_transaction_id)
             if bank_txn:
-                bank_txn.is_matched = True
+                bank_txn.match_status = MatchStatus.AUTO_MATCHED
                 bank_txn.matched_transaction_id = match.ledger_transaction_id
                 bank_txn.match_type = match.match_type
                 bank_txn.match_group_id = match.match_group_id
@@ -763,7 +764,7 @@ class MatchingEngine:
         transactions = result.scalars().all()
         
         for txn in transactions:
-            txn.is_matched = False
+            txn.match_status = MatchStatus.UNMATCHED
             txn.matched_transaction_id = None
             txn.match_type = None
             txn.match_group_id = None

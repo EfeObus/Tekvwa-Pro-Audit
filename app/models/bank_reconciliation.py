@@ -157,15 +157,24 @@ class UnmatchedItemType(str, Enum):
 
 
 class ChargeDetectionMethod(str, Enum):
-    """Method for detecting bank charges."""
-    NARRATION_REGEX = "narration_regex"
-    AMOUNT_EXACT = "amount_exact"
+    """
+    Method for detecting bank charges.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this enum previously had a corrupted member set --
+    NARRATION_REGEX/AMOUNT_EXACT plus UNMATCHED/AUTO_MATCHED/MANUAL_MATCHED/RECONCILED, the last
+    four apparently copy-pasted from MatchStatus and unrelated to "how was this charge detected".
+    app/services/bank_reconciliation_service.py's only real reference,
+    `ChargeDetectionMethod.AUTO`, matched no member on either version -- confirmed crashing with
+    AttributeError. Replaced with app/schemas/bank_reconciliation.py's own (already correct,
+    independently-declared) ChargeDetectionMethod member set, and the one call site updated to
+    NARRATION_PATTERN, matching what that call site's detection function (pattern/keyword
+    matching against the transaction description) actually does.
+    """
+    NARRATION_PATTERN = "narration_pattern"
+    EXACT_AMOUNT = "exact_amount"
     AMOUNT_RANGE = "amount_range"
+    KEYWORD_MATCH = "keyword_match"
     COMBINED = "combined"
-    UNMATCHED = "unmatched"
-    AUTO_MATCHED = "auto_matched"
-    MANUAL_MATCHED = "manual_matched"
-    RECONCILED = "reconciled"
     DISPUTED = "disputed"
 
 
@@ -404,35 +413,74 @@ class BankStatement(BaseModel):
 class BankStatementTransaction(BaseModel):
     """
     Individual transaction from a bank statement.
-    
+
     Enhanced with Nigerian-specific features:
     - EMTL (Electronic Money Transfer Levy) detection
     - Stamp Duty detection
     - Bank charge categorization
     - Reversal tracking
     - Clean narration (post-regex processing)
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): the worst case of competing, mutually-inconsistent
+    call sites found in this remediation pass -- all 4 constructors of this model
+    (app/services/bank_integration_service.py's Mono/Okra/Stitch importers, and
+    app/services/bank_reconciliation_service.py's import_statement_transactions()) passed at
+    least one keyword argument that existed on neither this model nor the live table, so every
+    real bank-statement import path has always crashed with TypeError before ever reaching the
+    DB. bank_account_id/narration/transaction_type/channel/posted_date/reversal_reason/source/
+    external_id below all existed on the live table already (added here, Direction B).
+    reconciliation_id/import_id/charge_detection_method existed on neither side but are needed by
+    import_statement_transactions() (added to both, Direction A). match_status already existed
+    here with no DB equivalent (the DB instead has a plain is_matched boolean, used by
+    app/services/matching_engine.py) -- match_status is the richer, far-more-used design (10+
+    call sites in bank_reconciliation_service.py vs. 3 in matching_engine.py), so it was added to
+    the DB and matching_engine.py's is_matched usages were migrated to it; is_matched itself stays
+    in the DB, unmapped, per this session's additive-only policy.
     """
-    
+
     __tablename__ = "bank_statement_transactions"
-    
-    statement_id: Mapped[uuid.UUID] = mapped_column(
+
+    bank_account_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("bank_statements.id", ondelete="CASCADE"),
+        ForeignKey("bank_accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
+    statement_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bank_statements.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    reconciliation_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bank_reconciliations.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    import_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("bank_statement_imports.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Transaction Details
     transaction_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     value_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    
+    posted_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    transaction_type: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    channel: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    source: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    external_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     # Narration
-    raw_narration: Mapped[str] = mapped_column(Text, nullable=False)
+    raw_narration: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     clean_narration: Mapped[Optional[str]] = mapped_column(
         Text, nullable=True,
         comment="Cleaned narration after regex processing",
     )
-    description: Mapped[str] = mapped_column(Text, nullable=False)  # Alias for compatibility
+    narration: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Alias for compatibility
     reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
     bank_reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
@@ -458,6 +506,7 @@ class BankStatementTransaction(BaseModel):
         UUID(as_uuid=True), nullable=True,
         comment="ID of the transaction this reverses",
     )
+    reversal_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_emtl: Mapped[bool] = mapped_column(
         Boolean, default=False,
         comment="Electronic Money Transfer Levy (N50 on inflows > N10,000)",
@@ -474,7 +523,10 @@ class BankStatementTransaction(BaseModel):
     detected_charge_type: Mapped[Optional[str]] = mapped_column(
         SQLEnum(AdjustmentType), nullable=True,
     )
-    
+    charge_detection_method: Mapped[Optional[str]] = mapped_column(
+        SQLEnum(ChargeDetectionMethod), nullable=True,
+    )
+
     # Matching
     match_status: Mapped[MatchStatus] = mapped_column(
         SQLEnum(MatchStatus),

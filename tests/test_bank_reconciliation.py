@@ -17,7 +17,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.bank_reconciliation import (
-    BankAccount, BankAccountType, BankStatement, ReconciliationStatus,
+    BankAccount, BankAccountType, BankStatement, BankStatementSource,
+    ChargeDetectionMethod, MatchStatus, ReconciliationStatus,
 )
 from app.models.entity import BusinessEntity
 from app.models.user import User
@@ -116,6 +117,55 @@ class TestBankStatementPersistence:
         assert statement.end_date == date(2026, 9, 30)
         assert statement.transaction_count == 5
         assert statement.total_credits == Decimal("6000.00")
+
+
+class TestBankStatementTransactionPersistence:
+    """
+    Regression coverage for Finding 50's BankStatementTransaction column drift.
+
+    All 4 real construction sites of this model (3 in bank_integration_service.py's Mono/Okra/
+    Stitch importers, 1 in bank_reconciliation_service.py's import_statement_transactions())
+    passed at least one keyword argument that existed on neither the model nor the live table --
+    confirmed crashing with TypeError on every call. This test exercises the
+    import_statement_transactions() path end-to-end, including automatic Nigerian charge
+    detection, which also depended on a corrupted ChargeDetectionMethod enum
+    (ChargeDetectionMethod.AUTO didn't exist on either its old or new member set).
+    """
+
+    async def test_import_statement_transactions_with_charge_detection(
+        self, db_session: AsyncSession, test_entity: BusinessEntity,
+    ):
+        account = await _make_bank_account(db_session, test_entity)
+        service = get_bank_reconciliation_service(db_session)
+
+        result = await service.import_statement_transactions(
+            bank_account_id=account.id,
+            reconciliation_id=None,
+            transactions=[
+                {
+                    "transaction_date": date(2026, 9, 5),
+                    "description": "EMTL CHARGE ON TRANSFER",
+                    "debit_amount": Decimal("50.00"),
+                    "credit_amount": Decimal("0.00"),
+                    "balance": Decimal("9950.00"),
+                    "reference": "TXN001",
+                },
+            ],
+            source=BankStatementSource.MANUAL_ENTRY,
+        )
+
+        assert result["imported"] == 1
+        assert result["charges_detected"] == 1
+
+        txns = await service.get_statement_transactions(bank_account_id=account.id)
+        assert len(txns) == 1
+        txn = txns[0]
+        assert txn.bank_account_id == account.id
+        assert txn.balance == Decimal("9950.00")
+        assert txn.match_status == MatchStatus.UNMATCHED
+        assert txn.is_emtl is True
+        assert txn.detected_charge_type == "emtl"
+        assert txn.charge_detection_method == ChargeDetectionMethod.NARRATION_PATTERN
 
 
 class TestBankReconciliationPersistence:
