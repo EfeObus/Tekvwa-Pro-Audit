@@ -776,8 +776,10 @@ cosmetic residuals, unrelated). Rather than a new test, extended the existing `A
 regression test's `ChartOfAccounts` construction with an assertion on the new field — 82 tests
 across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 48 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `960407b`, build
+`f86a330e-fe5c-4808-8ebf-244826b01adf` — `verify-migration-applied` confirmed head unchanged at
+`f5829862f984` as expected since this fix needed no migration, `proaudit-web-00028-6qc` live,
+health check passing). 48 of the original 66 Finding-50 tables remain.
 
 ---
 
