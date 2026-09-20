@@ -1149,7 +1149,10 @@ error (the same class of issue documented earlier this session for `ApprovalWork
 across `test_bank_reconciliation.py`, `test_consolidation.py`, `test_workflow_integration.py`, and
 `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 38 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `c5e5ede`, build
+`d20ca523-ac90-4ff3-ac2a-749966d0dbff` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 0fc583c63898 (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00036-psh`, `/health` returns 200. 38 of the
 original 66 Finding-50 tables remain.
 
 ---
