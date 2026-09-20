@@ -758,15 +758,21 @@ class EntityGroup(BaseModel):
     Parent-subsidiary relationships for consolidation
     """
     __tablename__ = "entity_groups"
-    
+
     organization_id = Column(UUID(as_uuid=True), ForeignKey("organizations.id"), nullable=False, index=True)
-    
-    name = Column(String(255), nullable=False)
+
+    name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    
-    parent_entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False)
+
+    # Finding 50 (docs/FINDING_50_SCOPE.md): this column and fiscal_year_end_month below did not
+    # exist on the live table until alembic/versions/20260919_2124_add_missing_columns_to_entity_groups.py
+    # added them. nullable=True here (not the originally-intended NOT NULL) because a data-driven
+    # backfill can't invent a parent for a zero-member group, and this environment can't confirm no
+    # such group exists in production - see that migration's docstring. Tighten to NOT NULL (both
+    # here and at the DB level) once that's verified.
+    parent_entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=True)
     consolidation_currency = Column(String(3), default="NGN")
-    
+
     fiscal_year_end_month = Column(Integer, default=12)  # December
     
     is_active = Column(Boolean, default=True)
@@ -823,18 +829,25 @@ class EntityGroupMember(BaseModel):
 class IntercompanyTransaction(BaseModel):
     """
     Tracks inter-company transactions for elimination during consolidation
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): from_entity_id/to_entity_id/transaction_date/currency/
+    from_transaction_id/to_transaction_id/elimination_date/notes below did not exist on the live table
+    until alembic/versions/20260919_2120_backfill_intercompany_transactions_.py added and backfilled
+    them from the original migration's source_entity_id/target_entity_id/source_transaction_id/
+    target_transaction_id/eliminated_at/description columns, which still exist on the table (unused by
+    this model going forward) pending a later cleanup migration to drop them.
     """
     __tablename__ = "intercompany_transactions"
-    
+
     group_id = Column(UUID(as_uuid=True), ForeignKey("entity_groups.id"), nullable=False)
-    
+
     from_entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False)
     to_entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False)
-    
+
     transaction_date = Column(Date, nullable=False)
     transaction_type = Column(String(50), nullable=False)  # sale, purchase, loan, dividend, etc.
-    
-    amount = Column(Numeric(18, 2), nullable=False)
+
+    amount = Column(Numeric(20, 2), nullable=False)
     currency = Column(String(3), default="NGN")
     
     # Matching

@@ -522,6 +522,83 @@ class TestConsolidationValidation:
 
 
 # =============================================================================
+# INTERCOMPANY TRANSACTION PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# Every test above in this file is pure arithmetic with no database involved, so none of them
+# would have caught this: IntercompanyTransaction's model declared from_entity_id/to_entity_id/
+# transaction_date/currency/from_transaction_id/to_transaction_id/elimination_date/notes, but the
+# live migrated table had none of them (source_entity_id/target_entity_id/etc. instead, and no
+# transaction_date/currency at all) until alembic/versions/20260919_2120_backfill_intercompany_
+# transactions_.py. POST /intercompany crashed on every call before that fix. This is a permanent
+# regression test for the actual persistence path, not just the migration's own manual verification.
+# =============================================================================
+
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.advanced_accounting import IntercompanyTransaction, EntityGroup
+from app.models.entity import BusinessEntity
+
+
+class TestIntercompanyTransactionPersistence:
+    """Regression coverage for Finding 50's IntercompanyTransaction column drift."""
+
+    @pytest_asyncio.fixture
+    async def second_entity(self, db_session: AsyncSession, test_organization) -> BusinessEntity:
+        """A second business entity in the same org, for the inter-company pair."""
+        from app.models.entity import BusinessType
+        entity = BusinessEntity(
+            name="Second Test Business Ltd",
+            organization_id=test_organization.id,
+            business_type=BusinessType.LIMITED_COMPANY,
+            tin="87654321-0001",
+            rc_number="RC654321",
+            is_vat_registered=True,
+        )
+        db_session.add(entity)
+        await db_session.commit()
+        await db_session.refresh(entity)
+        return entity
+
+    async def test_create_and_fetch_intercompany_transaction(
+        self, db_session: AsyncSession, test_organization, test_entity: BusinessEntity, second_entity: BusinessEntity,
+    ):
+        """The exact scenario POST /intercompany performs: construct with the model's own field
+        names, flush, then read every field back unchanged."""
+        group = EntityGroup(
+            organization_id=test_organization.id,
+            name="Test Consolidation Group",
+            parent_entity_id=test_entity.id,
+        )
+        db_session.add(group)
+        await db_session.commit()
+        await db_session.refresh(group)
+
+        ic = IntercompanyTransaction(
+            group_id=group.id,
+            from_entity_id=test_entity.id,
+            to_entity_id=second_entity.id,
+            transaction_date=date.today(),
+            transaction_type="management_fee",
+            amount=Decimal("100000.00"),
+            currency="NGN",
+            notes="Q1 management fee allocation",
+            is_eliminated=False,
+        )
+        db_session.add(ic)
+        await db_session.commit()
+        await db_session.refresh(ic)
+
+        assert ic.id is not None
+        assert ic.from_entity_id == test_entity.id
+        assert ic.to_entity_id == second_entity.id
+        assert ic.transaction_date == date.today()
+        assert ic.currency == "NGN"
+        assert ic.notes == "Q1 management fee allocation"
+        assert ic.updated_at is not None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

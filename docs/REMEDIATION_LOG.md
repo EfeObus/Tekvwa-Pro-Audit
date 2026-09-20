@@ -350,6 +350,44 @@ remediation requires" section for the options presented to the user.
 
 ---
 
+## Finding 51 (new, not in original 48) — test-suite connection/transaction leak causes eventual full-suite deadlock
+
+**Discovered:** 2026-09-20, while running the full suite (`pytest tests/ -q`) against
+`tekvwarho_proaudit_test` as a broad regression check after the first Finding 50 table fixes
+(IntercompanyTransaction, EntityGroup — see below). The run genuinely hung: 8+ hours of wall-clock
+time, CPU time frozen at a constant 53.41s across repeated checks minutes apart (a real hang, not
+slow I/O — contrast with the earlier, correctly-not-killed background run in Phase 0, where CPU time
+was still visibly increasing).
+
+**Root cause (confirmed via `pg_stat_activity`, not fixed):** multiple test fixture connections were
+left `idle in transaction` (`BEGIN;` never committed or rolled back) at various points during the
+run, each still holding table-level locks. Eventually `Base.metadata.drop_all()` (part of
+`conftest.py`'s per-test teardown) tried to run `ALTER TABLE organizations DROP CONSTRAINT
+organizations_emergency_suspended_by_id_fkey` and blocked indefinitely waiting for a lock held by one
+of the leaked idle transactions — a genuine deadlock, not a slow query.
+
+**Severity/confidence:** CONFIRMED (directly observed, reproduced once), severity not yet fully
+assessed — could be P1 (blocks ever running the full suite to completion, which the audit's own
+Section 15 already flagged as unreliable) or lower if it's narrow/intermittent. **Not yet root-caused
+to a specific fixture or test** - the buffered progress output recovered after killing the hung
+process shows a cluster of errors (`E`) around 77% and failures (`F`) clustering near where it hung
+(86%+), suggesting the leak accumulates from repeated fixture failures rather than one single test,
+but this is inference, not confirmed.
+
+**Not fixed in this session** - out of scope for what was being verified (Finding 50 model/migration
+changes) and a properly-scoped investigation in its own right. Logged here so it isn't silently
+rediscovered as a mystery "the suite hangs sometimes" later. Candidate for Phase 9 (Testing &
+CI Infrastructure) or its own section.
+
+**What was used instead to verify Finding 50's changes had no regressions:** a scratch-DB round-trip
+test (real `alembic upgrade head` schema, not `create_all()`) plus a full run of the specific,
+directly-relevant test file (`pytest tests/test_consolidation.py` — 32/32 passed in 1.37s, including
+the new permanent regression test added for this fix). This is narrower than a full-suite run but
+is itself direct, verified evidence for the tables actually touched, not an assumption that "probably
+nothing else broke."
+
+---
+
 ## First real deploy of this remediation effort (2026-09-19)
 
 Pushed all commits through `b3c2bdc` (Phase 0 + Finding 49 partial fix + Finding 50 scoping) to

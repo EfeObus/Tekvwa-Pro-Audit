@@ -1577,7 +1577,8 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 47 | P2 | 8 | 8.3 | ⬜ |
 | 48 | P3 | 8 | 8.4 | ⬜ |
 | 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; 28 of the remaining 29 tables superseded by Finding 50; see `docs/REMEDIATION_LOG.md`) | 🟨 |
-| 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 (blocked on a remediation-direction decision; not yet assigned a fix section) | 🟨 |
+| 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 (decision resolved 2026-09-19: additive-only, no row-count dependency; `intercompany_transactions` and `entity_groups` fixed and verified; 64 of 66 tables remain) | 🟨 |
+| 51 (new, not in original 48) | Not yet assessed — CONFIRMED but severity/root-cause incomplete, see `docs/REMEDIATION_LOG.md` | 9 (tentative) | Not yet assigned | 🟨 |
 
 **Note on Findings 12, 25, and 34 — not yet assigned a dedicated section above, added here for
 completeness rather than left off the table entirely:**

@@ -133,12 +133,30 @@ For each affected table, one of:
   finishes what the code already intended); populated tables lean towards (B) unless a proper data
   migration is written for the rename.
 
-**Open verification task, not yet completable from this environment:** row counts for these 66 tables in
-the actual production database. Production DB access was already confirmed blocked earlier in this audit
-(see `docs/AUDIT_CHECKLIST.md` §6 — 403/missing IAM permission, plus this session's own auto-mode
-classifier denying production-database reads outright). Whoever makes the (A)/(B)/(C) call per table
-should have this number first; until then, treat every table's real-world impact as unknown rather than
-assuming either "surely empty, low risk" or "surely populated, high risk."
+**Decision made (2026-09-19): additive-only, no row-count dependency.** Row counts would only matter for
+deciding whether it's *safe to drop or rename a column in place* — and this pass deliberately never does
+that regardless of what the counts turn out to be, so the blocker is resolved by removing the need for
+the number, not by obtaining it. Concretely, for every table in this document:
+
+- Any column the **model** has that the **DB** lacks: add it via a normal additive Alembic migration
+  (nullable, or nullable-with-backfill if the model requires `NOT NULL` — see below). Safe whether the
+  table has 0 rows or a million; existing rows either get `NULL` (if nullable) or a computed backfill
+  value (if not).
+- Any column the **DB** has that the **model** lacks, where it's the same concept under an old name (the
+  common case — e.g. `IntercompanyTransaction.from_entity_id` vs. DB's `source_entity_id`): add the new
+  column, backfill it from the old column in the same migration (`UPDATE table SET new_col = old_col`),
+  and **leave the old column in place** rather than dropping it in the same step. Dropping genuinely
+  unused legacy columns is a separate, later cleanup pass (candidate for Phase 12), not this one — this
+  keeps every step here reversible and safe under any row count.
+- Any DB column with no plausible model equivalent at all: add it back onto the model as-is (catch the
+  model up to reality) rather than removing it from the database.
+- `NOT NULL` columns the model wants that don't exist in the DB yet get a computed backfill in the same
+  migration (e.g. `IntercompanyTransaction.transaction_date` backfills from `created_at::date` for any
+  existing rows) before the `NOT NULL` constraint is added, so the migration works unconditionally.
+
+This is (A) from the options above, made safe by construction rather than by knowing the data in advance.
+Executed per table, in the same individually-verified style as the rest of Finding 49/50 — see
+`docs/REMEDIATION_LOG.md` for the running per-table log as this executes.
 
 ## What this changes about the roadmap
 
