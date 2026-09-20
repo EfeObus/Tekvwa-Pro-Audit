@@ -350,6 +350,47 @@ remediation requires" section for the options presented to the user.
 
 ---
 
+## Finding 50 progress — approval_workflows / approval_workflow_approvers (2026-09-20)
+
+Continuing Finding 50's table-by-table fix after Finding 52's deploy-pipeline fix was validated.
+
+**`approval_workflow_approvers`:** model declared a phantom `approver_level` column with no DB
+backing under any name (confirmed zero other references anywhere in the codebase before renaming);
+the live table's real column is `approval_order`. Also missing from the model entirely:
+`role`/`is_required`/`delegated_from_id`/`delegation_expires`, all of which already existed on the
+live table (including a real FK on `delegated_from_id`) — pure model-only fix for those four, no
+migration needed. Separately, this table is missing **both** `created_at` and `updated_at` at the DB
+level (its original migration never included either) — migration
+`20260920_0604_add_timestamps_to_approval_workflow_.py` adds both with `server_default=now()`.
+
+**`approval_workflows`:** far more severe — confirmed the model declared `trigger_type`/
+`trigger_condition`/`total_approvers`/`approval_timeout_hours`/`priority`/`required_approvals`, and
+**none of these exist on the live table at all**. The real columns are `workflow_type`/
+`threshold_amount`/`escalation_hours`/`required_approvers`. Critically,
+`ApprovalWorkflowService.create_workflow` (`app/services/approval_workflow.py`) already constructs
+both `ApprovalWorkflow` and `ApprovalWorkflowApprover` using the *real* (DB-matching) field names —
+meaning this service has been raising a `TypeError` on every single call, not a subtler persistence
+bug. Confirmed `trigger_condition`/`total_approvers`/`approval_timeout_hours`/`priority` had zero
+other references anywhere in the codebase before removing them from the model rather than keeping
+them as unused phantom columns. Also found and fixed one dependent bug this same investigation
+surfaced: `app/services/budget_service.py` queried `ApprovalWorkflow.trigger_type == "budget"`,
+also referencing a column that never existed — changed to `workflow_type`, matching the naming
+convention already used everywhere else (`"expense_claim"`, `"fx_exposure_hedge"`, etc.). This table
+needed **zero migration** — the database was already correct; only the ORM model was wrong.
+
+**Verified via:** full migration-chain replay from a fresh scratch database, `alembic
+revision --autogenerate` showing no remaining diff for any column this fix touched (only
+pre-existing, unrelated index-naming/FK-ondelete/timestamp-timezone cosmetic residuals, confirmed
+present before this fix too), and a new permanent regression test
+(`TestApprovalWorkflowPersistence` in `tests/test_workflow_integration.py`) exercising
+`ApprovalWorkflowService.create_workflow` end-to-end through the real service layer — the same 72
+tests across `test_workflow_integration.py`/`test_consolidation.py`/`test_budget.py` all pass.
+
+**Status:** ✅ Fixed, verified, deployed (see the deploy entry following this one). 60 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

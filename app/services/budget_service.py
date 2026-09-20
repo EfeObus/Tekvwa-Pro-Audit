@@ -239,7 +239,7 @@ class BudgetService:
                 select(ApprovalWorkflow).where(
                     and_(
                         ApprovalWorkflow.entity_id == budget.entity_id,
-                        ApprovalWorkflow.trigger_type == "budget",
+                        ApprovalWorkflow.workflow_type == "budget",
                         ApprovalWorkflow.is_active == True,
                     )
                 )

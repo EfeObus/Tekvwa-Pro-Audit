@@ -781,6 +781,66 @@ class TestAuditTrailWorkflow:
 
 
 # =============================================================================
+# APPROVAL WORKFLOW PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# Everything above in this file uses MockEntity/MockAccount dataclasses with no real database
+# involved, so none of it would have caught this: ApprovalWorkflow's model declared trigger_type/
+# trigger_condition/total_approvers/approval_timeout_hours/priority/required_approvals, none of
+# which existed on the live table (workflow_type/threshold_amount/escalation_hours/
+# required_approvers instead) -- and ApprovalWorkflowService.create_workflow
+# (app/services/approval_workflow.py) already constructed both ApprovalWorkflow and
+# ApprovalWorkflowApprover using the *real* (DB-matching) field names, meaning every single call to
+# create_workflow() raised a TypeError before this fix, not a subtler bug. This is a permanent
+# regression test against the real persistence path, using the actual service class.
+# =============================================================================
+
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services.approval_workflow import ApprovalWorkflowService
+from app.models.advanced_accounting import ApprovalWorkflow, ApprovalWorkflowApprover
+
+
+class TestApprovalWorkflowPersistence:
+    """Regression coverage for Finding 50's ApprovalWorkflow/ApprovalWorkflowApprover column drift."""
+
+    async def test_create_workflow_with_approvers(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = ApprovalWorkflowService()
+        workflow = await service.create_workflow(
+            db=db_session,
+            entity_id=test_entity.id,
+            workflow_type="budget",
+            name="Budget Approval",
+            approvers=[
+                {"user_id": test_user.id, "role": "approver", "order": 1, "is_required": True},
+            ],
+            created_by=test_user.id,
+        )
+
+        assert workflow.id is not None
+        assert workflow.workflow_type == "budget"
+        assert workflow.required_approvers == 1
+
+        result = await db_session.execute(
+            select(ApprovalWorkflow)
+            .options(selectinload(ApprovalWorkflow.approvers))
+            .where(ApprovalWorkflow.id == workflow.id)
+        )
+        reloaded = result.scalar_one()
+        assert len(reloaded.approvers) == 1
+
+        approver = reloaded.approvers[0]
+        assert approver.user_id == test_user.id
+        assert approver.role == "approver"
+        assert approver.approval_order == 1
+        assert approver.is_required is True
+        assert approver.created_at is not None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

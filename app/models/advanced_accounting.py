@@ -590,29 +590,37 @@ class BudgetLineItem(BaseModel):
 class ApprovalWorkflow(BaseModel):
     """
     Configurable M-of-N approval workflow definitions
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared trigger_type/
+    trigger_condition/total_approvers/approval_timeout_hours/priority/required_approvals, none of
+    which exist on the live table (confirmed via \\d approval_workflows) - the real columns are
+    workflow_type/threshold_amount/escalation_hours/required_approvers, and
+    ApprovalWorkflowService.create_workflow (app/services/approval_workflow.py) already
+    constructs this model using exactly those real names, meaning workflow creation was
+    completely broken (TypeError on every call) before this fix, not just missing FKs.
+    trigger_condition/total_approvers/approval_timeout_hours/priority had zero other references
+    anywhere in the codebase - removed rather than kept as unused phantom columns.
     """
     __tablename__ = "approval_workflows"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
-    
-    name = Column(String(255), nullable=False)
+
+    name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
-    
+
     # What triggers this workflow
-    trigger_type = Column(String(50), nullable=False)  # payment, purchase_order, journal_entry, etc.
-    trigger_condition = Column(JSON, nullable=True)  # e.g., {"amount_gte": 1000000}
-    
+    workflow_type = Column(String(50), nullable=False)  # budget, expense_claim, fx_exposure_hedge, etc.
+    # (a real index, ix_approval_workflows_type, already exists on this column in the live DB -
+    # not re-declared here via index=True to avoid a naming-convention mismatch; see Finding 50 notes)
+    threshold_amount = Column(Numeric(20, 2), nullable=True)
+    escalation_hours = Column(Integer, nullable=True)
+
     # M-of-N configuration
-    required_approvals = Column(Integer, nullable=False, default=1)  # M
-    total_approvers = Column(Integer, nullable=False, default=1)  # N
-    
-    # Timeout
-    approval_timeout_hours = Column(Integer, default=72)
-    
-    is_active = Column(Boolean, default=True)
-    priority = Column(Integer, default=0)  # Higher priority workflows evaluated first
-    
-    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    required_approvers = Column(Integer, nullable=False, default=1)  # M
+
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     # Relationships
     approvers = relationship("ApprovalWorkflowApprover", back_populates="workflow", cascade="all, delete-orphan")
@@ -621,15 +629,26 @@ class ApprovalWorkflow(BaseModel):
 class ApprovalWorkflowApprover(BaseModel):
     """
     Approvers assigned to a workflow
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared `approver_level`, a
+    column that never existed on the live table under any name (confirmed: not referenced
+    anywhere else in the codebase, safe to rename rather than add as a redundant duplicate) - the
+    real column is `approval_order`. `role`/`is_required`/`delegated_from_id`/`delegation_expires`
+    all already existed on the live table (including a real FK constraint on
+    delegated_from_id) but were never declared here at all.
     """
     __tablename__ = "approval_workflow_approvers"
-    
+
     workflow_id = Column(UUID(as_uuid=True), ForeignKey("approval_workflows.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    
-    approver_level = Column(Integer, default=1)  # For sequential approvals
-    can_delegate = Column(Boolean, default=False)
-    
+
+    role = Column(String(50), nullable=True)
+    approval_order = Column(Integer, default=1, nullable=False)  # For sequential approvals
+    can_delegate = Column(Boolean, default=False, nullable=False)
+    is_required = Column(Boolean, default=False, nullable=False)
+    delegated_from_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    delegation_expires = Column(DateTime, nullable=True)
+
     workflow = relationship("ApprovalWorkflow", back_populates="approvers")
 
 

@@ -158,6 +158,11 @@ This is (A) from the options above, made safe by construction rather than by kno
 Executed per table, in the same individually-verified style as the rest of Finding 49/50 — see
 `docs/REMEDIATION_LOG.md` for the running per-table log as this executes.
 
+**Progress (updated as tables are fixed):** `intercompany_transactions`, `entity_groups`,
+`approval_workflow_approvers`, `approval_workflows` — done, verified, deployed. 60 of the 66 tables
+in the original scope remain (see the tier tables above for the full list; done tables are no longer
+individually re-listed here — check `docs/REMEDIATION_LOG.md` for the authoritative per-table record).
+
 ## What this changes about the roadmap
 
 Finding 49 and Finding 50 are not two separate defects — Finding 49's remaining 51-column, 29-table
