@@ -245,13 +245,13 @@ async def test_invoice(
         entity_id=test_entity.id,
         customer_id=test_customer.id,
         invoice_number="INV-2026-0001",
-        issue_date=date.today(),
+        invoice_date=date.today(),
         due_date=date.today(),
         subtotal=Decimal("100000.00"),
         vat_rate=Decimal("7.5"),
         vat_amount=Decimal("7500.00"),
         total_amount=Decimal("107500.00"),
-        status=InvoiceStatus.draft,
+        status=InvoiceStatus.DRAFT,
     )
     db_session.add(invoice)
     await db_session.commit()

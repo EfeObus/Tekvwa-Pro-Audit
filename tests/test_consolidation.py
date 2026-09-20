@@ -661,6 +661,73 @@ class TestLedgerEntryPersistence:
 
 
 # =============================================================================
+# THREE-WAY MATCH PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# ThreeWayMatch's model previously declared grn_amount/quantity_variance/price_variance/
+# tolerances/overrides/payment-authorization fields that ThreeWayMatchingService never used and
+# that don't exist on the live table, while missing grn_quantity/discrepancies/resolution_notes,
+# which the service always did use. Separately, MatchingStatus's member set didn't match either
+# the live enum type or what the service/forensic_audit.py actually reference -- not a casing
+# issue, the member set itself was wrong (AttributeError on every real usage). Both are fixed
+# together here since resolve_discrepancy can't be tested at all without a working enum.
+# =============================================================================
+
+from app.services.three_way_matching import ThreeWayMatchingService
+from app.models.advanced_accounting import ThreeWayMatch, MatchingStatus, PurchaseOrder
+
+
+class TestThreeWayMatchPersistence:
+    """Regression coverage for Finding 50's ThreeWayMatch column and enum drift."""
+
+    async def test_create_and_resolve_discrepancy(
+        self, db_session: AsyncSession, test_entity, test_vendor, test_user, test_invoice,
+    ):
+        po = PurchaseOrder(
+            entity_id=test_entity.id,
+            vendor_id=test_vendor.id,
+            po_number="PO-TEST-0001",
+            subtotal=Decimal("100000.00"),
+            total_amount=Decimal("100000.00"),
+            created_by_id=test_user.id,
+        )
+        db_session.add(po)
+        await db_session.commit()
+        await db_session.refresh(po)
+
+        match = ThreeWayMatch(
+            entity_id=test_entity.id,
+            purchase_order_id=po.id,
+            invoice_id=test_invoice.id,
+            status=MatchingStatus.DISCREPANCY,
+            po_amount=Decimal("100000.00"),
+            grn_quantity=Decimal("10.0000"),
+            invoice_amount=Decimal("105000.00"),
+            discrepancies=[{"type": "price_mismatch", "severity": "medium"}],
+        )
+        db_session.add(match)
+        await db_session.commit()
+        await db_session.refresh(match)
+
+        assert match.status == MatchingStatus.DISCREPANCY
+        assert match.discrepancies[0]["type"] == "price_mismatch"
+        assert match.updated_at is not None
+
+        service = ThreeWayMatchingService()
+        resolved = await service.resolve_discrepancy(
+            db=db_session,
+            match_id=match.id,
+            resolution="accept",
+            resolved_by=test_user.id,
+            notes="Approved despite variance",
+        )
+
+        assert resolved.status == MatchingStatus.MATCHED
+        assert resolved.resolved_by_id == test_user.id
+        assert resolved.resolution_notes == "Approved despite variance"
+        assert resolved.matched_at is not None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

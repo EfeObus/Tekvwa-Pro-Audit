@@ -1578,7 +1578,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 48 | P3 | 8 | 8.4 | ⬜ |
 | 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; 28 of the remaining 29 tables superseded by Finding 50; see `docs/REMEDIATION_LOG.md`) | 🟨 |
 | 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 (decision resolved 2026-09-19: additive-only, no row-count dependency; `intercompany_transactions` and `entity_groups` fixed and verified; 64 of 66 tables remain) | 🟨 |
-| 51 (new, not in original 48) | Not yet assessed — CONFIRMED but severity/root-cause incomplete, see `docs/REMEDIATION_LOG.md` | 9 (tentative) | Not yet assigned | 🟨 |
+| 51 (new, not in original 48) | P1 (leaning) — CONFIRMED, reproduced twice, root-cause narrowed but not pinned to a specific test, see `docs/REMEDIATION_LOG.md` | 9 (tentative) | Not yet assigned | 🟨 |
 | 52 (new, not in original 48) | P0, CONFIRMED — deploy pipeline's migration step silently never ran migrations | 0 (deployment baseline) | Fixed directly, not deferred — `cloudbuild.yaml` now pins the job's command every deploy plus a new verification step; see `docs/REMEDIATION_LOG.md` | ✅ |
 
 **Note on Findings 12, 25, and 34 — not yet assigned a dedicated section above, added here for

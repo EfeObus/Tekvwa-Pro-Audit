@@ -39,14 +39,21 @@ class DimensionType(str, Enum):
 
 
 class MatchingStatus(str, Enum):
-    """Status for 3-way matching (PO, GRN, Invoice)"""
+    """
+    Status for 3-way matching (PO, GRN, Invoice)
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this enum's member set previously didn't match either
+    the live Postgres enum type OR what ThreeWayMatchingService/forensic_audit.py actually
+    reference (MATCHED/DISCREPANCY/PENDING_REVIEW/REJECTED) - PARTIAL_MATCH/FULL_MATCH/MISMATCH/
+    AUTO_APPROVED/MANUAL_OVERRIDE had zero references anywhere in the codebase, and every real
+    usage referenced a member that raised AttributeError. Not a casing issue (Finding 1's
+    territory) - the member set itself was wrong.
+    """
     PENDING = "pending"
-    PARTIAL_MATCH = "partial_match"
-    FULL_MATCH = "full_match"
-    MISMATCH = "mismatch"
-    DISPUTED = "disputed"
-    AUTO_APPROVED = "auto_approved"
-    MANUAL_OVERRIDE = "manual_override"
+    MATCHED = "matched"
+    DISCREPANCY = "discrepancy"
+    PENDING_REVIEW = "pending_review"
+    REJECTED = "rejected"
 
 
 class WHTCreditStatus(str, Enum):
@@ -251,43 +258,38 @@ class GoodsReceivedNoteItem(BaseModel):
 class ThreeWayMatch(BaseModel):
     """
     3-Way Matching Record linking PO, GRN, and Invoice
-    Enables automatic payment authorization when all three match
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): grn_amount/quantity_variance/price_variance/
+    variance_percentage/price_tolerance/quantity_tolerance/auto_approved/auto_approved_at/
+    manual_override/override_reason/override_by_id/override_at/payment_authorized/
+    payment_authorized_at/payment_due_date below were removed - none exist on the live table and
+    none had any other reference anywhere in the codebase (ThreeWayMatchingService, the only real
+    caller, has never used them). grn_quantity/discrepancies/resolution_notes added - all three
+    already existed on the live table and are exactly what the service actually writes/reads, but
+    were never declared here.
     """
     __tablename__ = "three_way_matches"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
-    
+
     purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=False)
     grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_received_notes.id"), nullable=True)
-    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
-    
-    status = Column(SQLEnum(MatchingStatus), default=MatchingStatus.PENDING)
-    
+    invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=False)
+
+    status = Column(SQLEnum(MatchingStatus), default=MatchingStatus.PENDING, nullable=False)
+
     # Matching details
-    po_amount = Column(Numeric(18, 2), nullable=False)
-    grn_amount = Column(Numeric(18, 2), nullable=True)
-    invoice_amount = Column(Numeric(18, 2), nullable=True)
-    
-    quantity_variance = Column(Numeric(18, 4), default=0)
-    price_variance = Column(Numeric(18, 2), default=0)
-    variance_percentage = Column(Numeric(5, 2), default=0)
-    
-    # Tolerance settings
-    price_tolerance = Column(Numeric(5, 2), default=2.00)  # 2% default tolerance
-    quantity_tolerance = Column(Numeric(5, 2), default=5.00)  # 5% default tolerance
-    
-    auto_approved = Column(Boolean, default=False)
-    auto_approved_at = Column(DateTime, nullable=True)
-    
-    manual_override = Column(Boolean, default=False)
-    override_reason = Column(Text, nullable=True)
-    override_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    override_at = Column(DateTime, nullable=True)
-    
-    # Payment authorization
-    payment_authorized = Column(Boolean, default=False)
-    payment_authorized_at = Column(DateTime, nullable=True)
-    payment_due_date = Column(Date, nullable=True)
+    po_amount = Column(Numeric(20, 2), nullable=False)
+    grn_quantity = Column(Numeric(15, 4), nullable=True)
+    invoice_amount = Column(Numeric(20, 2), nullable=False)
+    discrepancies = Column(JSON, nullable=True)
+
+    matched_at = Column(DateTime, nullable=True)
+
+    # Resolution
+    resolved_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    resolution_notes = Column(Text, nullable=True)
+    resolved_at = Column(DateTime, nullable=True)
     
     __table_args__ = (
         Index('ix_3way_entity_status', 'entity_id', 'status'),

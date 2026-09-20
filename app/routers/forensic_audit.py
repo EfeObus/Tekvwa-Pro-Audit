@@ -732,7 +732,7 @@ async def get_matching_exceptions(
             ThreeWayMatch.status.in_([
                 MatchingStatus.DISCREPANCY,
                 MatchingStatus.PENDING,
-                MatchingStatus.DISPUTED,
+                MatchingStatus.PENDING_REVIEW,
             ])
         )
     

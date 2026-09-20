@@ -434,6 +434,54 @@ remain.
 
 ---
 
+## Finding 50 progress — three_way_matches (2026-09-20)
+
+Model previously declared `grn_amount`/`quantity_variance`/`price_variance`/`variance_percentage`/
+`price_tolerance`/`quantity_tolerance`/`auto_approved`/`auto_approved_at`/`manual_override`/
+`override_reason`/`override_by_id`/`override_at`/`payment_authorized`/`payment_authorized_at`/
+`payment_due_date` — confirmed zero references anywhere in the codebase, none exist on the live
+table, removed. Missing from the model but already present on the live table (and exactly what
+`ThreeWayMatchingService` actually writes/reads): `grn_quantity`, `discrepancies`,
+`resolution_notes` (plus `resolved_by_id`/`resolved_at`, which the model already had) — added.
+`invoice_id` tightened to `NOT NULL` to match the live column exactly (the service always provides
+it). One genuine migration needed: `updated_at` was missing at the DB level entirely.
+
+**A second, non-column bug found and fixed on the same table:** `MatchingStatus`'s member set
+didn't match either the live Postgres enum type or what `ThreeWayMatchingService`/
+`forensic_audit.py` actually reference (`MATCHED`/`DISCREPANCY`/`PENDING_REVIEW`/`REJECTED`) — not
+a casing issue like the rest of Finding 1's territory, the member set itself was wrong
+(`PARTIAL_MATCH`/`FULL_MATCH`/`MISMATCH`/`AUTO_APPROVED`/`MANUAL_OVERRIDE` had zero references
+anywhere, and every real usage referenced a member that didn't exist, raising `AttributeError` on
+every call to `resolve_discrepancy` or `match_invoice_to_po_grn`). Fixed the enum's member set to
+match reality. Also found and fixed a dependent bug: `forensic_audit.py`'s discrepancy-exceptions
+endpoint filtered on `MatchingStatus.DISPUTED`, a member that never existed on the live enum either
+— its default (no-filter) view would have crashed on every call. Changed to `PENDING_REVIEW`, the
+closest real status to the original intent (items still awaiting resolution).
+
+**While writing this table's regression test, also found and fixed two pre-existing, unrelated bugs
+in `tests/conftest.py`'s `test_invoice` fixture** (used by other tests, not just this one):
+`InvoiceStatus.draft` referenced a member that doesn't exist (real value is `.DRAFT`), and
+`issue_date` isn't a real `Invoice` column (the real one is `invoice_date`). Both fixed directly
+since they're trivial, unambiguous, and were blocking the fixture for any test that uses it.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only pre-existing, unrelated `ix_3way_entity_status`
+composite-index/`entity_id` naming/FK-ondelete/enum-type-name/timestamp-timezone residuals — the
+composite index mismatch pre-dates this fix, since the model's own `__table_args__` already
+declared it before today), and a new permanent regression test (`TestThreeWayMatchPersistence` in
+`tests/test_consolidation.py`) that creates a match, then calls `resolve_discrepancy` through the
+real service and asserts the status transition, resolver, and notes all persist correctly.
+
+Separately, while running a broader (non-full-suite) regression pass to double-check this fix,
+reproduced Finding 51's deadlock a second time (see that finding's entry, updated above) — confirms
+it's reliable, not intermittent, but is a pre-existing, separate issue unrelated to this fix; 270+
+tests passed cleanly before the run hit it.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 58 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
@@ -508,13 +556,20 @@ run, each still holding table-level locks. Eventually `Base.metadata.drop_all()`
 organizations_emergency_suspended_by_id_fkey` and blocked indefinitely waiting for a lock held by one
 of the leaked idle transactions — a genuine deadlock, not a slow query.
 
-**Severity/confidence:** CONFIRMED (directly observed, reproduced once), severity not yet fully
-assessed — could be P1 (blocks ever running the full suite to completion, which the audit's own
-Section 15 already flagged as unreliable) or lower if it's narrow/intermittent. **Not yet root-caused
-to a specific fixture or test** - the buffered progress output recovered after killing the hung
-process shows a cluster of errors (`E`) around 77% and failures (`F`) clustering near where it hung
-(86%+), suggesting the leak accumulates from repeated fixture failures rather than one single test,
-but this is inference, not confirmed.
+**Severity/confidence:** CONFIRMED (reproduced twice now, not a one-off — see below), leaning P1: it
+reliably blocks ever running the full suite to completion, not just occasionally. **Not yet
+root-caused to a specific fixture or test** - both times, the buffered progress output recovered
+after killing the hung process shows a cluster of errors (`E`) in the high-70s/low-80s% range and
+failures (`F`) clustering near where it hung (86-90%+), suggesting the leak accumulates from
+repeated fixture failures rather than one single test, but this is inference, not confirmed.
+
+**Reproduced a second time**, 2026-09-20, during a broader (not full-suite, `--ignore=tests/test_api.py
+--deselect tests/test_api_endpoints.py::test_endpoint`) regression run while verifying the
+`ThreeWayMatch` Finding-50 fix below — identical signature: CPU time frozen (36.98s) across checks
+seconds apart despite wall-clock advancing, same exact blocked query
+(`ALTER TABLE organizations DROP CONSTRAINT organizations_emergency_suspended_by_id_fkey`), same
+progress shape (hung around 88-90%, after passing 270+ tests cleanly first). This confirms the issue
+is reliable and not narrow/intermittent, though still not root-caused to a specific test.
 
 **Not fixed in this session** - out of scope for what was being verified (Finding 50 model/migration
 changes) and a properly-scoped investigation in its own right. Logged here so it isn't silently
