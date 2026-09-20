@@ -800,6 +800,24 @@ health check passing). 47 of the original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — exchange_rates; fiscal_years confirmed already clean (2026-09-20)
+
+`exchange_rates` was missing `updated_at` at the DB level entirely (`created_at` already exists,
+with timezone) — migration adds and backfills it. Verified via full migration-chain replay and
+`alembic revision --autogenerate` showing no remaining diff for this column, and a new permanent
+regression test (`TestExchangeRatePersistence` in `tests/test_consolidation.py`) — 83 tests across
+the three related test files pass.
+
+Also checked `fiscal_years` (not part of the original 66-table scope, but adjacent to several
+tables just fixed) — confirmed via `alembic revision --autogenerate` that it has **zero**
+column-level drift already; only the same pre-existing constraint-naming/nullable cosmetic
+residuals seen throughout this session. No fix needed.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 46 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

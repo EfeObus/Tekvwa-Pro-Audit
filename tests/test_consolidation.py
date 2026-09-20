@@ -1031,6 +1031,35 @@ class TestJournalEntryLinePersistence:
 
 
 # =============================================================================
+# EXCHANGE RATE PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# exchange_rates was missing updated_at at the DB level entirely (created_at already existed).
+# =============================================================================
+
+from app.models.sku import ExchangeRate
+
+
+class TestExchangeRatePersistence:
+    """Regression coverage for Finding 50's ExchangeRate column drift."""
+
+    async def test_create_and_fetch(self, db_session: AsyncSession):
+        rate = ExchangeRate(
+            from_currency="USD",
+            to_currency="NGN",
+            rate=Decimal("1550.000000"),
+            rate_date=date.today(),
+            source="manual",
+        )
+        db_session.add(rate)
+        await db_session.commit()
+        await db_session.refresh(rate)
+
+        assert rate.id is not None
+        assert rate.created_at is not None
+        assert rate.updated_at is not None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 
