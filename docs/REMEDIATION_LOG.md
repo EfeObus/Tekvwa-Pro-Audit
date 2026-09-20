@@ -766,6 +766,21 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — chart_of_accounts (2026-09-20)
+
+Small, single-column fix: `allow_manual_entries` already existed on the live table, confirmed
+unused anywhere in the codebase, but was never declared on the model. Added with a matching Python
+default. Needed zero migration. Verified via full migration-chain replay and `alembic revision
+--autogenerate` showing no remaining diff for this column (only pre-existing `entity_id`/index/FK
+cosmetic residuals, unrelated). Rather than a new test, extended the existing `AccountBalance`
+regression test's `ChartOfAccounts` construction with an assertion on the new field — 82 tests
+across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 48 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

@@ -259,7 +259,10 @@ class ChartOfAccounts(BaseModel, AuditMixin):
         Boolean, default=False, nullable=False,
         comment="Can this account be reconciled?",
     )
-    
+    # Finding 50 (docs/FINDING_50_SCOPE.md): already existed on the live table, unused anywhere in
+    # the codebase, but never declared here. Needed zero migration.
+    allow_manual_entries: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
     # Reporting Tags
     cash_flow_category: Mapped[Optional[str]] = mapped_column(
         String(50), nullable=True,

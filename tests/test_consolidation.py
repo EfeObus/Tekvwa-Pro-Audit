@@ -820,6 +820,9 @@ class TestAccountBalancePersistence:
         )
         db_session.add(account)
         await db_session.flush()
+        # Finding 50: allow_manual_entries already existed on the live table, unused anywhere in
+        # the codebase, but was never declared on the model until this fix.
+        assert account.allow_manual_entries is True
 
         balance = AccountBalance(
             entity_id=test_entity.id,
