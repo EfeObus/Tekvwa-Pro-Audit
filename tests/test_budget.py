@@ -550,6 +550,54 @@ from datetime import timedelta
 
 
 # =============================================================================
+# BUDGET PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# Every test above in this file is pure arithmetic with no database involved, so none of them
+# would have caught this: budget_service.py and app/routers/budget.py consistently construct/read
+# Budget using description/total_revenue_budget/total_expense_budget/total_capex_budget, none of
+# which existed on the live table (which had notes/total_revenue/total_expense instead, and no
+# capex concept at all) until this session's migration. create_budget() and every variance
+# calculation would have crashed or silently operated on the wrong (nonexistent) attributes.
+# =============================================================================
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.services.budget_service import BudgetService
+
+
+class TestBudgetPersistence:
+    """Regression coverage for Finding 50's Budget column drift."""
+
+    async def test_create_budget_and_update_totals(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = BudgetService(db_session)
+        budget = await service.create_budget(
+            entity_id=test_entity.id,
+            name="FY2026 Operating Budget",
+            fiscal_year=2026,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+            created_by_id=test_user.id,
+            description="Annual operating budget",
+        )
+
+        assert budget.id is not None
+        assert budget.description == "Annual operating budget"
+        assert budget.total_revenue_budget == Decimal("0.00")
+        assert budget.total_expense_budget == Decimal("0.00")
+        assert budget.total_capex_budget == Decimal("0.00")
+
+        budget.total_revenue_budget = Decimal("5000000.00")
+        budget.total_expense_budget = Decimal("3000000.00")
+        budget.total_capex_budget = Decimal("500000.00")
+        await db_session.commit()
+        await db_session.refresh(budget)
+
+        assert budget.total_revenue_budget == Decimal("5000000.00")
+        assert budget.total_capex_budget == Decimal("500000.00")
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

@@ -588,6 +588,31 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — budgets, a second option-(A) case (2026-09-20)
+
+Same direction as `ledger_entries`: `budget_service.py` and `app/routers/budget.py` consistently
+construct/read `Budget` using `description`/`total_revenue_budget`/`total_expense_budget`/
+`total_capex_budget` (confirmed via grep — extensive use across variance calculations, summary
+reporting, and revision-copying logic, not an isolated reference), none of which existed on the live
+table (which had `notes`/`total_revenue`/`total_expense` instead, and no capex concept at all).
+Migrated the database to match the model+code rather than the reverse. Also corrected two smaller
+type mismatches while in the model: `name` was `String(255)` but the live column is `String(200)`;
+`status` was `String(20)` but the live column is `String(50)`. The old `notes`/`total_revenue`/
+`total_expense` columns stay in place, unmapped — confirmed nothing references `Budget.notes`
+directly (only the unrelated `BudgetLineItem.notes` is used elsewhere).
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only pre-existing `entity_id` index-naming/FK-ondelete and
+several `nullable`/enum-type-name/timestamp-timezone residuals — none introduced by this fix), and a
+new permanent regression test (`TestBudgetPersistence` in `tests/test_budget.py`) that creates a
+budget through the real service and updates its three total fields — 77 tests across the three
+related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 54 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

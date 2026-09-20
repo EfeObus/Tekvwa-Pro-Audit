@@ -373,18 +373,26 @@ class WHTCreditNote(BaseModel):
 class Budget(BaseModel):
     """
     Budget definition for Budget vs Actual analysis
-    
+
     Supports:
     - Multiple period types (monthly, quarterly, annual)
     - Version control with revision tracking
     - Approval workflow integration
     - Forecasting with actuals rollover
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): description/total_revenue_budget/total_expense_budget/
+    total_capex_budget below were already correctly declared here, but didn't exist on the live
+    table at all (which had notes/total_revenue/total_expense instead, no capex concept) until
+    alembic/versions/20260920_0731_backfill_budgets_column_drift.py added and backfilled them - the
+    database was migrated to match this model and budget_service.py, not the other way around,
+    since both already consistently used these names. The old notes/total_revenue/total_expense
+    columns still exist, unmapped, pending a later cleanup migration.
     """
     __tablename__ = "budgets"
     
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     
-    name = Column(String(255), nullable=False)
+    name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     fiscal_year = Column(Integer, nullable=False)
     period_type = Column(SQLEnum(BudgetPeriodType), default=BudgetPeriodType.MONTHLY)
@@ -396,7 +404,7 @@ class Budget(BaseModel):
     total_expense_budget = Column(Numeric(18, 2), default=0)
     total_capex_budget = Column(Numeric(18, 2), default=0)
     
-    status = Column(String(20), default="draft")  # draft, pending_approval, approved, active, locked, closed
+    status = Column(String(50), default="draft")  # draft, pending_approval, approved, active, locked, closed
     approved_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
     
