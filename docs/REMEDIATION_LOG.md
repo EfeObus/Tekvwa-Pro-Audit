@@ -1106,7 +1106,11 @@ exercising `create_purchase_order()` end-to-end, including VAT calculation and t
 relationship — 89 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
 `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 40 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `2b8343a`, build
+`518b157a-b9b2-46a1-9ee6-bbf405a4a17f` (SUCCESS — the Finding 53 retry-loop fix worked cleanly on
+its first real use). `verify-migration-applied` reported
+`Post-migration state: 2abef31e385f (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00035-cpp`, `/health` returns 200. 40 of the
 original 66 Finding-50 tables remain.
 
 ---
