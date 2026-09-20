@@ -810,6 +810,11 @@ class TestAccountBalancePersistence:
         )
         db_session.add(fiscal_period)
         await db_session.flush()
+        # Finding 50: inventory_counted/ar_reconciled/ap_reconciled already existed on the live
+        # table, unused anywhere in the codebase, but were never declared on the model.
+        assert fiscal_period.inventory_counted is False
+        assert fiscal_period.ar_reconciled is False
+        assert fiscal_period.ap_reconciled is False
 
         account = ChartOfAccounts(
             entity_id=test_entity.id,

@@ -383,10 +383,13 @@ class FiscalPeriod(BaseModel):
         Boolean, default=False, nullable=False,
         comment="All bank accounts reconciled for this period?",
     )
-    reconciliation_ids: Mapped[Optional[List]] = mapped_column(
-        JSONB, nullable=True,
-        comment="List of completed reconciliation IDs",
-    )
+    # Finding 50 (docs/FINDING_50_SCOPE.md): reconciliation_ids (JSONB) was removed - it never
+    # existed on the live table and had zero references anywhere in the codebase.
+    # inventory_counted/ar_reconciled/ap_reconciled added below - all three already existed on the
+    # live table but were never declared. Neither side is currently used by any real call site.
+    inventory_counted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ar_reconciled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ap_reconciled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     
     # Closing details
     closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

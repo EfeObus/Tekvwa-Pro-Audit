@@ -783,6 +783,21 @@ health check passing). 48 of the original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — fiscal_periods (2026-09-20)
+
+`reconciliation_ids` (JSONB) removed — confirmed zero references anywhere in the codebase, and it
+never existed on the live table. `inventory_counted`/`ar_reconciled`/`ap_reconciled` added — all
+three already existed on the live table but were never declared, and are also unused on either
+side. Needed zero migration. Verified via full migration-chain replay and `alembic revision
+--autogenerate` showing zero remaining column-level diff for `fiscal_periods`. Extended the
+existing `AccountBalance` regression test's `FiscalPeriod` construction with assertions on the
+three new fields rather than adding a new test — 82 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 47 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
