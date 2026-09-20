@@ -10,8 +10,12 @@
 # docs/GCP_DEPLOYMENT.md) - nothing sensitive is passed through this file.
 #
 # Trigger from Cloud Build on push to `main`:
-#   gcloud builds submit --config cloudbuild.yaml
+#   gcloud builds submit --config cloudbuild.yaml --substitutions=_TAG=$(git rev-parse --short HEAD)
 #
+# _TAG defaults to "manual" for an ad-hoc local submit with no override. $SHORT_SHA (Cloud Build's
+# own built-in substitution) is only auto-populated when the build is triggered from a linked git
+# repo trigger, not for a plain `gcloud builds submit .` from local source - always pass an explicit
+# _TAG (e.g. the current commit's short SHA) so images stay traceable to a real commit.
 substitutions:
   _REGION: africa-south1
   _REPO: proaudit-repo
@@ -19,9 +23,10 @@ substitutions:
   _WORKER_SERVICE: proaudit-worker
   _BEAT_SERVICE: proaudit-beat
   _MIGRATE_JOB: proaudit-migrate
+  _TAG: manual
 
 images:
-  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
 
 steps:
   # 1. Build the production image (reuses the existing multi-stage Dockerfile)
@@ -31,7 +36,7 @@ steps:
       - "--target"
       - "production"
       - "-t"
-      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "-t"
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:latest"
       - "."
@@ -53,7 +58,7 @@ steps:
       - "jobs"
       - "update"
       - "${_MIGRATE_JOB}"
-      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
 
   - name: "gcr.io/google-cloud-sdk/slim"
@@ -75,7 +80,7 @@ steps:
       - "run"
       - "deploy"
       - "${_SERVICE}"
-      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
       - "--platform=managed"
     waitFor: ["run-migrations"]
@@ -90,7 +95,7 @@ steps:
       - "worker-pools"
       - "deploy"
       - "${_WORKER_SERVICE}"
-      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
     waitFor: ["run-migrations"]
 
@@ -102,7 +107,7 @@ steps:
       - "worker-pools"
       - "deploy"
       - "${_BEAT_SERVICE}"
-      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:$SHORT_SHA"
+      - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
     waitFor: ["run-migrations"]
 
