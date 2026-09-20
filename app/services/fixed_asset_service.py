@@ -117,7 +117,10 @@ class FixedAssetService:
             insured_value=insured_value,
             insurance_policy_number=insurance_policy_number,
             insurance_expiry=insurance_expiry,
+            is_insured=is_insured,
             notes=notes,
+            condition=condition,
+            created_by_id=created_by_id,
         )
         
         self.db.add(asset)
@@ -308,6 +311,7 @@ class FixedAssetService:
             
             # Create depreciation entry
             entry = DepreciationEntry(
+                entity_id=asset.entity_id,
                 asset_id=asset.id,
                 period_year=period_year,
                 period_month=period_month,

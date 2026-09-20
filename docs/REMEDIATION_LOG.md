@@ -1157,6 +1157,64 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — fixed_assets and depreciation_entries (2026-09-20)
+
+Tier 1 (`fixed_assets` 20 `ADD_DROP`) and Tier 2 (`depreciation_entries` 13). Discovered a subtly
+different failure mode from every other table fixed so far: both models already declared the
+*correct* Python attribute names for their real construction sites
+(`app/services/fixed_asset_service.py`'s `create_asset()`/`run_depreciation()`, the only real
+callers of either model) — the columns those names map to simply never existed on the live
+tables, so every real call has always failed with a database-level `UndefinedColumnError`, not a
+Python-level `TypeError` like every other case this session. Confirmed via a second, independent
+migration (`alembic/versions/20260104_1500_sync_models_with_db.py:126-160`) that had already added
+`department`/`assigned_to`/`warranty_expiry`/`notes`/`asset_metadata` to `fixed_assets` — a real
+lesson that reading only the original `CREATE TABLE` isn't sufficient for tables with multiple
+migrations; live-DB introspection via the scratch database is the only reliable source of truth
+(used throughout, and specifically re-confirmed here after this exact miss).
+
+**`FixedAsset`:** `create_asset()` already sent `vendor_invoice_number`/`vat_recovered`/
+`disposal_amount`/`insured_value`/`insurance_expiry` on every insert. The live table instead had
+`invoice_number`/`vat_recovery_eligible`+`vat_recovery_claimed`+`vat_recovery_date`/
+`disposal_proceeds`/`insurance_value`/`insurance_expiry_date`. `app/services/reports_service.py`'s
+independent read of `asset.disposal_amount` confirmed the model's naming is what real code outside
+this file depends on, so migrated the DB to add the model's five fields (direction (A)); the live
+table's own duplicates stay in place, unmapped, per this session's additive-only policy (same
+treatment as `bank_statement_transactions`' `is_matched`). Added for parity, and wired up two
+previously dead function parameters found along the way: `condition`/`is_insured` (accepted by
+`create_asset()` but never passed to the constructor) plus `created_by_id` (same problem),
+`depreciation_start_date`, `disposal_buyer_name`/`disposal_buyer_tin`,
+`vat_recovery_eligible`/`vat_recovery_claimed`/`vat_recovery_date`, `updated_by_id`,
+`disposed_by_id` — all dormant, confirmed via grep with zero other references. Migration:
+`alembic/versions/20260920_1345_backfill_fixed_assets_column_drift.py`.
+
+**`DepreciationEntry`:** same pattern — `run_depreciation()` already sent `period_year`/
+`period_month`/`depreciation_method`/`depreciation_rate`/`posted_by_id`, but the live table
+represented periods as `fiscal_year_end`/`period_start`/`period_end` date ranges and tracked
+`depreciation_rate_used` instead of a name-matching `depreciation_rate`, with no
+`depreciation_method`/`posted_by_id` at all. Migrated the DB to add all five (direction (A));
+`entity_id` (`NOT NULL` on the live table, absent from the model) and `is_posted`/`created_by_id`
+(both dormant, DB-only) added to the model for parity — `entity_id` also wired up at the one real
+construction site (`asset.entity_id`, since the live column requires it and nothing populated it
+before). Also missing entirely: `updated_at` (only `created_at` existed, despite inheriting
+`BaseModel`/`TimestampMixin` — same class of gap as `purchase_order_items`/
+`goods_received_note_items`). Migration:
+`alembic/versions/20260920_1350_backfill_depreciation_entries_column_dr.py`. Both tables confirmed
+structurally unable to hold a row under the pre-fix code, so no backfill was needed for anything
+added to either.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for either table (only the deliberate unmapped residuals described above,
+plus the usual cosmetic `NULLABLE`/index-naming/FK-`ondelete` residuals), and a new permanent
+regression test file (`tests/test_fixed_assets.py`) exercising `create_asset()` and
+`run_depreciation()` end-to-end — 92 tests across `test_fixed_assets.py`,
+`test_bank_reconciliation.py`, `test_consolidation.py`, `test_workflow_integration.py`, and
+`test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 36 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

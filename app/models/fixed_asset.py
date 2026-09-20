@@ -90,6 +90,24 @@ class FixedAsset(BaseModel):
     - Capital gains on disposal (2026: taxed at CIT rate)
     - Input VAT recovery (2026: now allowed on capital expenditure)
     - Development Levy threshold calculation
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): app/services/fixed_asset_service.py's create_asset()
+    already accepted both this model's field names AND the live table's real column names as
+    aliased parameters (vendor_invoice_number/invoice_number, insured_value/insurance_value,
+    insurance_expiry/insurance_expiry_date) -- but only ever wrote to this model's names, meaning
+    the DB never actually had columns for them. app/services/reports_service.py's real,
+    independent read of `asset.disposal_amount` confirmed the model's naming (not the DB's
+    disposal_proceeds) is the one real code outside this file depends on, so direction (A) was
+    used throughout: migrated the DB to add vendor_invoice_number/insured_value/insurance_expiry/
+    disposal_amount/vat_recovered/department/assigned_to/warranty_expiry/notes/asset_metadata. The
+    live table's own invoice_number/insurance_value/insurance_expiry_date/disposal_proceeds stay
+    in place, unmapped -- fully superseded duplicates of the fields above, same treatment as
+    bank_statement_transactions' `is_matched`. Genuinely distinct DB-only fields (not duplicates)
+    were added here for parity: depreciation_start_date/disposal_buyer_name/disposal_buyer_tin/
+    vat_recovery_eligible/vat_recovery_claimed/vat_recovery_date/created_by_id/updated_by_id/
+    disposed_by_id (all dormant, confirmed via grep with zero references), plus condition/
+    is_insured, which create_asset() already accepted as parameters but silently never wired into
+    the constructor -- wired up here.
     """
     
     __tablename__ = "fixed_assets"
@@ -187,7 +205,8 @@ class FixedAsset(BaseModel):
         nullable=False,
     )
     last_depreciation_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    
+    depreciation_start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
     # Disposal Details (for capital gains calculation)
     disposal_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     disposal_type: Mapped[Optional[DisposalType]] = mapped_column(
@@ -199,8 +218,10 @@ class FixedAsset(BaseModel):
         nullable=True,
         comment="Proceeds from disposal",
     )
+    disposal_buyer_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    disposal_buyer_tin: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     disposal_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Insurance
     insured_value: Mapped[Optional[Decimal]] = mapped_column(
         Numeric(precision=15, scale=2),
@@ -208,12 +229,30 @@ class FixedAsset(BaseModel):
     )
     insurance_policy_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     insurance_expiry: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    
+    is_insured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # VAT Recovery (richer tracking alongside vat_recovered)
+    vat_recovery_eligible: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    vat_recovery_claimed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    vat_recovery_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
     # Additional Info
     serial_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    condition: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     warranty_expiry: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     asset_metadata: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+
+    # Audit trail
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    updated_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
+    disposed_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True,
+    )
     
     # Relationships
     entity: Mapped["BusinessEntity"] = relationship("BusinessEntity")
@@ -263,15 +302,33 @@ class FixedAsset(BaseModel):
 class DepreciationEntry(BaseModel):
     """
     Monthly/Annual depreciation entry for fixed assets.
-    
+
     Used for:
     - Tracking depreciation over time
     - Generating depreciation reports
     - Calculating assessable profit (less depreciation)
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): the live table represented periods as a fiscal-year-end
+    plus a start/end date range (fiscal_year_end/period_start/period_end), and tracked
+    depreciation_rate_used/is_posted instead of depreciation_method/posted_by_id -- but
+    app/services/fixed_asset_service.py's only real construction site already used this model's
+    simpler period_year/period_month representation plus depreciation_method/posted_by_id
+    directly, meaning every real call has always failed with an UndefinedColumnError. Migrated the
+    DB to match (direction (A)); entity_id (present on the live table, NOT NULL, but absent here)
+    is now wired up from the asset's own entity_id at the one real construction site.
+    fiscal_year_end/period_start/period_end/depreciation_rate_used stay in place, unmapped --
+    superseded by period_year/period_month/depreciation_rate above.
     """
-    
+
     __tablename__ = "depreciation_entries"
-    
+
+    entity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("business_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     # Asset
     asset_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -279,7 +336,7 @@ class DepreciationEntry(BaseModel):
         nullable=False,
         index=True,
     )
-    
+
     # Period
     period_year: Mapped[int] = mapped_column(Integer, nullable=False)
     period_month: Mapped[Optional[int]] = mapped_column(
@@ -313,6 +370,7 @@ class DepreciationEntry(BaseModel):
     )
     
     # Posted by
+    is_posted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     posted_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -323,7 +381,12 @@ class DepreciationEntry(BaseModel):
         default=datetime.utcnow,
         nullable=False,
     )
-    
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Notes
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
