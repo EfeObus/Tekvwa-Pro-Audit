@@ -727,6 +727,56 @@ class TestThreeWayMatchPersistence:
         assert resolved.matched_at is not None
 
 
+class TestPurchaseOrderPersistence:
+    """
+    Regression coverage for Finding 50's PurchaseOrder/PurchaseOrderItem column drift.
+
+    ThreeWayMatchingService.create_purchase_order() -- the only real construction site for
+    either model -- passed delivery_address/payment_terms (PurchaseOrder) and item_description/
+    line_total/gl_account_code (PurchaseOrderItem), none of which existed on either model before
+    this fix, despite all of them already existing on the live tables. Confirmed crashing with
+    TypeError on every call.
+    """
+
+    async def test_create_purchase_order_with_items(
+        self, db_session: AsyncSession, test_entity, test_vendor, test_user,
+    ):
+        service = ThreeWayMatchingService()
+        po = await service.create_purchase_order(
+            db=db_session,
+            entity_id=test_entity.id,
+            vendor_id=test_vendor.id,
+            po_data={
+                "delivery_address": "12 Marina Road, Lagos",
+                "payment_terms": "Net 30",
+                "notes": "Q3 stock replenishment",
+            },
+            items=[
+                {
+                    "description": "Office chairs",
+                    "quantity": Decimal("10"),
+                    "unit_price": Decimal("25000.00"),
+                    "uom": "UNIT",
+                    "gl_account_code": "5100",
+                },
+            ],
+            created_by=test_user.id,
+        )
+
+        assert po.id is not None
+        assert po.delivery_address == "12 Marina Road, Lagos"
+        assert po.payment_terms == "Net 30"
+        assert po.subtotal == Decimal("250000.00")
+        assert po.total_amount == Decimal("268750.00")  # includes 7.5% VAT
+
+        await db_session.refresh(po, attribute_names=["items"])
+        assert len(po.items) == 1
+        item = po.items[0]
+        assert item.item_description == "Office chairs"
+        assert item.gl_account_code == "5100"
+        assert item.line_total == Decimal("268750.00")
+
+
 # =============================================================================
 # WHT CREDIT NOTE PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
 #

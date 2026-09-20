@@ -1071,6 +1071,46 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — purchase_orders and purchase_order_items, together (2026-09-20)
+
+Tier 2 (`purchase_orders` 6, `purchase_order_items` 12 `ADD_DROP`). Fixed together since both are
+only ever touched by the same single real code path,
+`ThreeWayMatchingService.create_purchase_order()` (`app/services/three_way_matching.py`) — the
+only construction site for either model.
+
+**`PurchaseOrder`:** model previously declared `wht_amount`/`currency`/`terms_and_conditions`/
+`matching_status`, none of which existed on the live table
+(`alembic/versions/20260106_1600_advanced_accounting.py:102-121`) and none of which had any real
+reference anywhere in the codebase (confirmed via grep — `matching_status` in particular is a
+plausible-looking field that simply was never wired up). Conversely, `delivery_address`/
+`payment_terms` existed on the live table but not the model, despite
+`create_purchase_order()` already passing both — confirmed crashing with `TypeError` on every
+call before this fix. Removed the four unused fields, added the two real ones. Model-only fix, no
+migration needed.
+
+**`PurchaseOrderItem`:** same pattern, worse — model previously declared `item_code`/
+`description`/`subtotal`/`vat_rate`/`total`/`received_quantity`/`invoiced_quantity`, none with any
+real reference; `create_purchase_order()`'s item-construction loop already used the live table's
+actual column names directly (`item_description`/`line_total`/`gl_account_code`), so this
+constructor crashed too. Migrated the model to match the DB. Separately, and unrelated to the
+naming drift itself, this table was *also* missing `created_at`/`updated_at` at the DB level
+entirely, despite inheriting `BaseModel`/`TimestampMixin` — added via migration
+`alembic/versions/20260920_1330_add_timestamps_to_purchase_order_items.py` (no backfill needed;
+inserted fresh with `server_default=now()`).
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for either table (only the usual cosmetic `NULLABLE`/index-naming/FK-`ondelete`
+residuals — the last one pre-existing on `entity_id`, unrelated to anything touched here), and a
+new permanent regression test (`TestPurchaseOrderPersistence` in `tests/test_consolidation.py`)
+exercising `create_purchase_order()` end-to-end, including VAT calculation and the item
+relationship — 89 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
+`test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 40 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

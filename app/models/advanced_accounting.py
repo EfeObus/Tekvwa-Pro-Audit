@@ -149,28 +149,34 @@ class PurchaseOrder(BaseModel):
     """
     Purchase Order for 3-way matching
     Links: PO -> GRN -> Invoice
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared wht_amount/currency/
+    terms_and_conditions/matching_status, none of which existed on the live table
+    (alembic/versions/20260106_1600_advanced_accounting.py:102-121) and none of which had any real
+    reference anywhere in the codebase. Conversely, delivery_address/payment_terms existed on the
+    live table but not the model, despite app/services/three_way_matching.py's only real
+    construction site (create_purchase_order) already passing both -- confirmed crashing with
+    TypeError on every call before this fix.
     """
     __tablename__ = "purchase_orders"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     vendor_id = Column(UUID(as_uuid=True), ForeignKey("vendors.id"), nullable=False)
-    
+
     po_number = Column(String(50), nullable=False)
     po_date = Column(Date, nullable=False, default=date.today)
     expected_delivery_date = Column(Date, nullable=True)
-    
-    subtotal = Column(Numeric(18, 2), nullable=False, default=0)
-    vat_amount = Column(Numeric(18, 2), nullable=False, default=0)
-    wht_amount = Column(Numeric(18, 2), nullable=False, default=0)
-    total_amount = Column(Numeric(18, 2), nullable=False, default=0)
-    
-    currency = Column(String(3), default="NGN")
-    terms_and_conditions = Column(Text, nullable=True)
+    delivery_address = Column(Text, nullable=True)
+    payment_terms = Column(String(200), nullable=True)
+
+    subtotal = Column(Numeric(20, 2), nullable=False, default=0)
+    vat_amount = Column(Numeric(20, 2), nullable=False, default=0)
+    total_amount = Column(Numeric(20, 2), nullable=False, default=0)
+
     notes = Column(Text, nullable=True)
-    
-    status = Column(String(20), default="draft")  # draft, sent, acknowledged, fulfilled, cancelled
-    matching_status = Column(SQLEnum(MatchingStatus), default=MatchingStatus.PENDING)
-    
+
+    status = Column(String(50), default="draft")  # draft, sent, acknowledged, fulfilled, cancelled
+
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     approved_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     approved_at = Column(DateTime, nullable=True)
@@ -189,26 +195,31 @@ class PurchaseOrder(BaseModel):
 
 
 class PurchaseOrderItem(BaseModel):
-    """Individual line items in a Purchase Order"""
+    """
+    Individual line items in a Purchase Order
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared item_code/description/
+    subtotal/vat_rate/total/received_quantity/invoiced_quantity, none of which existed on the live
+    table (alembic/versions/20260106_1600_advanced_accounting.py:128-139) and none of which had any
+    real reference anywhere in the codebase. app/services/three_way_matching.py's only real
+    construction site already used the live table's actual column names
+    (item_description/line_total/gl_account_code) directly, meaning every call crashed with
+    TypeError before this fix. Model migrated to match the DB (option (B)).
+    """
     __tablename__ = "purchase_order_items"
-    
+
     purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id", ondelete="CASCADE"), nullable=False)
     inventory_item_id = Column(UUID(as_uuid=True), ForeignKey("inventory_items.id"), nullable=True)
-    
-    item_code = Column(String(50), nullable=True)
-    description = Column(Text, nullable=False)
-    quantity = Column(Numeric(18, 4), nullable=False)
-    unit_price = Column(Numeric(18, 4), nullable=False)
-    unit_of_measure = Column(String(20), default="unit")
-    
-    subtotal = Column(Numeric(18, 2), nullable=False)
-    vat_rate = Column(Numeric(5, 2), default=7.50)  # 2026 VAT rate
-    vat_amount = Column(Numeric(18, 2), default=0)
-    total = Column(Numeric(18, 2), nullable=False)
-    
-    received_quantity = Column(Numeric(18, 4), default=0)  # Updated by GRN
-    invoiced_quantity = Column(Numeric(18, 4), default=0)  # Updated by Invoice matching
-    
+
+    item_description = Column(String(500), nullable=False)
+    quantity = Column(Numeric(15, 4), nullable=False)
+    unit_price = Column(Numeric(20, 4), nullable=False)
+    unit_of_measure = Column(String(50), nullable=True)
+
+    vat_amount = Column(Numeric(20, 2), default=0, nullable=False)
+    line_total = Column(Numeric(20, 2), nullable=False)
+    gl_account_code = Column(String(20), nullable=True)
+
     purchase_order = relationship("PurchaseOrder", back_populates="items")
 
 
