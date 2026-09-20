@@ -324,22 +324,31 @@ class BankAccount(BaseModel, AuditMixin):
 class BankStatement(BaseModel):
     """
     Imported bank statement containing transactions from the bank.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): genuinely dead code -- confirmed via grep that this
+    model is imported (app/models/__init__.py, app/services/bank_integration_service.py) but never
+    constructed, queried, or read anywhere in the codebase. With no real call site to determine
+    intent from, fixed to match the live table exactly (option (B)) rather than write a migration
+    for speculative fields nothing depends on: period_start/period_end -> start_date/end_date, and
+    total_transactions/matched_transactions/unmatched_transactions (no such breakdown exists on the
+    live table) -> transaction_count/total_credits/total_debits/is_reconciled. Needed zero
+    migration.
     """
-    
+
     __tablename__ = "bank_statements"
-    
+
     bank_account_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("bank_accounts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     # Statement Period
     statement_date: Mapped[date] = mapped_column(Date, nullable=False)
-    period_start: Mapped[date] = mapped_column(Date, nullable=False)
-    period_end: Mapped[date] = mapped_column(Date, nullable=False)
-    
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+
     # Balances from Statement
     opening_balance: Mapped[Decimal] = mapped_column(
         Numeric(precision=18, scale=2),
@@ -349,7 +358,7 @@ class BankStatement(BaseModel):
         Numeric(precision=18, scale=2),
         nullable=False,
     )
-    
+
     # Import Details
     source: Mapped[BankStatementSource] = mapped_column(
         SQLEnum(BankStatementSource),
@@ -367,11 +376,12 @@ class BankStatement(BaseModel):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
-    # Transaction Count
-    total_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    matched_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    unmatched_transactions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Transaction Summary
+    transaction_count: Mapped[int] = mapped_column(Integer, default=0, nullable=True)
+    total_credits: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+    total_debits: Mapped[Decimal] = mapped_column(Numeric(precision=18, scale=2), default=Decimal("0.00"), nullable=True)
+    is_reconciled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
     
     # Relationships
     bank_account: Mapped["BankAccount"] = relationship(

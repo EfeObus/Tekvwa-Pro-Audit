@@ -969,6 +969,33 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — bank_statements, second genuinely-dead-code case (2026-09-20)
+
+`BankStatement` is genuinely dead in current usage — confirmed via grep that it's imported
+(`app/models/__init__.py`, `app/services/bank_integration_service.py`) but never constructed,
+queried, or read anywhere in the codebase, and no Pydantic schema exposes it either. Confirmed the
+live table's real shape via the same full-migration-chain-replay method used for
+`bank_reconciliations`/`bank_accounts` (the comprehensive migration does `DROP TABLE IF EXISTS
+bank_statements CASCADE` before recreating it, so — unlike `bank_accounts` — its live shape really
+is the comprehensive migration's version). With no real call site to determine intent from, fixed
+the model to match the live table exactly (option (B)), matching the precedent set by
+`recurring_journal_entries`: renamed `period_start`/`period_end` → `start_date`/`end_date`, and
+replaced `total_transactions`/`matched_transactions`/`unmatched_transactions` (no such breakdown
+exists on the live table) with `transaction_count`/`total_credits`/`total_debits`/`is_reconciled`.
+Needed zero migration.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for `bank_statements` (only the usual cosmetic `NULLABLE`/enum-vs-`VARCHAR`/
+index-naming residuals), and a new permanent regression test (`TestBankStatementPersistence` in
+`tests/test_bank_reconciliation.py`) — a direct ORM round-trip rather than a service-level test,
+since there's no service call site to exercise. 87 tests across `test_bank_reconciliation.py`,
+`test_consolidation.py`, `test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 43 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

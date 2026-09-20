@@ -16,7 +16,9 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.bank_reconciliation import BankAccount, BankAccountType, ReconciliationStatus
+from app.models.bank_reconciliation import (
+    BankAccount, BankAccountType, BankStatement, ReconciliationStatus,
+)
 from app.models.entity import BusinessEntity
 from app.models.user import User
 from app.services.bank_reconciliation_service import get_bank_reconciliation_service
@@ -80,6 +82,40 @@ class TestBankAccountPersistence:
         assert account.opening_balance == Decimal("10000.00")
         assert account.current_balance == Decimal("10000.00")
         assert account.notes == "Primary operating account"
+
+
+class TestBankStatementPersistence:
+    """
+    Regression coverage for Finding 50's BankStatement column drift.
+
+    BankStatement is genuinely dead code (imported but never constructed/queried anywhere), so
+    this is a direct ORM round-trip rather than a service-level test, matching the precedent set
+    for other genuinely-dead-code tables in this remediation pass.
+    """
+
+    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity: BusinessEntity):
+        account = await _make_bank_account(db_session, test_entity)
+        statement = BankStatement(
+            bank_account_id=account.id,
+            statement_date=date(2026, 9, 30),
+            start_date=date(2026, 9, 1),
+            end_date=date(2026, 9, 30),
+            opening_balance=Decimal("10000.00"),
+            closing_balance=Decimal("15000.00"),
+            transaction_count=5,
+            total_credits=Decimal("6000.00"),
+            total_debits=Decimal("1000.00"),
+            is_reconciled=False,
+        )
+        db_session.add(statement)
+        await db_session.commit()
+        await db_session.refresh(statement)
+
+        assert statement.id is not None
+        assert statement.start_date == date(2026, 9, 1)
+        assert statement.end_date == date(2026, 9, 30)
+        assert statement.transaction_count == 5
+        assert statement.total_credits == Decimal("6000.00")
 
 
 class TestBankReconciliationPersistence:
