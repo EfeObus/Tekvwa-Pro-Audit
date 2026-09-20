@@ -6,7 +6,7 @@ Available to customer service and super admin roles.
 """
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 
 from sqlalchemy import select, func, and_, or_, desc
@@ -155,7 +155,7 @@ class SupportTicketService:
         critical_count = critical.scalar() or 0
         
         # SLA breached
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         sla_breached = await self.db.execute(
             select(func.count(SupportTicket.id)).where(
                 and_(
@@ -173,7 +173,7 @@ class SupportTicketService:
         sla_breached_count = sla_breached.scalar() or 0
         
         # Resolved today
-        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         resolved = await self.db.execute(
             select(func.count(SupportTicket.id)).where(
                 and_(
@@ -246,7 +246,7 @@ class SupportTicketService:
         ticket.status = status
         
         if status in [TicketStatus.RESOLVED, TicketStatus.CLOSED]:
-            ticket.resolved_at = datetime.utcnow()
+            ticket.resolved_at = datetime.now(timezone.utc)
             ticket.resolved_by_id = resolved_by_id
             ticket.resolution_notes = resolution_notes
             
@@ -274,7 +274,7 @@ class SupportTicketService:
         ticket.status = TicketStatus.ON_HOLD
         ticket.is_escalated = True
         ticket.escalation_reason = escalation_reason
-        ticket.escalated_at = datetime.utcnow()
+        ticket.escalated_at = datetime.now(timezone.utc)
         ticket.escalation_level = (ticket.escalation_level or 0) + 1
         
         await self.db.commit()
@@ -307,7 +307,7 @@ class SupportTicketService:
         
         # Update first response time if this is staff's first response
         if staff_id and ticket.first_response_at is None and not is_internal:
-            ticket.first_response_at = datetime.utcnow()
+            ticket.first_response_at = datetime.now(timezone.utc)
         
         await self.db.commit()
         await self.db.refresh(comment)
@@ -389,7 +389,7 @@ class SupportTicketService:
     
     async def check_and_update_sla_breaches(self) -> int:
         """Check and update SLA breaches for all open tickets."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         result = await self.db.execute(
             select(SupportTicket).where(
@@ -419,7 +419,7 @@ class SupportTicketService:
     
     def _calculate_sla_due_date(self, priority: TicketPriority) -> datetime:
         """Calculate SLA due date based on priority."""
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         
         sla_hours = {
             TicketPriority.CRITICAL: 2,
@@ -433,7 +433,7 @@ class SupportTicketService:
     
     async def _generate_ticket_number(self) -> str:
         """Generate a unique ticket number."""
-        today = datetime.utcnow().strftime("%Y%m%d")
+        today = datetime.now(timezone.utc).strftime("%Y%m%d")
         
         result = await self.db.execute(
             select(func.count(SupportTicket.id)).where(

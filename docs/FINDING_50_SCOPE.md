@@ -165,10 +165,10 @@ Executed per table, in the same individually-verified style as the rest of Findi
 `chart_of_accounts`, `fiscal_periods`, `exchange_rates`, `bank_reconciliations`, `bank_accounts`,
 `bank_statements`, `bank_statement_transactions`, `purchase_orders`, `purchase_order_items`,
 `goods_received_notes`, `goods_received_note_items`, `fixed_assets`, `depreciation_entries`,
-`expense_claims`, `expense_claim_items` — done, verified (check `docs/REMEDIATION_LOG.md` for
-current deploy status of the most recent one). 34 of the 66 tables in the original scope remain
-(see the tier tables above for the full list; done tables are no longer individually re-listed
-here). `ledger_entries`, `budgets`, and `account_balances` were fixed via
+`expense_claims`, `expense_claim_items`, `support_tickets`, `ticket_comments`,
+`ticket_attachments` — done, verified (check `docs/REMEDIATION_LOG.md` for current deploy status
+of the most recent one). 31 of the 66 tables in the original scope remain (see the tier tables
+above for the full list; done tables are no longer individually re-listed here). `ledger_entries`, `budgets`, and `account_balances` were fixed via
 option (A) — migrating the database to match the model — rather than (B); see those log entries
 for why. `recurring_journal_entries` is the first table found to be genuinely dead code (no real
 call site anywhere), fixed via (B) for that reason.

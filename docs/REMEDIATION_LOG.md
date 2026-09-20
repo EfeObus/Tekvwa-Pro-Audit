@@ -1283,6 +1283,59 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — support_tickets, ticket_comments, ticket_attachments (2026-09-20)
+
+Tier 1 (`support_tickets` 26 `ADD_DROP`) plus Tier 2 (`ticket_attachments` 10, `ticket_comments`
+9) — but the real drift on `support_tickets` was considerably larger than the automated count
+suggested, for the same reason `bank_reconciliations` was: the model had a large set of fields
+with **zero real usage anywhere**, alongside a `requester_id` that was `NOT NULL` with no DB
+column at all. All three tables share the same pattern: `app/services/support_ticket_service.py`
+(the only real construction site for all three models) and `app/routers/support_tickets.py`'s own
+`TicketResponse` Pydantic schema both already used the live tables' real column names directly —
+confirmed crashing with `UndefinedColumnError` on every create, and would have failed Pydantic
+response validation on every read even if a row existed. All three models rewritten to match the
+live tables and real usage exactly (option (B)) — **zero migrations needed for any of them.**
+
+- **`SupportTicket`:** removed `requester_id`/`assigned_team`/`assigned_at`/
+  `first_response_sla_met`/`resolution_summary`/`resolution_code`/`closed_at`/`closed_by_id`/
+  `csat_rating`/`csat_feedback`/`escalated`/`escalated_to_id`/`parent_ticket_id`/
+  `has_attachments`/`internal_notes`/`context_data` (all confirmed zero references via grep across
+  services and routers); added `reporter_user_id`/`reporter_email`/`reporter_name`/
+  `is_escalated`/`escalation_level`/`resolution_notes`/`response_time_minutes`/
+  `resolution_time_minutes`/`satisfaction_rating`/`satisfaction_feedback` (all real, all already
+  used by `create_ticket()`/`update_status()`/`escalate_ticket()` and `TicketResponse`).
+- **`TicketComment`:** renamed `ticket_id`→`support_ticket_id`, `content`→`comment`; removed the
+  `NOT NULL` fictional `author_id` in favor of the live table's two separate nullable author FKs,
+  `staff_id`/`user_id` (a comment can come from platform staff or the reporting user — `is_internal`
+  distinguishes staff-only notes); removed unused `is_from_customer`/`attachments`.
+- **`TicketAttachment`:** renamed `ticket_id`→`support_ticket_id`, `file_size_bytes`→`file_size`,
+  `mime_type`→`content_type`; removed the fictional, unreferenced `comment_id`; removed the `NOT
+  NULL` fictional `uploaded_by_id` in favor of the live table's two separate nullable uploader FKs,
+  `uploaded_by_staff_id`/`uploaded_by_user_id`.
+
+**Independent bug found and fixed while exercising the full lifecycle:**
+`update_status()`'s resolution-time calculation (`ticket.resolved_at - ticket.created_at`) raised
+`TypeError: can't subtract offset-naive and offset-aware datetimes` — `resolved_at` was being set
+via `datetime.utcnow()` (naive), while SQLAlchemy's `DateTime(timezone=True)` type coerces
+`created_at` to timezone-aware on read regardless of the live column's actual
+`timestamp without time zone` storage. Every `datetime.utcnow()` call in this service file
+(8 call sites) was replaced with `datetime.now(timezone.utc)` for consistency, not just the one
+that happened to crash.
+
+**Verified via:** full migration-chain replay (against the *current* head — no new migration
+needed), `alembic revision --autogenerate` showing zero remaining `ADD_DROP` for any of the three
+tables (only the usual cosmetic `NULLABLE`/index-naming residuals), and a new permanent regression
+test (`tests/test_support_tickets.py`) exercising the full `create_ticket → add_comment →
+add_attachment → assign → escalate → resolve` lifecycle, which is also what caught the datetime
+bug — 95 tests across `test_support_tickets.py`, `test_expense_claims.py`,
+`test_fixed_assets.py`, `test_bank_reconciliation.py`, `test_consolidation.py`,
+`test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 31 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

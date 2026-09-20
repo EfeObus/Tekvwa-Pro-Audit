@@ -77,15 +77,29 @@ class TicketSource(str, Enum):
 class SupportTicket(BaseModel):
     """
     Support ticket for customer service.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared a large set of fields
+    with zero real usage anywhere in the codebase (requester_id -- NOT NULL, with no matching DB
+    column at all -- assigned_team/assigned_at/first_response_sla_met/resolution_summary/
+    resolution_code/closed_at/closed_by_id/csat_rating/csat_feedback/escalated/escalated_to_id/
+    parent_ticket_id/has_attachments/internal_notes/context_data), while
+    app/services/support_ticket_service.py's create_ticket() (the only real construction site)
+    and app/routers/support_tickets.py's own TicketResponse schema both already used the live
+    table's real column names directly (reporter_user_id/reporter_email/reporter_name/
+    is_escalated/escalation_level/resolution_notes/response_time_minutes/
+    resolution_time_minutes/satisfaction_rating/satisfaction_feedback) -- confirmed crashing with
+    UndefinedColumnError on every create, and would have failed Pydantic response validation on
+    every read even if a row existed. Rewritten to match the live table and real usage exactly
+    (option (B)). Needed zero migration.
     """
     __tablename__ = "support_tickets"
-    
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
-    
+
     # Ticket identification
     ticket_number: Mapped[str] = mapped_column(
         String(50),
@@ -94,216 +108,157 @@ class SupportTicket(BaseModel):
         index=True,
         comment="Unique ticket number (e.g., TKT-2026-00001)"
     )
-    
-    # Organization and user
-    organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+
+    # Organization and reporter
+    organization_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("organizations.id", ondelete="SET NULL"),
-        nullable=True,
-        index=True,
-    )
-    
-    requester_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
+    reporter_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    reporter_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    reporter_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     # Ticket details
     subject: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
-    
+
     description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    
+
     category: Mapped[TicketCategory] = mapped_column(
         SQLEnum(TicketCategory),
         nullable=False,
         index=True,
     )
-    
+
     priority: Mapped[TicketPriority] = mapped_column(
         SQLEnum(TicketPriority),
         nullable=False,
         default=TicketPriority.MEDIUM,
         index=True,
     )
-    
+
     status: Mapped[TicketStatus] = mapped_column(
         SQLEnum(TicketStatus),
         nullable=False,
         default=TicketStatus.NEW,
         index=True,
     )
-    
-    source: Mapped[TicketSource] = mapped_column(
+
+    source: Mapped[Optional[TicketSource]] = mapped_column(
         SQLEnum(TicketSource),
-        nullable=False,
+        nullable=True,
         default=TicketSource.WEB_PORTAL,
     )
-    
+
     # Tags for filtering
     tags: Mapped[Optional[List[str]]] = mapped_column(
         JSONB,
         nullable=True,
     )
-    
+
     # Assignment
     assigned_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
-    assigned_team: Mapped[Optional[str]] = mapped_column(
-        String(100),
-        nullable=True,
-        comment="support, billing, technical, compliance"
-    )
-    
-    assigned_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    
+
     # SLA tracking
     sla_due_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         comment="SLA deadline"
     )
-    
-    sla_breached: Mapped[bool] = mapped_column(
+
+    sla_breached: Mapped[Optional[bool]] = mapped_column(
         Boolean,
         default=False,
     )
-    
+
     first_response_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    
-    first_response_sla_met: Mapped[Optional[bool]] = mapped_column(
-        Boolean,
-        nullable=True,
-    )
-    
+
+    response_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
     # Resolution
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    
+
     resolved_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
-    resolution_summary: Mapped[Optional[str]] = mapped_column(
+
+    resolution_notes: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
-    resolution_code: Mapped[Optional[str]] = mapped_column(
-        String(50),
-        nullable=True,
-        comment="fixed, duplicate, wont_fix, not_reproducible, etc."
-    )
-    
-    # Closure
-    closed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    
-    closed_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
+
+    resolution_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
     # Customer satisfaction
-    csat_rating: Mapped[Optional[int]] = mapped_column(
+    satisfaction_rating: Mapped[Optional[int]] = mapped_column(
         Integer,
         nullable=True,
         comment="1-5 satisfaction rating"
     )
-    
-    csat_feedback: Mapped[Optional[str]] = mapped_column(
+
+    satisfaction_feedback: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
+
     # Escalation
-    escalated: Mapped[bool] = mapped_column(
+    is_escalated: Mapped[Optional[bool]] = mapped_column(
         Boolean,
         default=False,
     )
-    
+
     escalated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    
-    escalated_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
+
+    escalation_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
     escalation_reason: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
-    # Related ticket (for duplicates/follow-ups)
-    parent_ticket_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("support_tickets.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
-    # Attachments info
-    has_attachments: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-    )
-    
-    # Internal notes (not visible to customer)
-    internal_notes: Mapped[Optional[str]] = mapped_column(
-        Text,
-        nullable=True,
-    )
-    
-    # Context data
-    context_data: Mapped[Optional[dict]] = mapped_column(
-        JSONB,
-        nullable=True,
-        comment="Browser info, page URL, error details, etc."
-    )
-    
+
     # Relationships
     organization: Mapped[Optional["Organization"]] = relationship(
         back_populates="support_tickets",
         lazy="selectin"
     )
-    
-    requester: Mapped["User"] = relationship(
-        foreign_keys=[requester_id],
+
+    reporter: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[reporter_user_id],
         lazy="selectin"
     )
-    
+
     assigned_to: Mapped[Optional["User"]] = relationship(
         foreign_keys=[assigned_to_id],
         lazy="selectin"
     )
-    
+
     resolved_by: Mapped[Optional["User"]] = relationship(
         foreign_keys=[resolved_by_id],
         lazy="selectin"
@@ -333,105 +288,127 @@ class SupportTicket(BaseModel):
 
 
 class TicketComment(BaseModel):
-    """Comments/replies on support tickets."""
+    """
+    Comments/replies on support tickets.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared ticket_id/author_id
+    (NOT NULL)/content/is_from_customer/attachments, none of which existed on the live table
+    (which instead has support_ticket_id and two separate nullable author FKs, staff_id/user_id,
+    plus comment). app/services/support_ticket_service.py's add_comment() (the only real
+    construction site) already used the live table's real names directly -- confirmed crashing
+    with UndefinedColumnError on every call. Rewritten to match (option (B)). Needed zero
+    migration.
+    """
     __tablename__ = "ticket_comments"
-    
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
-    
-    ticket_id: Mapped[uuid.UUID] = mapped_column(
+
+    support_ticket_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("support_tickets.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
-    author_id: Mapped[uuid.UUID] = mapped_column(
+
+    staff_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
-    
-    content: Mapped[str] = mapped_column(
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    comment: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    
-    is_internal: Mapped[bool] = mapped_column(
+
+    is_internal: Mapped[Optional[bool]] = mapped_column(
         Boolean,
         default=False,
         comment="Internal notes not visible to customer"
     )
-    
-    is_from_customer: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-    )
-    
-    # Attachments
-    attachments: Mapped[Optional[List[dict]]] = mapped_column(
-        JSONB,
-        nullable=True,
-        comment="List of attachment metadata"
-    )
-    
+
     # Relationships
-    ticket: Mapped["SupportTicket"] = relationship(lazy="selectin")
-    author: Mapped["User"] = relationship(lazy="selectin")
+    ticket: Mapped["SupportTicket"] = relationship(
+        foreign_keys=[support_ticket_id], lazy="selectin",
+    )
+    staff: Mapped[Optional["User"]] = relationship(foreign_keys=[staff_id], lazy="selectin")
+    user: Mapped[Optional["User"]] = relationship(foreign_keys=[user_id], lazy="selectin")
 
 
 class TicketAttachment(BaseModel):
-    """Attachments for support tickets."""
+    """
+    Attachments for support tickets.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared ticket_id/comment_id
+    (fictional, no DB equivalent)/file_size_bytes/mime_type/uploaded_by_id (NOT NULL), none of
+    which existed on the live table (which instead has support_ticket_id/file_size/content_type
+    and two separate nullable uploader FKs, uploaded_by_staff_id/uploaded_by_user_id).
+    app/services/support_ticket_service.py's add_attachment() (the only real construction site)
+    already used the live table's real names directly -- confirmed crashing with
+    UndefinedColumnError on every call. Rewritten to match (option (B)). Needed zero migration.
+    """
     __tablename__ = "ticket_attachments"
-    
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
-    
-    ticket_id: Mapped[uuid.UUID] = mapped_column(
+
+    support_ticket_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("support_tickets.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
-    comment_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("ticket_comments.id", ondelete="CASCADE"),
-        nullable=True,
-    )
-    
+
     filename: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
-    
+
     file_path: Mapped[str] = mapped_column(
         String(500),
         nullable=False,
     )
-    
-    file_size_bytes: Mapped[int] = mapped_column(
+
+    file_size: Mapped[Optional[int]] = mapped_column(
         Integer,
-        nullable=False,
+        nullable=True,
     )
-    
-    mime_type: Mapped[str] = mapped_column(
+
+    content_type: Mapped[Optional[str]] = mapped_column(
         String(100),
-        nullable=False,
+        nullable=True,
     )
-    
-    uploaded_by_id: Mapped[uuid.UUID] = mapped_column(
+
+    uploaded_by_staff_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
-    
+    uploaded_by_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Relationships
-    ticket: Mapped["SupportTicket"] = relationship(lazy="selectin")
-    uploaded_by: Mapped["User"] = relationship(lazy="selectin")
+    ticket: Mapped["SupportTicket"] = relationship(
+        foreign_keys=[support_ticket_id], lazy="selectin",
+    )
+    uploaded_by_staff: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[uploaded_by_staff_id], lazy="selectin",
+    )
+    uploaded_by_user: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[uploaded_by_user_id], lazy="selectin",
+    )
