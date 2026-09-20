@@ -67,12 +67,19 @@ class WHTCreditStatus(str, Enum):
 
 
 class ApprovalStatus(str, Enum):
-    """Status for M-of-N approval workflows"""
+    """
+    Status for M-of-N approval workflows
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): PARTIALLY_APPROVED had zero references anywhere in the
+    codebase and isn't a value the live Postgres enum has - removed. CANCELLED is a real live enum
+    value with no current Python-side usage; added anyway to keep this enum a complete match for
+    what the database actually accepts.
+    """
     PENDING = "pending"
-    PARTIALLY_APPROVED = "partially_approved"
     APPROVED = "approved"
     REJECTED = "rejected"
     EXPIRED = "expired"
+    CANCELLED = "cancelled"
 
 
 class BudgetPeriodType(str, Enum):
@@ -661,33 +668,36 @@ class ApprovalWorkflowApprover(BaseModel):
 class ApprovalRequest(BaseModel):
     """
     Individual approval requests created when workflow is triggered
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): resource_data/requested_by_id/requested_at/
+    required_approvals/current_approvals/current_rejections/notes below were removed - confirmed
+    zero references anywhere in the codebase, and none exist on the live table.
+    amount/submitted_by_id/context added - all three already existed on the live table and are
+    exactly what ApprovalWorkflowService.submit_for_approval actually writes, but were never
+    declared here. Needed zero migration for these three - the database was already correct.
     """
     __tablename__ = "approval_requests"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     workflow_id = Column(UUID(as_uuid=True), ForeignKey("approval_workflows.id"), nullable=False)
-    
+
     # What needs approval
-    resource_type = Column(String(50), nullable=False)  # payment, purchase_order, etc.
+    resource_type = Column(String(100), nullable=False)  # payment, purchase_order, etc.
     resource_id = Column(UUID(as_uuid=True), nullable=False)
-    resource_data = Column(JSON, nullable=True)  # Snapshot of resource at request time
-    
-    # Request details
-    requested_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    requested_at = Column(DateTime, default=datetime.utcnow)
-    
-    status = Column(SQLEnum(ApprovalStatus), default=ApprovalStatus.PENDING)
-    
-    required_approvals = Column(Integer, nullable=False)
-    current_approvals = Column(Integer, default=0)
-    current_rejections = Column(Integer, default=0)
-    
+    amount = Column(Numeric(20, 2), nullable=True)
+
+    status = Column(SQLEnum(ApprovalStatus), default=ApprovalStatus.PENDING, nullable=False)
+    submitted_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    context = Column(JSON, nullable=True)  # Snapshot of resource at request time
+
     expires_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
-    
-    notes = Column(Text, nullable=True)
-    
+
     # Relationships
+    # workflow: ApprovalWorkflowService.approve() eager-loads this (selectinload) and it never
+    # existed on this model at all - AttributeError on every real call, unrelated to the Finding 50
+    # column drift above, found while writing a regression test for it.
+    workflow = relationship("ApprovalWorkflow")
     decisions = relationship("ApprovalDecision", back_populates="request", cascade="all, delete-orphan")
     
     __table_args__ = (

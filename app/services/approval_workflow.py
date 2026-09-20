@@ -25,7 +25,7 @@ from app.models.advanced_accounting import (
     ApprovalDecision,
     ApprovalStatus
 )
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationType, NotificationPriority
 
 logger = logging.getLogger(__name__)
 
@@ -374,10 +374,10 @@ class ApprovalWorkflowService:
         notification = Notification(
             entity_id=request.entity_id,
             user_id=delegate_to_id,
-            notification_type="approval_delegated",
+            notification_type=NotificationType.INFO,
             title="Approval Delegated to You",
             message=f"You have been delegated approval authority for {request.resource_type}",
-            data={
+            extra_data={
                 "request_id": str(request_id),
                 "delegated_by": str(delegator_id),
                 "reason": reason
@@ -656,15 +656,15 @@ class ApprovalWorkflowService:
             notification = Notification(
                 entity_id=request.entity_id,
                 user_id=approver.user_id,
-                notification_type="approval_required",
+                notification_type=NotificationType.INFO,
                 title=f"Approval Required: {workflow.name}",
                 message=f"A new {request.resource_type} requires your approval",
-                data={
+                extra_data={
                     "request_id": str(request.id),
                     "workflow_type": workflow.workflow_type,
                     "amount": str(request.amount) if request.amount else None
                 },
-                priority="high" if request.amount and request.amount > Decimal("1000000") else "normal"
+                priority=NotificationPriority.HIGH if request.amount and request.amount > Decimal("1000000") else NotificationPriority.NORMAL
             )
             db.add(notification)
     
@@ -680,14 +680,14 @@ class ApprovalWorkflowService:
             notification = Notification(
                 entity_id=request.entity_id,
                 user_id=request.submitted_by_id,
-                notification_type="approval_rejected",
+                notification_type=NotificationType.WARNING,
                 title=f"Approval Rejected",
                 message=f"Your {request.resource_type} request was rejected: {reason}",
-                data={
+                extra_data={
                     "request_id": str(request.id),
                     "reason": reason
                 },
-                priority="high"
+                priority=NotificationPriority.HIGH
             )
             db.add(notification)
     
@@ -703,15 +703,15 @@ class ApprovalWorkflowService:
             notification = Notification(
                 entity_id=request.entity_id,
                 user_id=request.submitted_by_id,
-                notification_type="approval_completed",
+                notification_type=NotificationType.SUCCESS,
                 title=f"Approval Completed",
                 message=f"Your {request.resource_type} has been approved",
-                data={
+                extra_data={
                     "request_id": str(request.id),
                     "resource_type": request.resource_type,
                     "resource_id": str(request.resource_id)
                 },
-                priority="normal"
+                priority=NotificationPriority.NORMAL
             )
             db.add(notification)
         

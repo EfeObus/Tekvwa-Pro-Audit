@@ -522,6 +522,49 @@ check passing). 57 of the original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — approval_requests, plus two dependent bugs found while testing it (2026-09-20)
+
+Same pattern as `wht_credit_notes`/`approval_workflows`: model previously declared `resource_data`/
+`requested_by_id`/`requested_at`/`required_approvals`/`current_approvals`/`current_rejections`/
+`notes` — confirmed zero references anywhere in the codebase, none exist on the live table.
+Added `amount`/`submitted_by_id`/`context`, all three already on the live table and exactly what
+`ApprovalWorkflowService.submit_for_approval` always used. `ApprovalStatus`'s member set also had
+the same shape of bug as `MatchingStatus` did for `three_way_matches`: `PARTIALLY_APPROVED` had zero
+references and isn't a live enum value; removed. `CANCELLED` is a real live enum value with no
+current Python-side usage; added anyway to keep the enum a complete match for what the database
+accepts. One genuine migration needed: `updated_at` was missing at the DB level entirely.
+
+**Two further, dependent bugs found and fixed while writing this table's regression test** (both
+pre-existing, unrelated to the Finding 50 column-drift pattern, but directly blocking the exact code
+path being verified):
+1. `ApprovalRequest` never declared a `workflow` relationship at all, despite
+   `ApprovalWorkflowService.approve()` eager-loading it (`selectinload(ApprovalRequest.workflow)`)
+   on every call — `AttributeError` on every real approval, unrelated to any column mismatch. Added
+   the relationship.
+2. All four `Notification(...)` constructions in `app/services/approval_workflow.py`
+   (`_notify_approvers`, `_notify_rejection`, the delegation notice, and the post-approval notice)
+   used `data=` (the real column is `extra_data`) and passed `notification_type=`/`priority=` as raw
+   strings that don't exist as `NotificationType`/`NotificationPriority` enum members at all
+   (`"approval_required"`, `"approval_rejected"`, `"approval_delegated"`, `"approval_completed"` —
+   none of these are real values; the live Postgres enum for `notification_type` doesn't have them
+   either). Fixed by using the closest existing safe members (`INFO`/`WARNING`/`SUCCESS`) rather than
+   adding new Postgres enum values, which would have needed its own migration for a table
+   (`notifications`) that showed zero drift in the original Finding 50 scan and is out of scope
+   here. Every single call to `submit_for_approval`, `approve`, `reject`, or `delegate_approval` was
+   crashing on the notification step before this fix.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (including confirming the new `workflow` relationship adds
+no DDL, as expected for a pure ORM-level construct), and a new permanent regression test
+(`TestApprovalRequestPersistence` in `tests/test_workflow_integration.py`) that submits a request
+through the real service and approves it, exercising both bugs' fixes end-to-end — 76 tests across
+the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 56 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

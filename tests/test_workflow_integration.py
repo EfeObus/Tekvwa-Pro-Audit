@@ -799,7 +799,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.approval_workflow import ApprovalWorkflowService
-from app.models.advanced_accounting import ApprovalWorkflow, ApprovalWorkflowApprover
+from app.models.advanced_accounting import ApprovalWorkflow, ApprovalWorkflowApprover, ApprovalStatus
 
 
 class TestApprovalWorkflowPersistence:
@@ -838,6 +838,59 @@ class TestApprovalWorkflowPersistence:
         assert approver.approval_order == 1
         assert approver.is_required is True
         assert approver.created_at is not None
+
+
+class TestApprovalRequestPersistence:
+    """
+    Regression coverage for Finding 50's ApprovalRequest column drift.
+
+    The model previously declared resource_data/requested_by_id/requested_at/
+    required_approvals/current_approvals/current_rejections/notes -- none of which exist on the
+    live table or have any other reference anywhere in the codebase -- while missing amount/
+    submitted_by_id/context, which ApprovalWorkflowService.submit_for_approval always used.
+    """
+
+    async def test_submit_and_approve(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = ApprovalWorkflowService()
+        workflow = await service.create_workflow(
+            db=db_session,
+            entity_id=test_entity.id,
+            workflow_type="expense_claim",
+            name="Expense Approval",
+            approvers=[{"user_id": test_user.id, "role": "approver", "order": 1}],
+            created_by=test_user.id,
+        )
+
+        request = await service.submit_for_approval(
+            db=db_session,
+            entity_id=test_entity.id,
+            workflow_type="expense_claim",
+            resource_type="expense_claim",
+            resource_id=uuid4(),
+            amount=Decimal("150000.00"),
+            submitted_by=test_user.id,
+            context={"description": "Client dinner"},
+        )
+
+        assert request.id is not None
+        assert request.amount == Decimal("150000.00")
+        assert request.submitted_by_id == test_user.id
+        assert request.context["description"] == "Client dinner"
+        assert request.status == ApprovalStatus.PENDING
+
+        decision = await service.approve(
+            db=db_session,
+            request_id=request.id,
+            approver_id=test_user.id,
+            comments="Looks fine",
+        )
+
+        assert decision.decision == "approved"
+        await db_session.refresh(request)
+        assert request.status == ApprovalStatus.APPROVED
+        assert request.completed_at is not None
 
 
 # =============================================================================
