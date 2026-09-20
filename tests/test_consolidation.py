@@ -729,13 +729,15 @@ class TestThreeWayMatchPersistence:
 
 class TestPurchaseOrderPersistence:
     """
-    Regression coverage for Finding 50's PurchaseOrder/PurchaseOrderItem column drift.
+    Regression coverage for Finding 50's PurchaseOrder/PurchaseOrderItem/GoodsReceivedNote/
+    GoodsReceivedNoteItem column drift.
 
     ThreeWayMatchingService.create_purchase_order() -- the only real construction site for
-    either model -- passed delivery_address/payment_terms (PurchaseOrder) and item_description/
+    either PO model -- passed delivery_address/payment_terms (PurchaseOrder) and item_description/
     line_total/gl_account_code (PurchaseOrderItem), none of which existed on either model before
-    this fix, despite all of them already existing on the live tables. Confirmed crashing with
-    TypeError on every call.
+    this fix, despite all of them already existing on the live tables. create_goods_received_note()
+    had the same problem for GoodsReceivedNoteItem (item_description/quantity_accepted/
+    storage_location). Confirmed crashing with TypeError on every call.
     """
 
     async def test_create_purchase_order_with_items(
@@ -775,6 +777,58 @@ class TestPurchaseOrderPersistence:
         assert item.item_description == "Office chairs"
         assert item.gl_account_code == "5100"
         assert item.line_total == Decimal("268750.00")
+        assert item.created_at is not None
+
+    async def test_create_goods_received_note_with_items(
+        self, db_session: AsyncSession, test_entity, test_vendor, test_user,
+    ):
+        service = ThreeWayMatchingService()
+        po = await service.create_purchase_order(
+            db=db_session,
+            entity_id=test_entity.id,
+            vendor_id=test_vendor.id,
+            po_data={},
+            items=[
+                {
+                    "description": "Office chairs",
+                    "quantity": Decimal("10"),
+                    "unit_price": Decimal("25000.00"),
+                },
+            ],
+            created_by=test_user.id,
+        )
+        await service.approve_purchase_order(db=db_session, po_id=po.id, approved_by=test_user.id)
+        await db_session.refresh(po, attribute_names=["items"])
+        po_item_id = po.items[0].id
+
+        grn = await service.create_goods_received_note(
+            db=db_session,
+            entity_id=test_entity.id,
+            po_id=po.id,
+            grn_data={"received_by": "Warehouse Team"},
+            items=[
+                {
+                    "po_item_id": po_item_id,
+                    "quantity_received": Decimal("10"),
+                    "quantity_accepted": Decimal("9"),
+                    "quantity_rejected": Decimal("1"),
+                    "rejection_reason": "Damaged in transit",
+                    "storage_location": "Bay 3",
+                },
+            ],
+            created_by=test_user.id,
+        )
+
+        assert grn.id is not None
+        assert grn.received_by == "Warehouse Team"
+
+        await db_session.refresh(grn, attribute_names=["items"])
+        assert len(grn.items) == 1
+        grn_item = grn.items[0]
+        assert grn_item.item_description == "Office chairs"
+        assert grn_item.quantity_accepted == Decimal("9")
+        assert grn_item.storage_location == "Bay 3"
+        assert grn_item.created_at is not None
 
 
 # =============================================================================

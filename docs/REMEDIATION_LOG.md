@@ -1115,6 +1115,45 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — goods_received_notes and goods_received_note_items (2026-09-20)
+
+Same file, same construction path as the previous entry —
+`ThreeWayMatchingService.create_goods_received_note()` is the only real construction site for
+either model.
+
+**`GoodsReceivedNote`:** removed `warehouse_location` — did not exist on the live table and had
+no reference anywhere in the codebase (the constructor never set it). Model-only fix, no
+migration.
+
+**`GoodsReceivedNoteItem`:** same pattern as `PurchaseOrderItem` — model previously declared
+`batch_number`/`serial_numbers`/`expiry_date` (unrelated same-named fields elsewhere in the
+codebase are on inventory items, a different model — confirmed via grep this table has zero real
+references to any of the three), while the real constructor already used the live table's actual
+column names directly (`item_description`/`quantity_accepted`/`storage_location`) — confirmed
+crashing with `TypeError` on every call before this fix. Also relaxed `po_item_id` to nullable,
+matching the live column and the constructor's actual `item_data.get("po_item_id")` (can be
+`None`). Separately, this table was *also* missing `created_at`/`updated_at` at the DB level
+entirely (same gap as `purchase_order_items` — both created by the same migration, both missing
+the same two columns) — added via
+`alembic/versions/20260920_1335_add_timestamps_to_goods_received_note_it.py`, no backfill needed.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for either table (only the usual cosmetic `NULLABLE`/index-naming/FK-`ondelete`
+residuals), and a new permanent regression test
+(`test_create_goods_received_note_with_items` in `TestPurchaseOrderPersistence`,
+`tests/test_consolidation.py`) exercising the full `create_purchase_order → approve →
+create_goods_received_note` flow. Hit and fixed one test-only bug along the way: accessing
+`po.items[0].id` immediately after `approve_purchase_order()` triggered a `MissingGreenlet` lazy-load
+error (the same class of issue documented earlier this session for `ApprovalWorkflow.approvers`)
+— fixed by explicitly `refresh()`-ing `po.items` first, matching the established pattern. 90 tests
+across `test_bank_reconciliation.py`, `test_consolidation.py`, `test_workflow_integration.py`, and
+`test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 38 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

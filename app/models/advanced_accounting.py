@@ -226,19 +226,22 @@ class PurchaseOrderItem(BaseModel):
 class GoodsReceivedNote(BaseModel):
     """
     Goods Received Note (GRN) for 3-way matching
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): warehouse_location removed -- did not exist on the live
+    table and had no reference anywhere in the codebase (the constructor in
+    app/services/three_way_matching.py never set it).
     """
     __tablename__ = "goods_received_notes"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     purchase_order_id = Column(UUID(as_uuid=True), ForeignKey("purchase_orders.id"), nullable=False)
-    
+
     grn_number = Column(String(50), nullable=False)
     received_date = Column(Date, nullable=False, default=date.today)
-    
+
     delivery_note_number = Column(String(100), nullable=True)
     received_by = Column(String(255), nullable=True)
-    warehouse_location = Column(String(255), nullable=True)
-    
+
     notes = Column(Text, nullable=True)
     status = Column(String(20), default="draft")  # draft, confirmed, partial, complete
     
@@ -254,22 +257,32 @@ class GoodsReceivedNote(BaseModel):
 
 
 class GoodsReceivedNoteItem(BaseModel):
-    """Individual line items in a GRN"""
+    """
+    Individual line items in a GRN
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model previously declared batch_number/
+    serial_numbers/expiry_date, none of which existed on the live table
+    (alembic/versions/20260106_1600_advanced_accounting.py:165-175) and none of which had any real
+    reference anywhere in the codebase (unrelated `batch_number`/`expiry_date` usages elsewhere are
+    on inventory items, a different model). app/services/three_way_matching.py's only real
+    construction site already used the live table's actual column names
+    (item_description/quantity_accepted/storage_location) directly, meaning every call crashed
+    with TypeError before this fix. po_item_id relaxed to nullable, matching the live column and
+    the constructor's actual `item_data.get("po_item_id")` (can be `None`).
+    """
     __tablename__ = "goods_received_note_items"
-    
+
     grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_received_notes.id", ondelete="CASCADE"), nullable=False)
-    po_item_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order_items.id"), nullable=False)
-    
-    quantity_received = Column(Numeric(18, 4), nullable=False)
-    quantity_rejected = Column(Numeric(18, 4), default=0)
+    po_item_id = Column(UUID(as_uuid=True), ForeignKey("purchase_order_items.id"), nullable=True)
+
+    item_description = Column(String(500), nullable=False)
+    quantity_received = Column(Numeric(15, 4), nullable=False)
+    quantity_accepted = Column(Numeric(15, 4), nullable=False)
+    quantity_rejected = Column(Numeric(15, 4), default=0, nullable=False)
     rejection_reason = Column(Text, nullable=True)
-    
-    batch_number = Column(String(100), nullable=True)
-    serial_numbers = Column(ARRAY(String), nullable=True)
-    expiry_date = Column(Date, nullable=True)
-    
     inspection_notes = Column(Text, nullable=True)
-    
+    storage_location = Column(String(200), nullable=True)
+
     grn = relationship("GoodsReceivedNote", back_populates="items")
 
 
