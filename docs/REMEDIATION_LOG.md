@@ -793,8 +793,10 @@ side. Needed zero migration. Verified via full migration-chain replay and `alemb
 existing `AccountBalance` regression test's `FiscalPeriod` construction with assertions on the
 three new fields rather than adding a new test — 82 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 47 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `9b74166`, build
+`5e4b0ff1-8cf8-4d74-b973-2bca7896eb80` — `verify-migration-applied` confirmed head unchanged at
+`f5829862f984` as expected since this fix needed no migration, `proaudit-web-00029-mj6` live,
+health check passing). 47 of the original 66 Finding-50 tables remain.
 
 ---
 
