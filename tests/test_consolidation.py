@@ -847,6 +847,47 @@ class TestAccountBalancePersistence:
 
 
 # =============================================================================
+# RECURRING JOURNAL ENTRY PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# Unlike every other table fixed under this finding, RecurringJournalEntry is genuinely dead in
+# current usage -- imported by accounting_service.py but never constructed, queried, or read
+# anywhere. With no real call site to determine intent from, the model was fixed to match the
+# live table exactly (not the reverse) since the database is the real, currently-deployed state.
+# This is a direct ORM round-trip, not a service-level test, since there's no service to exercise.
+# =============================================================================
+
+from app.models.accounting import RecurringJournalEntry
+
+
+class TestRecurringJournalEntryPersistence:
+    """Regression coverage for Finding 50's RecurringJournalEntry column drift."""
+
+    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity, test_user):
+        entry = RecurringJournalEntry(
+            entity_id=test_entity.id,
+            name="Monthly Depreciation",
+            description="Auto-generated monthly depreciation entry",
+            frequency="monthly",
+            start_date=date.today(),
+            template_data={"lines": [{"account": "6100", "debit": "10000.00"}]},
+            created_by_id=test_user.id,
+        )
+        db_session.add(entry)
+        await db_session.commit()
+        await db_session.refresh(entry)
+
+        assert entry.id is not None
+        assert entry.template_data["lines"][0]["account"] == "6100"
+        assert entry.run_count == 0
+        assert entry.auto_post is False
+
+        result = await db_session.execute(
+            select(RecurringJournalEntry).where(RecurringJournalEntry.entity_id == test_entity.id)
+        )
+        assert result.scalar_one().id == entry.id
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

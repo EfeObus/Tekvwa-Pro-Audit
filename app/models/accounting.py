@@ -769,8 +769,18 @@ class AccountBalance(BaseModel):
 class RecurringJournalEntry(BaseModel, AuditMixin):
     """
     Template for recurring journal entries (depreciation, accruals, etc.)
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model is imported by accounting_service.py but
+    never actually constructed, queried, or read anywhere in the codebase - genuinely dead in
+    current usage, unlike every other table fixed under this finding. With no real call site to
+    determine intent from, and the database being the real, migrated, currently-deployed state,
+    fixed this model to match the live table exactly (option (B)) rather than write a migration
+    for speculative fields nothing depends on. entry_type/next_date/template_lines/total_amount/
+    last_generated_date/times_generated below were removed (none exist on the live table);
+    start_date/next_run_date/template_data/run_count/auto_post added (all already existed on the
+    live table).
     """
-    
+
     __tablename__ = "recurring_journal_entries"
 
     # Overrides AuditMixin's created_by_id only — this table's migration added a FK for
@@ -788,37 +798,31 @@ class RecurringJournalEntry(BaseModel, AuditMixin):
         nullable=False,
         index=True,
     )
-    
-    name: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[str] = mapped_column(String(500), nullable=False)
-    entry_type: Mapped[JournalEntryType] = mapped_column(
-        SQLEnum(JournalEntryType),
-        nullable=False,
-    )
-    
+
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+
     # Schedule
     frequency: Mapped[str] = mapped_column(
         String(20), nullable=False,
         comment="daily, weekly, monthly, quarterly, annually",
     )
-    next_date: Mapped[date] = mapped_column(Date, nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
     end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    
+    next_run_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    last_run_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
     # Template data
-    template_lines: Mapped[List] = mapped_column(
+    template_data: Mapped[dict] = mapped_column(
         JSONB, nullable=False,
         comment="Template line items for the entry",
     )
-    total_amount: Mapped[Decimal] = mapped_column(
-        Numeric(precision=18, scale=2),
-        nullable=False,
-    )
-    
+
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    last_generated_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    times_generated: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    
+    auto_post: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    run_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
     __table_args__ = (
         Index('ix_rje_entity_active', 'entity_id', 'is_active'),
     )

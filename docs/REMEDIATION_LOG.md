@@ -651,6 +651,31 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — recurring_journal_entries, first genuinely-dead-code case (2026-09-20)
+
+Unlike every other table fixed so far, `RecurringJournalEntry` is genuinely dead in current usage —
+confirmed via grep that it's imported by `accounting_service.py` but never constructed, queried, or
+read anywhere in the codebase. With no real call site to determine intent from, and the database
+being the real, currently-deployed state, fixed the model to match the live table exactly (option
+(B)) rather than write a migration for speculative fields nothing depends on. Removed
+`entry_type`/`next_date`/`template_lines`/`total_amount`/`last_generated_date`/`times_generated`
+(none exist on the live table); added `start_date`/`next_run_date`/`template_data`/`run_count`/
+`auto_post` (all already existed on the live table). Also tightened `name`'s length to match
+(`String(200)` → `String(100)`) and relaxed `description` to nullable, matching the live column.
+Needed zero migration.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only the pre-existing, already-documented `updated_by_id`
+`AuditMixin` gap from Finding 49, and cosmetic `frequency`/`template_data`/timestamp/FK-attribute
+residuals), and a new permanent regression test (`TestRecurringJournalEntryPersistence` in
+`tests/test_consolidation.py`) — a direct ORM round-trip rather than a service-level test, since
+there's no service call site to exercise. 79 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 52 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

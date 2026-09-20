@@ -160,12 +160,14 @@ Executed per table, in the same individually-verified style as the rest of Findi
 
 **Progress (updated as tables are fixed):** `intercompany_transactions`, `entity_groups`,
 `approval_workflow_approvers`, `approval_workflows`, `ledger_entries`, `three_way_matches`,
-`wht_credit_notes`, `approval_requests`, `approval_decisions`, `budgets`, `account_balances` —
-done, verified (check `docs/REMEDIATION_LOG.md` for current deploy status of the most recent one).
-53 of the 66 tables in the original scope remain (see the tier tables above for the full list; done
-tables are no longer individually re-listed here). `ledger_entries`, `budgets`, and
-`account_balances` were fixed via option (A) — migrating the database to match the model — rather
-than (B); see those log entries for why.
+`wht_credit_notes`, `approval_requests`, `approval_decisions`, `budgets`, `account_balances`,
+`recurring_journal_entries` — done, verified (check `docs/REMEDIATION_LOG.md` for current deploy
+status of the most recent one). 52 of the 66 tables in the original scope remain (see the tier
+tables above for the full list; done tables are no longer individually re-listed here).
+`ledger_entries`, `budgets`, and `account_balances` were fixed via option (A) — migrating the
+database to match the model — rather than (B); see those log entries for why.
+`recurring_journal_entries` is the first table found to be genuinely dead code (no real call site
+anywhere), fixed via (B) for that reason.
 
 ## What this changes about the roadmap
 
