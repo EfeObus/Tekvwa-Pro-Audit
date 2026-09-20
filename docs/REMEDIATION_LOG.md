@@ -1218,6 +1218,68 @@ original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — expense_claims and expense_claim_items (2026-09-20)
+
+Tier 1 (`expense_claims` 17 `ADD_DROP`) and Tier 2 (`expense_claim_items` 9). Same failure mode as
+`fixed_assets`/`depreciation_entries`: `app/services/expense_claims_service.py`'s `create_claim()`/
+`add_expense_item()` — the only real construction sites for either model — already sent the
+model's own field names, and every real call has always failed with an `UndefinedColumnError`.
+
+**`ExpenseClaim`:** `create_claim()` sent `title`/`expense_date_from`/`expense_date_to`/
+`project_code`/`cost_center`/`department`; `approve_claim()`/`reject_claim()` set
+`approved_by_id`/`rejected_by_id`/`approval_notes` directly. None of these existed on the live
+table (which instead has `claim_date`/`approved_by`/`rejected_by`/`notes`). Migrated the DB to add
+the model's names (direction (A)); the live table's `approved_by`/`rejected_by` stay unmapped
+(superseded by the `_id`-suffixed pair above). `claim_date`/`notes` added to the model for parity
+— **and `claim_date` turned out not to be dormant at all**: `app/routers/forensic_audit.py`
+independently filters `ExpenseClaim.claim_date` in two audit-period queries, so without
+`create_claim()` ever populating it, those queries would have silently matched zero real claims
+forever (`NULL >= start_date` is never true). Wired `claim_date=expense_date_from` into
+`create_claim()` to fix this.
+
+**Also found and fixed while making `submit_claim()` reachable:** it stored FX-claim metadata via
+`claim.metadata = {...}` — `metadata` is a name reserved by SQLAlchemy's declarative base for the
+schema `MetaData` object, so this silently shadowed the class attribute at the instance level
+without ever persisting (confirmed via a quick interactive check — no crash, no error, complete
+silent data loss on every FX claim submission). Renamed to `claim_metadata` (matching the
+`asset_metadata` naming convention already used elsewhere in this codebase for the same class of
+conflict) and given a real column; also switched from in-place dict mutation
+(`claim.metadata["key"] = ...`, which even a correctly-named `Mapped[dict]` column wouldn't track
+without `MutableDict`) to building and reassigning a fresh dict.
+
+**`ExpenseClaimItem`:** the model's FK was named `claim_id`, but the live table's real column (and
+its own FK constraint name) is `expense_claim_id` — renamed the model to match, updating the two
+internal query filters in the same service file. `vat_amount`/`approved_amount`/
+`receipt_file_url`/`has_receipt` also existed on neither side; `add_expense_item()` already sent
+all four, so migrated the DB to add them (the live table's `receipt_path` stays unmapped,
+superseded by `receipt_file_url`). Model gained `payment_method` (dormant, DB-only) for parity.
+Also missing entirely: `updated_at` (only `created_at` existed, despite inheriting `BaseModel`/
+`TimestampMixin` — same class of gap as several other tables this session).
+
+**Independent bug found and fixed, unrelated to column naming:** both `add_expense_item()` and
+`approve_claim()`'s item-adjustment path called `_update_claim_totals()` — which recomputes
+`claim.total_amount`/`approved_amount` via a `SELECT SUM(...)` — immediately after adding or
+mutating a line item, but *before* flushing. This app's session factory sets `autoflush=False`
+(`app/database.py`, and `tests/conftest.py` matches it), so the pending item was invisible to that
+SUM query every time: every claim's `total_amount` was always one item behind (or, for the first
+item on a claim, simply `0.00`). Fixed by adding an explicit `flush()` before each call to
+`_update_claim_totals()`.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining `ADD_DROP` for either table (only the deliberate unmapped residuals described above,
+plus the usual cosmetic `NULLABLE`/index-naming/FK-`ondelete` residuals), and a new permanent
+regression test file (`tests/test_expense_claims.py`) exercising `create_claim()`/
+`add_expense_item()`/`submit_claim()`/`approve_claim()` end-to-end, including the FX-metadata path
+and confirming `claim.total_amount` is correct immediately after adding an item (which would have
+caught the autoflush bug on its own) — 94 tests across `test_expense_claims.py`,
+`test_fixed_assets.py`, `test_bank_reconciliation.py`, `test_consolidation.py`,
+`test_workflow_integration.py`, and `test_budget.py` pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 34 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

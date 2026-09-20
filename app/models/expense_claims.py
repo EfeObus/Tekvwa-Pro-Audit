@@ -73,8 +73,18 @@ class PaymentMethod(str, Enum):
 class ExpenseClaim(BaseModel, AuditMixin):
     """
     Expense claim submitted by an employee for reimbursement.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): app/services/expense_claims_service.py's
+    create_claim() -- the only real construction site -- already sent title/expense_date_from/
+    expense_date_to/project_code/cost_center/department, and approve_claim()/reject_claim() set
+    approved_by_id/rejected_by_id/approval_notes directly, none of which existed on the live
+    table (which instead has claim_date/approved_by/rejected_by/notes) -- every real call has
+    always failed with an UndefinedColumnError. Migrated the DB to add the model's names
+    (direction (A)); claim_date/approved_by/rejected_by/notes stay in place, unmapped, except
+    claim_date/notes, added here for parity since they're not exact duplicates of anything above
+    (approved_by/rejected_by ARE superseded by approved_by_id/rejected_by_id and stay unmapped).
     """
-    
+
     __tablename__ = "expense_claims"
     
     entity_id: Mapped[uuid.UUID] = mapped_column(
@@ -103,6 +113,7 @@ class ExpenseClaim(BaseModel, AuditMixin):
     # Period
     expense_date_from: Mapped[date] = mapped_column(Date, nullable=False)
     expense_date_to: Mapped[date] = mapped_column(Date, nullable=False)
+    claim_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     
     # Amounts
     currency: Mapped[str] = mapped_column(String(3), default="NGN", nullable=False)
@@ -165,7 +176,16 @@ class ExpenseClaim(BaseModel, AuditMixin):
     project_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     cost_center: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     department: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    
+
+    # Notes
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # FX claim metadata (named claim_metadata, not metadata -- that name is reserved by
+    # SQLAlchemy's declarative base for the schema MetaData object; assigning to it silently
+    # shadows the class attribute at the instance level without persisting anywhere, which is
+    # exactly what submit_claim() did before this fix)
+    claim_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
     # Relationships
     entity: Mapped["BusinessEntity"] = relationship("BusinessEntity")
     employee: Mapped["Employee"] = relationship("Employee")
@@ -186,17 +206,28 @@ class ExpenseClaim(BaseModel, AuditMixin):
 class ExpenseClaimItem(BaseModel):
     """
     Individual expense item within a claim.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this model's FK was named `claim_id`, but the live
+    table's real column (and its own FK constraint name,
+    fk_expense_claim_items_expense_claim_id_expense_claims) is `expense_claim_id` -- renamed to
+    match, and the two internal query filters in app/services/expense_claims_service.py updated.
+    vat_amount/approved_amount/receipt_file_url/has_receipt also existed on neither side; the
+    real construction site (add_expense_item()) already sent all of them, so migrated the DB to
+    add them (direction (A)) rather than the model to the DB's payment_method/receipt_path
+    (dormant, added for parity below; receipt_path specifically superseded by receipt_file_url,
+    stays unmapped). Also missing entirely: updated_at, despite inheriting BaseModel/
+    TimestampMixin.
     """
-    
+
     __tablename__ = "expense_claim_items"
-    
-    claim_id: Mapped[uuid.UUID] = mapped_column(
+
+    expense_claim_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("expense_claims.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     # Item Details
     expense_date: Mapped[date] = mapped_column(Date, nullable=False)
     category: Mapped[ExpenseCategory] = mapped_column(
@@ -205,7 +236,7 @@ class ExpenseClaimItem(BaseModel):
     )
     description: Mapped[str] = mapped_column(Text, nullable=False)
     vendor_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    
+
     # Amounts
     currency: Mapped[str] = mapped_column(String(3), default="NGN", nullable=False)
     amount: Mapped[Decimal] = mapped_column(
@@ -222,7 +253,8 @@ class ExpenseClaimItem(BaseModel):
         default=Decimal("0.00"),
         nullable=False,
     )
-    
+    payment_method: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+
     # Receipt
     receipt_number: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     receipt_file_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
@@ -240,7 +272,7 @@ class ExpenseClaimItem(BaseModel):
     
     # Notes
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Relationships
     claim: Mapped["ExpenseClaim"] = relationship(
         "ExpenseClaim", back_populates="line_items",

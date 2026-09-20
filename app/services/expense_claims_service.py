@@ -55,6 +55,7 @@ class ExpenseClaimsService:
             claim_number=self._generate_claim_number(),
             title=title,
             description=description,
+            claim_date=expense_date_from,
             expense_date_from=expense_date_from,
             expense_date_to=expense_date_to,
             project_code=project_code,
@@ -85,7 +86,7 @@ class ExpenseClaimsService:
     ) -> ExpenseClaimItem:
         """Add an expense item to a claim."""
         item = ExpenseClaimItem(
-            claim_id=claim_id,
+            expense_claim_id=claim_id,
             expense_date=expense_date,
             category=category,
             description=description,
@@ -101,7 +102,8 @@ class ExpenseClaimsService:
             notes=notes,
         )
         self.db.add(item)
-        
+        await self.db.flush()
+
         # Update claim total
         await self._update_claim_totals(claim_id)
         
@@ -121,14 +123,14 @@ class ExpenseClaimsService:
         # Sum line items
         total_result = await self.db.execute(
             select(func.sum(ExpenseClaimItem.amount)).where(
-                ExpenseClaimItem.claim_id == claim_id
+                ExpenseClaimItem.expense_claim_id == claim_id
             )
         )
         total = total_result.scalar() or Decimal("0.00")
         
         approved_result = await self.db.execute(
             select(func.sum(ExpenseClaimItem.approved_amount)).where(
-                ExpenseClaimItem.claim_id == claim_id
+                ExpenseClaimItem.expense_claim_id == claim_id
             )
         )
         approved = approved_result.scalar() or Decimal("0.00")
@@ -221,10 +223,12 @@ class ExpenseClaimsService:
         
         # Store FX metadata if applicable
         if is_fx_claim:
-            claim.metadata = claim.metadata or {}
-            claim.metadata["currency"] = currency.upper()
-            claim.metadata["exchange_rate"] = str(exchange_rate) if exchange_rate else None
-            claim.metadata["original_amount"] = str(claim.total_amount)
+            claim.claim_metadata = {
+                **(claim.claim_metadata or {}),
+                "currency": currency.upper(),
+                "exchange_rate": str(exchange_rate) if exchange_rate else None,
+                "original_amount": str(claim.total_amount),
+            }
         
         # Check if workflow approval is required
         workflow_type = None
@@ -269,10 +273,10 @@ class ExpenseClaimsService:
             "entity_id": str(claim.entity_id),
         }
         
-        if claim.metadata:
-            request_data["currency"] = claim.metadata.get("currency", "NGN")
-            request_data["exchange_rate"] = claim.metadata.get("exchange_rate")
-            request_data["original_amount"] = claim.metadata.get("original_amount")
+        if claim.claim_metadata:
+            request_data["currency"] = claim.claim_metadata.get("currency", "NGN")
+            request_data["exchange_rate"] = claim.claim_metadata.get("exchange_rate")
+            request_data["original_amount"] = claim.claim_metadata.get("original_amount")
         
         try:
             await approval_service.create_approval_request(
@@ -315,7 +319,8 @@ class ExpenseClaimsService:
             for item in claim.line_items:
                 if str(item.id) in item_adjustments:
                     item.approved_amount = item_adjustments[str(item.id)]
-        
+            await self.db.flush()
+
         # Recalculate totals
         await self._update_claim_totals(claim_id)
         
