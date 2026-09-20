@@ -427,8 +427,10 @@ test (`TestLedgerEntryPersistence` in `tests/test_consolidation.py`) creating tw
 through the real service and asserting the running balance and hash-chain link are both correct —
 73 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry in this log).
-59 of the original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `a05002d`, build
+`dfc24998-73dd-4625-9fd7-10a1f6d8dff5` — `verify-migration-applied` confirmed `e46be79bee0f (head)`,
+`proaudit-web-00017-j7l` live, health check passing). 59 of the original 66 Finding-50 tables
+remain.
 
 ---
 
