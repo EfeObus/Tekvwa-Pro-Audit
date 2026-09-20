@@ -964,7 +964,10 @@ unique-constraint-naming residuals), and a new permanent regression test
 `create_bank_account()`) — 86 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
 `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 44 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `ef74004`, build
+`d6afcfe4-5138-43b5-8019-ece57a5f2e02` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 92e487a0d264 (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00032-mph`, `/health` returns 200. 44 of the
 original 66 Finding-50 tables remain.
 
 ---
