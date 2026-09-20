@@ -98,7 +98,20 @@ steps:
         set -euo pipefail
         gcloud run jobs update "${_MIGRATE_JOB}" --region="${_REGION}" --command=alembic --args=current --quiet
         EXEC_NAME=$$(gcloud run jobs execute "${_MIGRATE_JOB}" --region="${_REGION}" --wait --format="value(metadata.name)")
-        CURRENT=$$(gcloud logging read "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"${_MIGRATE_JOB}\" AND labels.\"run.googleapis.com/execution_name\"=\"$$EXEC_NAME\" AND textPayload:\"(head)\"" --limit=1 --format="value(textPayload)")
+        # Finding 53 (docs/REMEDIATION_LOG.md): Cloud Logging ingestion is eventually consistent, so
+        # querying it in the same breath as the job finishing can race ahead of log indexing and
+        # return zero rows even though the job's own output already has the head marker -- a false
+        # deploy failure, confirmed twice via a manual re-query minutes later showing the correct
+        # head both times. Retry the query for up to ~30s before concluding the marker truly isn't
+        # there.
+        CURRENT=""
+        for i in $$(seq 1 6); do
+          CURRENT=$$(gcloud logging read "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"${_MIGRATE_JOB}\" AND labels.\"run.googleapis.com/execution_name\"=\"$$EXEC_NAME\" AND textPayload:\"(head)\"" --limit=1 --format="value(textPayload)")
+          if [[ "$$CURRENT" == *"(head)"* ]]; then
+            break
+          fi
+          sleep 5
+        done
         gcloud run jobs update "${_MIGRATE_JOB}" --region="${_REGION}" --command=alembic --args=upgrade,head --quiet
         echo "Post-migration state: $$CURRENT"
         if [[ "$$CURRENT" != *"(head)"* ]]; then

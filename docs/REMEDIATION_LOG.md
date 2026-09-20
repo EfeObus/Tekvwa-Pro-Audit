@@ -1202,13 +1202,12 @@ previous image), but the new code fix sat undeployed until a manual retry. Retri
 already-current DB is a no-op) and it passed cleanly the second time, confirming this is
 intermittent, not deterministic.
 
-**Not yet fixed:** the right fix is a short retry/poll loop around the `gcloud logging read` call
-(e.g. retry up to ~30s with backoff before concluding the head marker truly isn't there) rather
-than a single immediate query. Not fixed in this pass — flagging as a follow-up rather than
-patching CI infrastructure while mid-way through an unrelated table-by-table remediation pass, per
-this roadmap's own discipline about not silently expanding scope. Low urgency: worst case is a
-false-fail requiring one manual retry, never a false-pass that hides a real migration failure
-(the check errs toward paranoia, not blindness).
+**Update — fixed:** a blind retry of the exact same build (`5b72dc7e-fde3-4a46-b3b4-1db11e682229`)
+failed the *same* way a second time, with the same independently-confirmed correct head
+(`367e1f63c047`) both times — two-for-two, not a rare fluke, so this needed fixing now rather than
+deferring. `cloudbuild.yaml`'s `verify-migration-applied` step now retries the `gcloud logging
+read` query up to 6 times with a 5s sleep between attempts (~30s total) before concluding the head
+marker genuinely isn't there, instead of trusting a single immediate query.
 
 ---
 
