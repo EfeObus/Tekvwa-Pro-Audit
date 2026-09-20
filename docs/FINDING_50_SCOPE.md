@@ -160,11 +160,11 @@ Executed per table, in the same individually-verified style as the rest of Findi
 
 **Progress (updated as tables are fixed):** `intercompany_transactions`, `entity_groups`,
 `approval_workflow_approvers`, `approval_workflows`, `ledger_entries`, `three_way_matches`,
-`wht_credit_notes`, `approval_requests` — done, verified (check `docs/REMEDIATION_LOG.md` for
-current deploy status of the most recent one). 56 of the 66 tables in the original scope remain (see
-the tier tables above for the full list; done tables are no longer individually re-listed here).
-`ledger_entries` was the first table fixed via option (A) — migrating the database to match the
-model — rather than (B); see that log entry for why.
+`wht_credit_notes`, `approval_requests`, `approval_decisions` — done, verified (check
+`docs/REMEDIATION_LOG.md` for current deploy status of the most recent one). 55 of the 66 tables in
+the original scope remain (see the tier tables above for the full list; done tables are no longer
+individually re-listed here). `ledger_entries` was the first table fixed via option (A) — migrating
+the database to match the model — rather than (B); see that log entry for why.
 
 ## What this changes about the roadmap
 

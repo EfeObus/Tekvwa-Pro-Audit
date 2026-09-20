@@ -888,6 +888,8 @@ class TestApprovalRequestPersistence:
         )
 
         assert decision.decision == "approved"
+        assert decision.comments == "Looks fine"
+        assert decision.created_at is not None  # Finding 50: was missing at the DB level entirely
         await db_session.refresh(request)
         assert request.status == ApprovalStatus.APPROVED
         assert request.completed_at is not None

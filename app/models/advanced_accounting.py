@@ -709,22 +709,22 @@ class ApprovalRequest(BaseModel):
 class ApprovalDecision(BaseModel):
     """
     Individual approval/rejection decisions
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): signature_hash/ip_address/user_agent below were
+    removed - confirmed zero references anywhere in the codebase, and none exist on the live
+    table. Separately, this table is missing both created_at and updated_at at the DB level (its
+    original migration only declared decided_at) - see the accompanying migration.
     """
     __tablename__ = "approval_decisions"
-    
+
     request_id = Column(UUID(as_uuid=True), ForeignKey("approval_requests.id", ondelete="CASCADE"), nullable=False)
     approver_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    
+
     decision = Column(String(20), nullable=False)  # approved, rejected
-    decided_at = Column(DateTime, default=datetime.utcnow)
-    
+    decided_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
     comments = Column(Text, nullable=True)
-    
-    # Digital signature (for audit purposes)
-    signature_hash = Column(String(256), nullable=True)
-    ip_address = Column(String(45), nullable=True)
-    user_agent = Column(String(500), nullable=True)
-    
+
     request = relationship("ApprovalRequest", back_populates="decisions")
     
     __table_args__ = (

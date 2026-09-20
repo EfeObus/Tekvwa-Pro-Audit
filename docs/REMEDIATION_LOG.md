@@ -567,6 +567,25 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — approval_decisions (2026-09-20)
+
+Model previously declared `signature_hash`/`ip_address`/`user_agent` — confirmed zero references
+anywhere in the codebase, none exist on the live table, removed. Separately, this table was missing
+**both** `created_at` and `updated_at` at the DB level entirely (its original migration only
+declared `decided_at`) — migration adds both, backfilled from `decided_at`.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only a pre-existing `uq_approval_decision_request_approver`
+unique-constraint mismatch — the model's own `__table_args__` declared this before today, unrelated
+to this fix), and the existing `TestApprovalRequestPersistence` regression test (which already
+exercises `ApprovalDecision` creation via `service.approve()`) strengthened with explicit assertions
+on `comments` and the new `created_at` — 76 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 55 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
