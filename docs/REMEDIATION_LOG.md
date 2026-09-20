@@ -581,8 +581,10 @@ to this fix), and the existing `TestApprovalRequestPersistence` regression test 
 exercises `ApprovalDecision` creation via `service.approve()`) strengthened with explicit assertions
 on `comments` and the new `created_at` — 76 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 55 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `676d6b6`, build
+`63926f6b-8115-449a-9212-d02e8debabfd` — `verify-migration-applied` confirmed
+`3022ef79bed9 (head)`, `proaudit-web-00021-8fz` live, health check passing). 55 of the original 66
+Finding-50 tables remain.
 
 ---
 
