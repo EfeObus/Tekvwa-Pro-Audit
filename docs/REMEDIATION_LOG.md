@@ -477,8 +477,10 @@ reproduced Finding 51's deadlock a second time (see that finding's entry, update
 it's reliable, not intermittent, but is a pre-existing, separate issue unrelated to this fix; 270+
 tests passed cleanly before the run hit it.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 58 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `55aff80`, build
+`b71428e7-631e-42d9-98ae-64f0f27856f0` — `verify-migration-applied` confirmed
+`4dbd6a167d9c (head)`, `proaudit-web-00018-g4x` live, health check passing). 58 of the original 66
+Finding-50 tables remain.
 
 ---
 
