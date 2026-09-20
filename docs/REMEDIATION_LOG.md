@@ -484,6 +484,42 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — wht_credit_notes (2026-09-20)
+
+Same direction-(B) pattern as `approval_workflows`: model previously declared `expiry_date`/
+`matched_transaction_id`/`matched_by_id`/`applied_amount`/`applied_to_period`/`document_url`/
+`document_verified`/`notes` — confirmed zero references anywhere in the codebase (a broad grep
+initially found matches on those exact attribute names, but every one belonged to unrelated models
+— `BankStatementTransaction`, PIT relief documents, inventory items — not `WHTCreditNote`), and none
+exist on the live table. Added `expires_at`/`applied_tax_reference`/`received_at`/`created_by_id`,
+all four already on the live table and exactly what `WHTCreditVaultService.record_credit_note`
+always used (`description`/`expires_at`/`created_by_id`) or the rest of the service reads/writes
+(`applied_tax_reference`, `received_at`). **Needed zero migration** — the database was already
+correct.
+
+**Incidental discovery while testing this fix:** the local `tekvwarho_proaudit_test` scratch
+database had accumulated inconsistent state from this session's earlier Finding-51 deadlock kills
+(interrupted `Base.metadata.create_all()`/`drop_all()` cycles left orphaned tables/constraints from
+stale, pre-edit model versions mixed with the current ones) — surfaced as a `UniqueViolationError`
+on a fixture's hardcoded slug and a `DependentObjectsStillExistError` referencing
+`matched_transaction_id`, a column already removed from the model. Not a new application bug —
+recreating the local test database from scratch resolved it immediately. Noted here only so a
+future session doesn't mistake stale local test-DB state for a real regression; nothing about this
+affects production, which was never touched by these local, killed test runs.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only pre-existing `ix_wht_entity_status`/`ix_wht_issuer_tin`
+composite/single-index-naming, `entity_id` FK-ondelete, and enum-type-name/timestamp-timezone
+residuals — none introduced by this fix), and a new permanent regression test
+(`TestWHTCreditNotePersistence` in `tests/test_consolidation.py`) exercising
+`WHTCreditVaultService.record_credit_note` end-to-end — 75 tests across the three related test
+files pass on a freshly recreated local database.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 57 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

@@ -304,49 +304,53 @@ class WHTCreditNote(BaseModel):
     """
     WHT Credit Note Vault
     Tracks Withholding Tax credit notes and matches against receivables
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): expiry_date/matched_transaction_id/matched_by_id/
+    applied_amount/applied_to_period/document_url/document_verified/notes below were removed -
+    confirmed zero references anywhere in the codebase, and none exist on the live table.
+    expires_at/applied_tax_reference/received_at/created_by_id added - all four already existed on
+    the live table and are exactly what WHTCreditVaultService actually writes/reads (using those
+    real names, not the removed ones), but were never declared here. Needed zero migration - the
+    database was already correct.
     """
     __tablename__ = "wht_credit_notes"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
-    
+
     # Credit note details
     credit_note_number = Column(String(100), nullable=False)
     issue_date = Column(Date, nullable=False)
-    expiry_date = Column(Date, nullable=True)  # WHT credits expire after 6 years
-    
+    expires_at = Column(DateTime, nullable=True)  # WHT credits expire after 6 years
+
     # Issuer (client who withheld tax)
-    issuer_name = Column(String(255), nullable=False)
+    issuer_name = Column(String(300), nullable=False)
     issuer_tin = Column(String(20), nullable=False)
     issuer_address = Column(Text, nullable=True)
-    
+
     # Amounts
-    gross_amount = Column(Numeric(18, 2), nullable=False)  # Original invoice amount
+    gross_amount = Column(Numeric(20, 2), nullable=False)  # Original invoice amount
     wht_rate = Column(Numeric(5, 2), nullable=False)  # WHT rate applied
-    wht_amount = Column(Numeric(18, 2), nullable=False)  # WHT deducted
-    
+    wht_amount = Column(Numeric(20, 2), nullable=False)  # WHT deducted
+
     # Classification
     wht_type = Column(String(50), nullable=False)  # professional, contract, rent, dividend, etc.
     tax_year = Column(Integer, nullable=False)
-    
+
     # Status tracking
-    status = Column(SQLEnum(WHTCreditStatus), default=WHTCreditStatus.PENDING)
-    
+    status = Column(SQLEnum(WHTCreditStatus), default=WHTCreditStatus.PENDING, nullable=False)
+
     # Matching
     matched_invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=True)
-    matched_transaction_id = Column(UUID(as_uuid=True), ForeignKey("transactions.id"), nullable=True)
     matched_at = Column(DateTime, nullable=True)
-    matched_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    
+
     # Application to tax liability
-    applied_amount = Column(Numeric(18, 2), default=0)
-    applied_to_period = Column(String(20), nullable=True)  # e.g., "2026-Q1"
+    applied_tax_reference = Column(String(100), nullable=True)
     applied_at = Column(DateTime, nullable=True)
-    
-    # Document storage
-    document_url = Column(String(500), nullable=True)
-    document_verified = Column(Boolean, default=False)
-    
-    notes = Column(Text, nullable=True)
+    applied_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
+    received_at = Column(DateTime, nullable=True)
+    description = Column(Text, nullable=True)
+    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     
     __table_args__ = (
         UniqueConstraint('entity_id', 'credit_note_number', 'issuer_tin', name='uq_wht_credit_note'),

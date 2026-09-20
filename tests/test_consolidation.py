@@ -728,6 +728,48 @@ class TestThreeWayMatchPersistence:
 
 
 # =============================================================================
+# WHT CREDIT NOTE PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# WHTCreditNote's model previously declared expiry_date/matched_transaction_id/matched_by_id/
+# applied_amount/applied_to_period/document_url/document_verified/notes -- none of which exist on
+# the live table or have any other reference anywhere in the codebase -- while missing
+# expires_at/applied_tax_reference/received_at/created_by_id, which WHTCreditVaultService always
+# used. Needed zero migration; the database was already correct.
+# =============================================================================
+
+from app.services.wht_credit_vault import WHTCreditVaultService
+
+
+class TestWHTCreditNotePersistence:
+    """Regression coverage for Finding 50's WHTCreditNote column drift."""
+
+    async def test_record_credit_note(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = WHTCreditVaultService()
+        credit_note = await service.record_credit_note(
+            db=db_session,
+            entity_id=test_entity.id,
+            credit_note_data={
+                "credit_note_number": "WHT-TEST-0001",
+                "issue_date": date.today(),
+                "issuer_name": "Test Client Ltd",
+                "issuer_tin": "12345678-0001",
+                "gross_amount": Decimal("500000.00"),
+                "wht_type": "professional_fees",
+                "description": "Consulting services WHT credit",
+            },
+            created_by=test_user.id,
+        )
+
+        assert credit_note.id is not None
+        assert credit_note.description == "Consulting services WHT credit"
+        assert credit_note.expires_at is not None
+        assert credit_note.created_by_id == test_user.id
+        assert credit_note.wht_amount > Decimal("0")
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 
