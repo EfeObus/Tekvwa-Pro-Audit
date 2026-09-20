@@ -1170,6 +1170,48 @@ nothing else broke."
 
 ---
 
+## Finding 53 (new, not in original 48) — `verify-migration-applied` has a log-propagation race, can false-fail a good deploy
+
+**Discovered:** 2026-09-20, deploying the `bank_statement_transactions` fix (commit `b42e691`,
+build `975e3bfe-e8b8-4620-a673-6f13d39137c2`). The build failed at step 4
+(`verify-migration-applied`) with `FAILED: database is not at head after the migration job ran.
+Got:` (empty). Before treating the deploy as a real failure or retrying blindly, checked what
+actually happened to production: `gcloud logging read` against the same `alembic current`
+execution's logs (`proaudit-migrate-5drt7`), run manually a few minutes later, showed
+`367e1f63c047 (head)` — the exact expected new head — and the preceding `run-migrations` step's
+own logs (`proaudit-migrate-xzmn4`) confirmed `Running upgrade 92e487a0d264 -> 367e1f63c047`
+completed with `exit(0)`. **The migration genuinely succeeded; only the verification step's own
+check of it failed.**
+
+**Root cause:** `cloudbuild.yaml`'s `verify-migration-applied` step (lines 93-107) runs
+`gcloud run jobs execute ... --wait`, then *immediately* queries Cloud Logging for that
+execution's log line containing `(head)` via `gcloud logging read ... --limit=1`. Cloud Logging
+ingestion is eventually consistent — querying it in the same breath as the job finishing can race
+ahead of log indexing and return zero rows, which the script's `$$CURRENT` variable then holds as
+an empty string, correctly failing the `[[ "$$CURRENT" != *"(head)"* ]]` check even though the
+underlying migration was fine. This is exactly the kind of blind-spot Finding 52 was written to
+close (a deploy step whose own reported status doesn't match reality) — except inverted: Finding
+52 was silent success on real failure, this is a loud failure on real success. Both point at the
+same underlying fragility of trusting a single, immediate `gcloud logging read` for anything.
+
+**Impact:** because `deploy-web`/`deploy-worker`/`deploy-beat` all `waitFor: ["verify-migration-applied"]`,
+this false failure blocked the image update to `proaudit-web` even though the DB was already
+safely at the new head — no outage (the additive migration is backward-compatible with the
+previous image), but the new code fix sat undeployed until a manual retry. Retried the exact same
+`gcloud builds submit` (the migration step is idempotent — `alembic upgrade head` against an
+already-current DB is a no-op) and it passed cleanly the second time, confirming this is
+intermittent, not deterministic.
+
+**Not yet fixed:** the right fix is a short retry/poll loop around the `gcloud logging read` call
+(e.g. retry up to ~30s with backoff before concluding the head marker truly isn't there) rather
+than a single immediate query. Not fixed in this pass — flagging as a follow-up rather than
+patching CI infrastructure while mid-way through an unrelated table-by-table remediation pass, per
+this roadmap's own discipline about not silently expanding scope. Low urgency: worst case is a
+false-fail requiring one manual retry, never a false-pass that hides a real migration failure
+(the check errs toward paranoia, not blindness).
+
+---
+
 ## First real deploy of this remediation effort (2026-09-19)
 
 Pushed all commits through `b3c2bdc` (Phase 0 + Finding 49 partial fix + Finding 50 scoping) to
