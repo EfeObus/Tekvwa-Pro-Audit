@@ -759,8 +759,10 @@ pre-existing `tax_amount`/`created_at`/`account_id`-ondelete cosmetic residuals)
 permanent regression test (`TestJournalEntryLinePersistence` in `tests/test_consolidation.py`) — 82
 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 49 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `f619da5`, build
+`4ba316e9-11c3-4ae1-9ffd-058e07d6d0ce` — `verify-migration-applied` confirmed
+`f5829862f984 (head)`, `proaudit-web-00027-x6t` live, health check passing). 49 of the original 66
+Finding-50 tables remain.
 
 ---
 
