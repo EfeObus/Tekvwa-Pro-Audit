@@ -1062,7 +1062,11 @@ index-naming residuals), and a new permanent regression test
 88 tests across `test_bank_reconciliation.py`, `test_consolidation.py`,
 `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 42 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `e776ccf` (bundled with the
+Finding 53 CI fix below), build `152fffcf-ce60-4089-96d7-dc57dd1d7191` (SUCCESS, after two prior
+false-fails — see Finding 53). `verify-migration-applied` reported
+`Post-migration state: 367e1f63c047 (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00034-dn9`, `/health` returns 200. 42 of the
 original 66 Finding-50 tables remain.
 
 ---
