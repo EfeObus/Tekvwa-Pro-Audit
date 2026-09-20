@@ -515,8 +515,10 @@ residuals — none introduced by this fix), and a new permanent regression test
 `WHTCreditVaultService.record_credit_note` end-to-end — 75 tests across the three related test
 files pass on a freshly recreated local database.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 57 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `e362e8d`, build
+`af727ff9-a1ea-4674-a6e8-e1d2ff461265` — `verify-migration-applied` confirmed head unchanged at
+`4dbd6a167d9c` as expected since this fix needed no migration, `proaudit-web-00019-xc6` live, health
+check passing). 57 of the original 66 Finding-50 tables remain.
 
 ---
 
