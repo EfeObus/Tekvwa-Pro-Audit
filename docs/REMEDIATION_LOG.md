@@ -608,8 +608,10 @@ new permanent regression test (`TestBudgetPersistence` in `tests/test_budget.py`
 budget through the real service and updates its three total fields — 77 tests across the three
 related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 54 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `254b588`, build
+`34fa718e-8f77-45d1-9cec-5129678e7c56` — `verify-migration-applied` confirmed
+`a17c9e5f2b3d (head)`, `proaudit-web-00022-9pq` live, health check passing). 54 of the original 66
+Finding-50 tables remain.
 
 ---
 
