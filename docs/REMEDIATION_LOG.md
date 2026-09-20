@@ -644,8 +644,10 @@ which is harmless), and a new permanent regression test
 chain (fiscal year → fiscal period → chart of accounts → account balance) and queries by
 `entity_id` — 78 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 53 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `653d7f4`, build
+`b7e9f712-8ec8-4cd1-b827-1dc77350c303` — `verify-migration-applied` confirmed
+`1f34cc20a492 (head)`, `proaudit-web-00023-h9m` live, health check passing). 53 of the original 66
+Finding-50 tables remain.
 
 ---
 
