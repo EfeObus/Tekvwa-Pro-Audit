@@ -702,8 +702,10 @@ regression test (`TestGLIntegrationLogPersistence` in `tests/test_consolidation.
 round-trip, since a full `post_to_gl` end-to-end test would need substantial unrelated journal-entry
 fixture setup. 80 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 51 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `a349197`, build
+`52ed9176-9d6c-4c41-9c67-7fdc36c73dcb` — `verify-migration-applied` confirmed
+`104a08d0d777 (head)`, `proaudit-web-00025-zjc` live, health check passing). 51 of the original 66
+Finding-50 tables remain.
 
 ---
 
