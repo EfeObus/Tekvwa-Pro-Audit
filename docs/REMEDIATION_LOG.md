@@ -725,8 +725,10 @@ remaining column-level diff for `journal_entries` at all, and a new permanent re
 (`TestJournalEntryPersistence` in `tests/test_consolidation.py`) — a direct ORM round-trip — 81
 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 50 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `fd395a0`, build
+`12319ed5-b51a-4b98-b3e4-3c06f17597b1` — `verify-migration-applied` confirmed head unchanged at
+`104a08d0d777` as expected since this fix needed no migration, `proaudit-web-00026-7w8` live,
+health check passing). 50 of the original 66 Finding-50 tables remain.
 
 ---
 
