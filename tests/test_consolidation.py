@@ -922,6 +922,42 @@ class TestGLIntegrationLogPersistence:
 
 
 # =============================================================================
+# JOURNAL ENTRY PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# JournalEntry's model declared attachments (JSONB), which never existed on the live table and had
+# zero references anywhere in the codebase, while missing is_recurring/recurring_entry_id, both of
+# which already existed on the live table. Neither pair is currently used by any real call site;
+# fixed to match the live table exactly since it's the real, deployed state.
+# =============================================================================
+
+from app.models.accounting import JournalEntry, JournalEntryType, JournalEntryStatus
+
+
+class TestJournalEntryPersistence:
+    """Regression coverage for Finding 50's JournalEntry column drift."""
+
+    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity, test_user):
+        entry = JournalEntry(
+            entity_id=test_entity.id,
+            entry_number="JE-TEST-0001",
+            entry_date=date.today(),
+            description="Test journal entry",
+            entry_type=JournalEntryType.MANUAL,
+            total_debit=Decimal("50000.00"),
+            total_credit=Decimal("50000.00"),
+            status=JournalEntryStatus.DRAFT,
+            created_by_id=test_user.id,
+        )
+        db_session.add(entry)
+        await db_session.commit()
+        await db_session.refresh(entry)
+
+        assert entry.id is not None
+        assert entry.is_recurring is False
+        assert entry.recurring_entry_id is None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

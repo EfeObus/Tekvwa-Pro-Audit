@@ -553,12 +553,18 @@ class JournalEntry(BaseModel, AuditMixin):
         comment="Created by bank reconciliation",
     )
     
-    # Attachments
-    attachments: Mapped[Optional[List]] = mapped_column(
-        JSONB, nullable=True,
-        comment="File attachments metadata",
-    )
-    
+    # Finding 50 (docs/FINDING_50_SCOPE.md): attachments (JSONB) was removed - it never existed on
+    # the live table and had zero references anywhere in the codebase. is_recurring/
+    # recurring_entry_id added below - both already existed on the live table but were never
+    # declared here. Neither pair is currently used by any real call site; fixed to match the
+    # live table exactly since it's the real, deployed state, not because either side has an
+    # active bug today.
+    is_recurring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # No ForeignKey() here - the live column has no FK constraint at all, unlike most id-shaped
+    # columns in this codebase; declaring one would mean a new migration for a currently-unused
+    # field.
+    recurring_entry_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
     # Relationships
     entity: Mapped["BusinessEntity"] = relationship("BusinessEntity")
     fiscal_period: Mapped[Optional["FiscalPeriod"]] = relationship(

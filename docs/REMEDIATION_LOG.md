@@ -709,6 +709,27 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — journal_entries, another genuinely-dormant case (2026-09-20)
+
+Model declared `attachments` (JSONB) — confirmed zero references anywhere in the codebase, and it
+never existed on the live table. Model was missing `is_recurring`/`recurring_entry_id`, both of
+which already existed on the live table — added. **Neither pair is currently used by any real call
+site on either side** (same pattern as `recurring_journal_entries`), so this is a model-only
+correction matching the live table's real, deployed shape, not a fix for an active bug.
+`recurring_entry_id` deliberately declared with no `ForeignKey()`, matching the live column exactly
+— it has no FK constraint in the database either, unlike most id-shaped columns in this codebase, and
+adding one would mean writing a migration for a currently-unused field. Needed zero migration.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing zero
+remaining column-level diff for `journal_entries` at all, and a new permanent regression test
+(`TestJournalEntryPersistence` in `tests/test_consolidation.py`) — a direct ORM round-trip — 81
+tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 50 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
