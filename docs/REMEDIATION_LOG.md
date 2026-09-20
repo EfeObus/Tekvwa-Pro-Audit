@@ -906,7 +906,10 @@ remaining `ADD_DROP` for `bank_reconciliations` (only the same cosmetic `NULLABL
 renamed/added workflow field) — 85 tests across `test_bank_reconciliation.py`,
 `test_consolidation.py`, `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 45 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `db99145`, build
+`c8d60822-94d2-404f-bd60-2c63f3b9fd86` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 12da478532fe (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00031-74p`, `/health` returns 200. 45 of the
 original 66 Finding-50 tables remain.
 
 ---
