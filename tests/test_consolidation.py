@@ -958,6 +958,71 @@ class TestJournalEntryPersistence:
 
 
 # =============================================================================
+# JOURNAL ENTRY LINE PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# department_id/project_id/bank_transaction_id previously declared ForeignKey()s that were never
+# actually created on the live table -- confirmed zero references anywhere in the codebase for all
+# three, so the ForeignKey()s were removed rather than creating real constraints for currently-
+# unused columns. cost_center_id added (already existed on the live table, also unused, also no
+# FK). Separately, updated_at was missing at the DB level entirely -- migration adds it.
+#
+# Not fixed here, flagged instead: the model's __table_args__ declares a uq_je_line_number unique
+# constraint (journal_entry_id, line_number) that doesn't exist on the live table either. Unlike
+# everything else fixed in this session, adding it would be a genuinely *new* constraint, not
+# catching up to something already enforced in the database -- and this environment can't verify
+# production has no existing duplicate (journal_entry_id, line_number) pairs. Left as an explicit
+# follow-up verification task rather than risking a migration failure on unverified data.
+# =============================================================================
+
+from app.models.accounting import JournalEntryLine
+
+
+class TestJournalEntryLinePersistence:
+    """Regression coverage for Finding 50's JournalEntryLine column drift."""
+
+    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity, test_user):
+        entry = JournalEntry(
+            entity_id=test_entity.id,
+            entry_number="JE-TEST-0002",
+            entry_date=date.today(),
+            description="Test entry for line",
+            entry_type=JournalEntryType.MANUAL,
+            total_debit=Decimal("10000.00"),
+            total_credit=Decimal("10000.00"),
+            status=JournalEntryStatus.DRAFT,
+            created_by_id=test_user.id,
+        )
+        db_session.add(entry)
+        await db_session.flush()
+
+        account = ChartOfAccounts(
+            entity_id=test_entity.id,
+            account_code="2000",
+            account_name="Accounts Payable",
+            account_type=AccountType.LIABILITY,
+            normal_balance=NormalBalance.CREDIT,
+        )
+        db_session.add(account)
+        await db_session.flush()
+
+        line = JournalEntryLine(
+            journal_entry_id=entry.id,
+            account_id=account.id,
+            line_number=1,
+            debit_amount=Decimal("10000.00"),
+            credit_amount=Decimal("0.00"),
+        )
+        db_session.add(line)
+        await db_session.commit()
+        await db_session.refresh(line)
+
+        assert line.id is not None
+        assert line.department_id is None
+        assert line.cost_center_id is None
+        assert line.updated_at is not None
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

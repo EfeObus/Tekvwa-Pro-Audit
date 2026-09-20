@@ -626,17 +626,15 @@ class JournalEntryLine(BaseModel):
     )
     
     # Dimensions (for multi-dimensional reporting)
-    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("accounting_dimensions.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("accounting_dimensions.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
+    # Finding 50 (docs/FINDING_50_SCOPE.md): department_id/project_id/bank_transaction_id below
+    # previously declared ForeignKey()s that were never actually created on the live table -
+    # confirmed zero references anywhere in the codebase for all three, so removed the
+    # ForeignKey() rather than write a migration to create real constraints for currently-unused
+    # columns. cost_center_id added (already existed on the live table, also unused, also no FK).
+    department_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    project_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+    cost_center_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
     # Tax details
     tax_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     tax_amount: Mapped[Decimal] = mapped_column(
@@ -658,11 +656,7 @@ class JournalEntryLine(BaseModel):
     )
     
     # Bank transaction link
-    bank_transaction_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("bank_statement_transactions.id", ondelete="SET NULL"),
-        nullable=True,
-    )
+    bank_transaction_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     
     # Relationships
     journal_entry: Mapped["JournalEntry"] = relationship(

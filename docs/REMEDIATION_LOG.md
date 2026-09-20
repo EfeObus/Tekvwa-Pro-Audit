@@ -732,6 +732,38 @@ health check passing). 50 of the original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — journal_entry_lines, and a new sub-category of drift (2026-09-20)
+
+This table surfaced a genuinely new sub-category, not caught by the earlier fk_drift_check.py
+script (which only checks the reverse direction — a real DB constraint the model doesn't know
+about): `department_id`, `project_id`, and `bank_transaction_id` all declared `ForeignKey()` on the
+model, but **none of the three constraints were ever actually created on the live table**.
+Confirmed zero references to any of the three anywhere in the codebase before deciding to remove
+the `ForeignKey()`s rather than write a migration creating real constraints for currently-unused
+columns. `cost_center_id` added (already existed on the live table, also unused, also no FK).
+Separately, this table was also missing `updated_at` at the DB level entirely — migration adds it,
+backfilled from `created_at`.
+
+**Explicitly not fixed, flagged as a follow-up instead:** the model's `__table_args__` declares
+`uq_je_line_number`, a unique constraint on `(journal_entry_id, line_number)`, which also doesn't
+exist on the live table. Unlike every other constraint/column fixed in this session, adding this
+one would be a genuinely *new* constraint, not catching up to something already enforced in the
+database — and this environment can't verify production has no existing duplicate
+`(journal_entry_id, line_number)` pairs that would make the migration fail outright. Per this
+roadmap's own instruction not to assume either success or failure where verification is
+incomplete, this is logged as an open verification task, not silently added or silently dropped.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything actually touched (only the flagged `uq_je_line_number` gap above and
+pre-existing `tax_amount`/`created_at`/`account_id`-ondelete cosmetic residuals), and a new
+permanent regression test (`TestJournalEntryLinePersistence` in `tests/test_consolidation.py`) — 82
+tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 49 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
