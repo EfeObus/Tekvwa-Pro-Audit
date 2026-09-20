@@ -671,8 +671,10 @@ residuals), and a new permanent regression test (`TestRecurringJournalEntryPersi
 `tests/test_consolidation.py`) — a direct ORM round-trip rather than a service-level test, since
 there's no service call site to exercise. 79 tests across the three related test files pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 52 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, verified, deployed (commit `a2f5d33`, build
+`f0e57f77-6e64-48a1-8b3a-37a6563b3bcc` — `verify-migration-applied` confirmed head unchanged at
+`1f34cc20a492` as expected since this fix needed no migration, `proaudit-web-00024-fmj` live,
+health check passing). 52 of the original 66 Finding-50 tables remain.
 
 ---
 
