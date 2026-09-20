@@ -1275,7 +1275,10 @@ caught the autoflush bug on its own) — 94 tests across `test_expense_claims.py
 `test_fixed_assets.py`, `test_bank_reconciliation.py`, `test_consolidation.py`,
 `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 34 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `60fe9f5`, build
+`09a56537-e7e8-44ef-9eab-db4bc282677d` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 6415d481ab54 (head)` — exactly this fix's migration revision.
+`proaudit-web` latest revision `proaudit-web-00038-nhz`, `/health` returns 200. 34 of the
 original 66 Finding-50 tables remain.
 
 ---
