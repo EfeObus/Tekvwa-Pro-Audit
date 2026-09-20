@@ -393,6 +393,45 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — ledger_entries, a direction-(A) case (2026-09-20)
+
+**First Finding-50 table fixed by migrating the database rather than fixing the model.** Every
+other table fixed so far had the database already correct (or a clear rename target) and only the
+model was wrong. `ledger_entries` is the opposite: `LedgerEntry`'s model and its only real caller,
+`ImmutableLedgerService.create_entry` (`app/services/immutable_ledger.py`), already agree with each
+other on a coherent hash-chained double-entry ledger design (`debit_amount`/`credit_amount`/
+`balance`/`account_code`/`currency`/`entry_date`/`description`/`reference`/`created_by_id`, with the
+integrity hash computed over exactly these fields) — but the live table
+(`alembic/versions/20260106_1600_advanced_accounting.py`) implemented a completely different,
+generic audit-log shape instead (`resource_type`/`resource_id`/`action`/`data_snapshot`/`user_id`/
+`ip_address`). Confirmed via an exhaustive grep across the entire codebase that **none** of the
+DB-only columns are referenced anywhere in application code before deciding to migrate the database
+to match the model (`docs/FINDING_50_SCOPE.md`'s option (A)) rather than the reverse, which would
+have meant gutting the hash-chain integrity feature that's clearly the real, already-implemented
+intent. Also fixed two smaller mismatches on the same table: `sequence_number` was `Integer` on the
+model but `bigint` on the live table, and `previous_hash`/`entry_hash` were declared `String(256)`
+on the model but `VARCHAR(64)` on the live table (both corrected to match reality). `created_by_id`
+is left nullable (not the model's original `NOT NULL`) because it backfills from the old `user_id`
+column, itself nullable — tightening this later is an explicit follow-up, not an assumption.
+
+Migration also had to add two indexes (`ix_ledger_entry_date`, `ix_ledger_source`) matching the
+model's own `__table_args__` exactly — caught by re-running `alembic revision --autogenerate` after
+the first draft and seeing it still wanted to create them, the same lesson from
+`intercompany_transactions` in Phase 1.5. `uq_ledger_entity_sequence` (the real uniqueness guarantee
+on `entity_id`+`sequence_number`) already existed and was left untouched.
+
+**Verified via:** full migration-chain replay from a fresh scratch database, `alembic revision
+--autogenerate` showing no remaining diff for anything touched here (only pre-existing, unrelated
+`entity_id` index-naming/FK-ondelete/timestamp-timezone residuals), and a new permanent regression
+test (`TestLedgerEntryPersistence` in `tests/test_consolidation.py`) creating two chained entries
+through the real service and asserting the running balance and hash-chain link are both correct —
+73 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry in this log).
+59 of the original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

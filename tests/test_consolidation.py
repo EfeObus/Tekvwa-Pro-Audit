@@ -599,6 +599,68 @@ class TestIntercompanyTransactionPersistence:
 
 
 # =============================================================================
+# IMMUTABLE LEDGER PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# The opposite direction from IntercompanyTransaction above: here the model and its only real
+# caller (ImmutableLedgerService.create_entry) already agreed with each other on a coherent
+# hash-chained ledger design, but the live table implemented a completely different, generic
+# audit-log shape instead (resource_type/resource_id/action/data_snapshot/user_id/ip_address, none
+# of which anything in the codebase ever used) - so every call to create_entry() crashed before
+# this fix, not because the code was wrong, but because the database was never migrated to match
+# what the code (and model) always expected.
+# =============================================================================
+
+from app.services.immutable_ledger import ImmutableLedgerService
+
+
+class TestLedgerEntryPersistence:
+    """Regression coverage for Finding 50's LedgerEntry column drift."""
+
+    async def test_create_entry_and_verify_hash_chain(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = ImmutableLedgerService()
+
+        entry1 = await service.create_entry(
+            db=db_session,
+            entity_id=test_entity.id,
+            entry_type="transaction",
+            source_type="invoice",
+            source_id=uuid4(),
+            account_code="4000",
+            debit_amount=Decimal("50000.00"),
+            credit_amount=Decimal("0.00"),
+            entry_date=date.today(),
+            description="First ledger entry",
+            reference="INV-001",
+            created_by_id=test_user.id,
+        )
+        assert entry1.id is not None
+        assert entry1.sequence_number == 1
+        assert entry1.balance == Decimal("50000.00")
+        assert entry1.entry_hash is not None
+        assert entry1.previous_hash is None
+
+        entry2 = await service.create_entry(
+            db=db_session,
+            entity_id=test_entity.id,
+            entry_type="transaction",
+            source_type="payment",
+            source_id=uuid4(),
+            account_code="4000",
+            debit_amount=Decimal("0.00"),
+            credit_amount=Decimal("20000.00"),
+            entry_date=date.today(),
+            description="Second ledger entry",
+            reference="PAY-001",
+            created_by_id=test_user.id,
+        )
+        assert entry2.sequence_number == 2
+        assert entry2.balance == Decimal("30000.00")
+        assert entry2.previous_hash == entry1.entry_hash
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

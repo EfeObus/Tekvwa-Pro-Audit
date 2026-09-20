@@ -12,7 +12,7 @@ from typing import Optional, List
 import uuid
 
 from sqlalchemy import (
-    Column, String, Text, Boolean, Integer, Float, Date, DateTime,
+    Column, String, Text, Boolean, Integer, BigInteger, Float, Date, DateTime,
     ForeignKey, Numeric, JSON, Enum as SQLEnum, Index, UniqueConstraint, CheckConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
@@ -724,13 +724,23 @@ class LedgerEntry(BaseModel):
     """
     Immutable ledger entries with hash chain for audit integrity
     Every financial transaction creates an entry here that cannot be modified
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): every column below except entity_id/entry_type/
+    entry_hash/previous_hash was missing from the live table until
+    alembic/versions/20260920_0617_backfill_ledger_entries_column_drift.py added and backfilled
+    them - the original migration built a completely different, generic audit-log shape
+    (resource_type/resource_id/action/data_snapshot/user_id/ip_address, none of which this model or
+    ImmutableLedgerService ever used) instead of the hash-chained ledger this model and its only
+    real caller already agreed on. Those old columns still exist on the table (unused by this model
+    going forward) pending a later cleanup migration. created_by_id is nullable, not the model's
+    original NOT NULL, because it backfills from the old user_id column which was itself nullable.
     """
     __tablename__ = "ledger_entries"
-    
+
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
-    
+
     # Sequence number for ordering
-    sequence_number = Column(Integer, nullable=False)
+    sequence_number = Column(BigInteger, nullable=False)
     
     # Entry details
     entry_type = Column(String(50), nullable=False)  # transaction, adjustment, opening_balance, etc.
@@ -751,11 +761,11 @@ class LedgerEntry(BaseModel):
     reference = Column(String(100), nullable=True)
     
     # User tracking
-    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    
+    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+
     # Hash chain for immutability
-    previous_hash = Column(String(256), nullable=True)  # Hash of previous entry
-    entry_hash = Column(String(256), nullable=False)  # Hash of this entry
+    previous_hash = Column(String(64), nullable=True)  # Hash of previous entry
+    entry_hash = Column(String(64), nullable=False)  # Hash of this entry
     
     # Verification
     is_verified = Column(Boolean, default=False)

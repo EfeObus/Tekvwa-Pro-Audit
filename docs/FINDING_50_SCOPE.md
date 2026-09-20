@@ -159,9 +159,12 @@ Executed per table, in the same individually-verified style as the rest of Findi
 `docs/REMEDIATION_LOG.md` for the running per-table log as this executes.
 
 **Progress (updated as tables are fixed):** `intercompany_transactions`, `entity_groups`,
-`approval_workflow_approvers`, `approval_workflows` — done, verified, deployed. 60 of the 66 tables
-in the original scope remain (see the tier tables above for the full list; done tables are no longer
-individually re-listed here — check `docs/REMEDIATION_LOG.md` for the authoritative per-table record).
+`approval_workflow_approvers`, `approval_workflows`, `ledger_entries` — done, verified
+(`ledger_entries` not yet deployed as of this line — check `docs/REMEDIATION_LOG.md` for current
+deploy status). 59 of the 66 tables in the original scope remain (see the tier tables above for the
+full list; done tables are no longer individually re-listed here — check `docs/REMEDIATION_LOG.md`
+for the authoritative per-table record). `ledger_entries` is also the first table fixed via option
+(A) — migrating the database to match the model — rather than (B); see that log entry for why.
 
 ## What this changes about the roadmap
 
