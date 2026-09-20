@@ -615,6 +615,40 @@ Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — account_balances, a third option-(A) case (2026-09-20)
+
+Same direction as `ledger_entries`/`budgets`: `AccountBalance`'s model declares `entity_id`/
+`ytd_debit`/`ytd_credit`/`last_updated`, and `app/utils/query_optimization.py`,
+`accounting_service.py`, and `year_end_closing_service.py` all already query/update using exactly
+these names (confirmed via grep) — none of which existed on the live table (no `entity_id` at all,
+no `ytd_debit`/`ytd_credit`, `last_calculated_at` instead of `last_updated`). Migrated the database
+to match. `entity_id` is `NOT NULL` on the model; backfilled via a join through
+`chart_of_accounts` (itself `NOT NULL` and FK-enforced on `account_id`), not a data-driven guess —
+every row is guaranteed a match. Separately, and unrelated to the entity_id/ytd drift, this table
+was *also* missing both `created_at` and `updated_at` at the DB level entirely — added and
+backfilled from `last_calculated_at` in the same migration. `last_calculated_at` stays in place,
+unmapped.
+
+**Interesting negative finding along the way:** no `AccountBalance(...)` construction exists
+anywhere in the codebase outside the model file itself — every real call site only queries existing
+rows or mutates already-loaded ones (`account.ytd_debit += ...`). This table's rows appear to be
+created by some process not yet identified in this codebase (or genuinely never created at all in
+practice) — worth flagging as a follow-up question, not assumed either way.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for anything touched here (only the deliberate `last_calculated_at` residual and
+pre-existing index/unique-constraint-naming mismatches — the model's newer, entity_id-inclusive
+`uq_account_balance` constraint now coexists with the old `uq_account_balances_account_period`,
+which is harmless), and a new permanent regression test
+(`TestAccountBalancePersistence` in `tests/test_consolidation.py`) that builds the full prerequisite
+chain (fiscal year → fiscal period → chart of accounts → account balance) and queries by
+`entity_id` — 78 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 53 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

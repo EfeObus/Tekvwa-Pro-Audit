@@ -687,8 +687,16 @@ class AccountBalance(BaseModel):
     """
     Period-specific account balances for quick reporting.
     Denormalized from journal entries for performance.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): entity_id/ytd_debit/ytd_credit/last_updated below were
+    already correctly declared here, but didn't exist on the live table at all (which had no
+    entity_id, no ytd_debit/ytd_credit, and last_calculated_at instead of last_updated) until
+    alembic/versions/20260920_0742_backfill_account_balances_column_drift.py added and backfilled
+    them - the database was migrated to match this model and its real callers
+    (app/utils/query_optimization.py, accounting_service.py, year_end_closing_service.py), not the
+    other way around. The old last_calculated_at column stays in place, unmapped.
     """
-    
+
     __tablename__ = "account_balances"
     
     entity_id: Mapped[uuid.UUID] = mapped_column(

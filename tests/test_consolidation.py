@@ -770,6 +770,83 @@ class TestWHTCreditNotePersistence:
 
 
 # =============================================================================
+# ACCOUNT BALANCE PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# AccountBalance's model declares entity_id/ytd_debit/ytd_credit/last_updated, and
+# app/utils/query_optimization.py, accounting_service.py, and year_end_closing_service.py all
+# already query/update using exactly these names -- none of which existed on the live table
+# (which had no entity_id, no ytd_debit/ytd_credit, and last_calculated_at instead) until this
+# session's migration. Every one of those real call sites would have crashed or silently failed
+# to filter/update the intended rows before this fix.
+# =============================================================================
+
+from sqlalchemy import select
+from app.models.accounting import AccountBalance, ChartOfAccounts, FiscalPeriod, FiscalYear, AccountType, NormalBalance, FiscalPeriodStatus
+
+
+class TestAccountBalancePersistence:
+    """Regression coverage for Finding 50's AccountBalance column drift."""
+
+    async def test_create_and_query_by_entity(
+        self, db_session: AsyncSession, test_entity,
+    ):
+        fiscal_year = FiscalYear(
+            entity_id=test_entity.id,
+            year_name="FY2026",
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+        )
+        db_session.add(fiscal_year)
+        await db_session.flush()
+
+        fiscal_period = FiscalPeriod(
+            entity_id=test_entity.id,
+            fiscal_year_id=fiscal_year.id,
+            period_name="January 2026",
+            period_number=1,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 1, 31),
+            status=FiscalPeriodStatus.OPEN,
+        )
+        db_session.add(fiscal_period)
+        await db_session.flush()
+
+        account = ChartOfAccounts(
+            entity_id=test_entity.id,
+            account_code="1000",
+            account_name="Cash",
+            account_type=AccountType.ASSET,
+            normal_balance=NormalBalance.DEBIT,
+        )
+        db_session.add(account)
+        await db_session.flush()
+
+        balance = AccountBalance(
+            entity_id=test_entity.id,
+            account_id=account.id,
+            fiscal_period_id=fiscal_period.id,
+            opening_balance=Decimal("100000.00"),
+            period_debit=Decimal("50000.00"),
+            period_credit=Decimal("20000.00"),
+            closing_balance=Decimal("130000.00"),
+            ytd_debit=Decimal("50000.00"),
+            ytd_credit=Decimal("20000.00"),
+        )
+        db_session.add(balance)
+        await db_session.commit()
+        await db_session.refresh(balance)
+
+        assert balance.entity_id == test_entity.id
+        assert balance.ytd_debit == Decimal("50000.00")
+        assert balance.last_updated is not None
+
+        result = await db_session.execute(
+            select(AccountBalance).where(AccountBalance.entity_id == test_entity.id)
+        )
+        assert result.scalar_one().id == balance.id
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 
