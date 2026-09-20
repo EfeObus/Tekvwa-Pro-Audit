@@ -1331,8 +1331,11 @@ bug — 95 tests across `test_support_tickets.py`, `test_expense_claims.py`,
 `test_fixed_assets.py`, `test_bank_reconciliation.py`, `test_consolidation.py`,
 `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 31 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `cbeafba`, build
+`34cbf659-2f2a-42f8-9156-95e9577fc17a` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 6415d481ab54 (head)` — head unchanged, as expected since this fix needed
+no migration. `proaudit-web` latest revision `proaudit-web-00039-xht`, `/health` returns 200.
+31 of the original 66 Finding-50 tables remain.
 
 ---
 
