@@ -994,8 +994,11 @@ index-naming residuals), and a new permanent regression test (`TestBankStatement
 since there's no service call site to exercise. 87 tests across `test_bank_reconciliation.py`,
 `test_consolidation.py`, `test_workflow_integration.py`, and `test_budget.py` pass.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 43 of the
-original 66 Finding-50 tables remain.
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `9afd355`, build
+`f9a52991-9dad-4fe3-af25-828ea55f99eb` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: 92e487a0d264 (head)` — head unchanged, as expected since this fix needed
+no migration. `proaudit-web` latest revision `proaudit-web-00033-25n`, `/health` returns 200.
+43 of the original 66 Finding-50 tables remain.
 
 ---
 
