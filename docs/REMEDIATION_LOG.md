@@ -813,7 +813,10 @@ tables just fixed) — confirmed via `alembic revision --autogenerate` that it h
 column-level drift already; only the same pre-existing constraint-naming/nullable cosmetic
 residuals seen throughout this session. No fix needed.
 
-**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 46 of the
+**Status:** ✅ Fixed, deployed, and verified in production. Commit `74b450d`, build
+`46ba679c-bcef-4e38-b062-4c8858c13bc9` (SUCCESS). `verify-migration-applied` reported
+`Post-migration state: d0fd664030a3 (head)` — exactly the exchange_rates migration's revision.
+`proaudit-web` latest revision `proaudit-web-00030-75s`, `/health` returns 200. 46 of the
 original 66 Finding-50 tables remain.
 
 ---
