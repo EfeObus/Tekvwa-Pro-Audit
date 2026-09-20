@@ -678,6 +678,35 @@ health check passing). 52 of the original 66 Finding-50 tables remain.
 
 ---
 
+## Finding 50 progress — gl_integration_logs (2026-09-20)
+
+`is_reversed`/`reversal_log_id` were already correctly declared on this model (an earlier partial
+read of the file suggested otherwise; a full re-read before acting confirmed both already matched
+the live table). The two real gaps: this table is missing both `created_at` and `updated_at` at the
+DB level entirely — migration adds both, backfilled from `posted_at`. Separately, `journal_entry_id`
+was declared `NOT NULL` with `ondelete="CASCADE"` on the model but the live column is nullable with
+`ondelete="SET NULL"` — a pure metadata correction (relaxed the model to match), not a functional
+change, since `gl_event_service.py`/`accounting_service.py` always provide a value in practice.
+
+**Deliberately left alone:** the model's own `__table_args__` unique constraint includes
+`is_reversed` in its column set, but the live constraint doesn't. Traced every place
+`GLIntegrationLog.is_reversed` is read or written and confirmed nothing in the codebase ever sets it
+to `True` — the difference is currently dormant, not an active bug, so no migration was written for
+it. Flagged here rather than silently fixed or silently ignored, in case a future reversal-logging
+feature depends on it.
+
+**Verified via:** full migration-chain replay, `alembic revision --autogenerate` showing no
+remaining diff for the two things actually fixed (only the deliberately-dormant constraint above
+and pre-existing index-naming/FK-ondelete residuals on other columns), and a new permanent
+regression test (`TestGLIntegrationLogPersistence` in `tests/test_consolidation.py`) — a direct ORM
+round-trip, since a full `post_to_gl` end-to-end test would need substantial unrelated journal-entry
+fixture setup. 80 tests across the three related test files pass.
+
+**Status:** ✅ Fixed and verified locally; not yet deployed (see the next deploy entry). 51 of the
+original 66 Finding-50 tables remain.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

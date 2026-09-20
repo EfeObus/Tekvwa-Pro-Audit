@@ -836,8 +836,17 @@ class GLIntegrationLog(BaseModel):
     """
     Tracks what has been posted to the GL from each module.
     Ensures no double posting and enables reconciliation.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): this table is missing both created_at and updated_at at
+    the DB level entirely - see the accompanying migration. journal_entry_id's nullable/ondelete
+    relaxed to match the live column exactly (SET NULL, not CASCADE) - purely a metadata
+    correction, zero functional risk either way since gl_event_service.py/accounting_service.py
+    always provide a value. The model's __table_args__ unique constraint additionally includes
+    is_reversed, which the live constraint doesn't - left as-is since nothing in the codebase
+    currently ever sets GLIntegrationLog.is_reversed to True, making the difference dormant rather
+    than an active bug.
     """
-    
+
     __tablename__ = "gl_integration_logs"
     
     entity_id: Mapped[uuid.UUID] = mapped_column(
@@ -854,10 +863,10 @@ class GLIntegrationLog(BaseModel):
     source_reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
     # GL Entry
-    journal_entry_id: Mapped[uuid.UUID] = mapped_column(
+    journal_entry_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("journal_entries.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("journal_entries.id", ondelete="SET NULL"),
+        nullable=True,
     )
     
     # Tracking

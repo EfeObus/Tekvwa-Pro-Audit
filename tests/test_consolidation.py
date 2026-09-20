@@ -888,6 +888,40 @@ class TestRecurringJournalEntryPersistence:
 
 
 # =============================================================================
+# GL INTEGRATION LOG PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md)
+#
+# gl_integration_logs was missing both created_at and updated_at at the DB level entirely.
+# journal_entry_id's nullable/ondelete also didn't match the live column (model said NOT NULL +
+# CASCADE, live column is nullable + SET NULL) -- a pure metadata correction, not a behavior
+# change, since gl_event_service.py/accounting_service.py always provide a value in practice.
+# =============================================================================
+
+from app.models.accounting import GLIntegrationLog
+
+
+class TestGLIntegrationLogPersistence:
+    """Regression coverage for Finding 50's GLIntegrationLog column drift."""
+
+    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity, test_user):
+        log = GLIntegrationLog(
+            entity_id=test_entity.id,
+            source_module="invoicing",
+            source_document_type="invoice",
+            source_document_id=uuid4(),
+            posted_by_id=test_user.id,
+        )
+        db_session.add(log)
+        await db_session.commit()
+        await db_session.refresh(log)
+
+        assert log.id is not None
+        assert log.journal_entry_id is None  # nullable, matching the live column
+        assert log.created_at is not None
+        assert log.updated_at is not None
+        assert log.is_reversed is False
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 
