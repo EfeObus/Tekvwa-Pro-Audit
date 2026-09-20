@@ -50,7 +50,7 @@ steps:
 
   # 3. Point the pre-existing migration job at the new image, then run it
   #    to completion before any traffic serves the new schema expectations.
-  - name: "gcr.io/google-cloud-sdk/slim"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     id: update-migrate-job
     entrypoint: "gcloud"
     args:
@@ -61,7 +61,7 @@ steps:
       - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
 
-  - name: "gcr.io/google-cloud-sdk/slim"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     id: run-migrations
     entrypoint: "gcloud"
     args:
@@ -74,7 +74,7 @@ steps:
     waitFor: ["update-migrate-job"]
 
   # 4. Deploy the web service
-  - name: "gcr.io/google-cloud-sdk/slim"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     entrypoint: "gcloud"
     args:
       - "run"
@@ -88,7 +88,7 @@ steps:
   # 5. Deploy the Celery worker pool (same image, different startup command).
   #    Worker/beat never listen on a port, so they run as Cloud Run worker pools,
   #    not ordinary services (which require an HTTP/TCP startup probe on $PORT).
-  - name: "gcr.io/google-cloud-sdk/slim"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     entrypoint: "gcloud"
     args:
       - "run"
@@ -100,7 +100,7 @@ steps:
     waitFor: ["run-migrations"]
 
   # 6. Deploy the Celery beat worker pool (same image, different startup command)
-  - name: "gcr.io/google-cloud-sdk/slim"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     entrypoint: "gcloud"
     args:
       - "run"
