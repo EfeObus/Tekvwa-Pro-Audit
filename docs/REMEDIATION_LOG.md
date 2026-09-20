@@ -350,6 +350,63 @@ remediation requires" section for the options presented to the user.
 
 ---
 
+## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
+
+**Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,
+build `f84eca07`) and verifying the build reported SUCCESS end-to-end, including the
+`update-migrate-job`/`run-migrations` steps. Before treating the deploy as actually complete,
+checked the migration job's *own* execution logs (not just its exit status) to confirm the new
+migrations really ran — they had not.
+
+**Root cause:** the `proaudit-migrate` Cloud Run Job's configured `--command`/`--args` was a one-off
+Python diagnostic one-liner (`import psycopg2,...;print('DB_ONLY:', ...)` — comparing
+`information_schema.tables` against `Base.metadata.tables`, i.e. the exact same class of check this
+session's own `fk_drift_check.py`/Finding 49/50 investigation used), **not** `alembic upgrade head` as
+`cloudbuild.yaml`'s own comments and `docs/GCP_DEPLOYMENT.md` both document as the intended behavior.
+`cloudbuild.yaml`'s `update-migrate-job` step only ever passed `--image=...` to `gcloud run jobs
+update`, never `--command`/`--args` — so whatever command the job happened to be configured with
+(correct or not) silently persisted across every deploy, with the job still reporting a clean exit(0)
+on every run because the diagnostic script itself succeeds every time, regardless of whether any
+migration was needed or ran.
+
+**Impact:** any deploy whose corresponding migration didn't get applied to the database would still
+report full pipeline SUCCESS — this is a genuine, structural blind spot in the deployment pipeline,
+not a one-off mistake in a single deploy. **Scope check (confirmed, not assumed):** ran a read-only
+`alembic current` via the same job (temporarily repointing its command) before touching anything
+further — production was at `fx_revaluation_001`, exactly the revision immediately prior to tonight's
+two new migrations. This means the silent-drift window only ever affected tonight's Finding 50 fix,
+not a larger historical backlog — confirmed, not inferred, before concluding this.
+
+**Fixed:**
+1. Repointed the job to `alembic upgrade head` and re-executed it for real — confirmed via its actual
+   log output (`INFO [alembic.runtime.migration] Running upgrade fx_revaluation_001 -> fa30aeb4bae6
+   ...` then `-> 5300207c437e`) and a follow-up `alembic current` read-only check showing
+   `5300207c437e (head)`. Production's schema is now correctly in sync with the code already deployed
+   in build `f84eca07` (`proaudit-web-00014-wsl`).
+2. `cloudbuild.yaml`'s `update-migrate-job` step now explicitly passes `--command=alembic
+   --args=upgrade,head` on every deploy, so the job's command can never silently drift again
+   regardless of what it was previously set to.
+3. Added a new step, `verify-migration-applied`, immediately after `run-migrations`: independently
+   re-runs `alembic current` via the same job and fails the whole build if the database isn't
+   reported at `(head)` afterward — a belt-and-suspenders check that would have caught this exact
+   failure mode even without fix #2, since it doesn't trust the execute step's exit code alone. All
+   three service deploy steps (`proaudit-web`/`proaudit-worker`/`proaudit-beat`) now wait on this new
+   step, not directly on `run-migrations`.
+
+**Not yet done:** a real end-to-end Cloud Build run exercising the new `verify-migration-applied`
+step hasn't happened yet (this fix was written and manually dry-run command-by-command against
+production directly, not yet through an actual `gcloud builds submit`) — see whether the next real
+deploy in this log confirms it end-to-end.
+
+**Why this belongs in this log despite being infrastructure, not application code:** it directly
+undermines the safety story this whole remediation effort depends on — every "verified DDL-neutral,
+safe to deploy" conclusion in Finding 49/50's work assumed migrations would actually run when
+deployed. For the zero-DDL Phase 0/1.5 fixes this didn't matter (there was nothing to apply either
+way), but Finding 50's remaining ~62 tables all require real migrations, and every one of them would
+have hit this same silent-failure risk without this fix.
+
+---
+
 ## Finding 51 (new, not in original 48) — test-suite connection/transaction leak causes eventual full-suite deadlock
 
 **Discovered:** 2026-09-20, while running the full suite (`pytest tests/ -q`) against

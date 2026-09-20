@@ -50,6 +50,15 @@ steps:
 
   # 3. Point the pre-existing migration job at the new image, then run it
   #    to completion before any traffic serves the new schema expectations.
+  #
+  #    --command/--args are explicit here on purpose, not left as whatever the job happened to be
+  #    configured with previously: this job's command silently drifted to a one-off diagnostic
+  #    Python script at some point (unrelated to this file, likely a manual `gcloud run jobs update`
+  #    during troubleshooting that was never reverted) and this step's own `--image`-only update
+  #    kept re-running that stale command against every new image without ever running a real
+  #    migration - discovered when a real migration silently didn't apply to production despite this
+  #    step and the next one both reporting success. Pinning the command here every deploy makes
+  #    that class of silent drift impossible again.
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     id: update-migrate-job
     entrypoint: "gcloud"
@@ -60,6 +69,8 @@ steps:
       - "${_MIGRATE_JOB}"
       - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
+      - "--command=alembic"
+      - "--args=upgrade,head"
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     id: run-migrations
@@ -73,6 +84,29 @@ steps:
       - "--wait"
     waitFor: ["update-migrate-job"]
 
+  # 3.5. Belt-and-suspenders check: the job executing successfully only proves its configured
+  #      command exited 0, not that it actually ran a migration (this is exactly how the command
+  #      drifted silently before - see the comment on update-migrate-job). Independently confirm the
+  #      database is really at head by running `alembic current` one more time via the same job and
+  #      failing the build if it doesn't match this image's own `alembic heads`.
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
+    id: verify-migration-applied
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        gcloud run jobs update "${_MIGRATE_JOB}" --region="${_REGION}" --command=alembic --args=current --quiet
+        EXEC_NAME=$$(gcloud run jobs execute "${_MIGRATE_JOB}" --region="${_REGION}" --wait --format="value(metadata.name)")
+        CURRENT=$$(gcloud logging read "resource.type=\"cloud_run_job\" AND resource.labels.job_name=\"${_MIGRATE_JOB}\" AND labels.\"run.googleapis.com/execution_name\"=\"$$EXEC_NAME\" AND textPayload:\"(head)\"" --limit=1 --format="value(textPayload)")
+        gcloud run jobs update "${_MIGRATE_JOB}" --region="${_REGION}" --command=alembic --args=upgrade,head --quiet
+        echo "Post-migration state: $$CURRENT"
+        if [[ "$$CURRENT" != *"(head)"* ]]; then
+          echo "FAILED: database is not at head after the migration job ran. Got: $$CURRENT"
+          exit 1
+        fi
+    waitFor: ["run-migrations"]
+
   # 4. Deploy the web service
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
     entrypoint: "gcloud"
@@ -83,7 +117,7 @@ steps:
       - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
       - "--platform=managed"
-    waitFor: ["run-migrations"]
+    waitFor: ["verify-migration-applied"]
 
   # 5. Deploy the Celery worker pool (same image, different startup command).
   #    Worker/beat never listen on a port, so they run as Cloud Run worker pools,
@@ -97,7 +131,7 @@ steps:
       - "${_WORKER_SERVICE}"
       - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
-    waitFor: ["run-migrations"]
+    waitFor: ["verify-migration-applied"]
 
   # 6. Deploy the Celery beat worker pool (same image, different startup command)
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk:slim"
@@ -109,7 +143,7 @@ steps:
       - "${_BEAT_SERVICE}"
       - "--image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/proaudit:${_TAG}"
       - "--region=${_REGION}"
-    waitFor: ["run-migrations"]
+    waitFor: ["verify-migration-applied"]
 
 options:
   logging: CLOUD_LOGGING_ONLY
