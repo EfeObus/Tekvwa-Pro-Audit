@@ -1409,8 +1409,15 @@ tests covering all 11 tables plus the `PayrollException.entity_id` derivation an
 `tests/test_fixed_assets.py`, `tests/test_expense_claims.py`, and `tests/test_support_tickets.py`
 pass with no regressions.
 
-**Status:** ✅ Fixed and tested locally; commit/push/deploy pending (next step in this same
-session). 20 of the original 66 Finding-50 tables remain once this deploys.
+**Status:** ✅ Fixed, tested, committed (`c1667ff`), and pushed to `origin/main`. ⚠️ **Deploy
+blocked, not attempted further:** `gcloud builds submit` failed before any build step ran —
+`ERROR: (gcloud.builds.submit) 403 ... The billing account for the owning project is disabled in
+state delinquent` — Cloud Build couldn't even upload the source tarball to GCS. This is the same
+org billing-account closure investigated and left closed by explicit user decision on 2026-09-24
+(see the GCP cost-reduction digression); `tekvwarho-proaudit`'s own `billingEnabled` flag is still
+`true`, but the billing account behind it is closed, which blocks every billing-gated write API
+project-wide, not just `gcloud run services update`. This fix will deploy on the next attempt after
+billing is reopened. 20 of the original 66 Finding-50 tables remain once this deploys.
 
 ---
 
