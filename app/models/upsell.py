@@ -12,12 +12,12 @@ Upsell Signals:
 """
 
 import uuid
-from datetime import datetime, date
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, Date, ForeignKey, String, Text, Integer, Numeric, Enum as SQLEnum
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, Numeric, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -108,141 +108,127 @@ class UpsellOpportunity(BaseModel):
     upsell_type: Mapped[UpsellType] = mapped_column(
         SQLEnum(UpsellType),
         nullable=False,
-        index=True,
     )
-    
+
     status: Mapped[UpsellStatus] = mapped_column(
         SQLEnum(UpsellStatus),
         nullable=False,
         default=UpsellStatus.IDENTIFIED,
         index=True,
     )
-    
+
     priority: Mapped[UpsellPriority] = mapped_column(
         SQLEnum(UpsellPriority),
         nullable=False,
         default=UpsellPriority.WARM,
     )
-    
+
     # Signal that triggered
-    trigger_signal: Mapped[UpsellSignal] = mapped_column(
+    signal: Mapped[UpsellSignal] = mapped_column(
         SQLEnum(UpsellSignal),
         nullable=False,
     )
-    
-    # Current and target tiers (for tier upgrades)
-    current_tier: Mapped[Optional[str]] = mapped_column(
-        String(50),
+
+    # Current and target products (for tier upgrades)
+    current_product: Mapped[Optional[str]] = mapped_column(
+        String(100),
         nullable=True,
     )
-    
-    target_tier: Mapped[Optional[str]] = mapped_column(
-        String(50),
+
+    target_product: Mapped[Optional[str]] = mapped_column(
+        String(100),
         nullable=True,
     )
-    
+
     # Value
-    estimated_mrr_increase: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        nullable=False,
-        default=Decimal("0"),
+    estimated_mrr_increase: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
         comment="Estimated monthly revenue increase"
     )
-    
-    estimated_arr_increase: Mapped[Decimal] = mapped_column(
-        Numeric(14, 2),
-        nullable=False,
-        default=Decimal("0"),
+
+    estimated_arr_increase: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
         comment="Estimated annual revenue increase"
     )
-    
-    # Probability
-    win_probability: Mapped[int] = mapped_column(
-        Integer,
-        default=50,
-        comment="0-100 probability of conversion"
+
+    actual_mrr_increase: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Actual MRR increase once won"
     )
-    
+
+    actual_arr_increase: Mapped[Optional[Decimal]] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Actual ARR increase once won"
+    )
+
     # Description
     title: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
-    
-    description: Mapped[Optional[str]] = mapped_column(
+
+    description: Mapped[str] = mapped_column(
         Text,
-        nullable=True,
+        nullable=False,
     )
-    
+
     # Evidence
-    trigger_data: Mapped[Optional[dict]] = mapped_column(
+    signal_data: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         nullable=True,
         comment="Data that triggered the opportunity"
     )
-    
+
+    confidence_score: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True,
+        comment="0-100 confidence in this opportunity"
+    )
+
+    auto_detected: Mapped[Optional[bool]] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
     # Timeline
-    identified_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-    )
-    
-    qualified_at: Mapped[Optional[datetime]] = mapped_column(
+    identified_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    
-    expected_close_date: Mapped[Optional[date]] = mapped_column(
-        Date,
-        nullable=True,
-    )
-    
+
     closed_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
-    
+
     # Assignment
     assigned_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
-    # Contact tracking
-    last_contact_date: Mapped[Optional[date]] = mapped_column(
-        Date,
-        nullable=True,
-    )
-    
-    next_follow_up_date: Mapped[Optional[date]] = mapped_column(
-        Date,
-        nullable=True,
-    )
-    
-    contact_count: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-    )
-    
+
     # Outcome
-    won_amount: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(12, 2),
-        nullable=True,
-        comment="Actual MRR increase if won"
-    )
-    
-    loss_reason: Mapped[Optional[str]] = mapped_column(
-        String(255),
-        nullable=True,
-    )
-    
-    # Notes
-    notes: Mapped[Optional[str]] = mapped_column(
+    lost_reason: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
+
+    # Next action
+    next_action: Mapped[Optional[str]] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
+    next_action_date: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     # Relationships
     organization: Mapped["Organization"] = relationship(
         back_populates="upsell_opportunities",
@@ -267,51 +253,56 @@ class UpsellOpportunity(BaseModel):
             UpsellStatus.NEGOTIATING
         ]
     
-    @property
-    def weighted_value(self) -> Decimal:
-        """Calculate weighted pipeline value."""
-        return self.estimated_mrr_increase * Decimal(self.win_probability) / 100
-
 
 class UpsellActivity(BaseModel):
     """Activity log for upsell opportunities."""
     __tablename__ = "upsell_activities"
-    
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
-    
-    opportunity_id: Mapped[uuid.UUID] = mapped_column(
+
+    upsell_opportunity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("upsell_opportunities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     activity_type: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
         comment="call, email, meeting, note, status_change"
     )
-    
+
     description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    
-    performed_by_id: Mapped[uuid.UUID] = mapped_column(
+
+    outcome: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
+    performed_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
-    
-    performed_at: Mapped[datetime] = mapped_column(
+
+    next_action: Mapped[Optional[str]] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
+    next_action_date: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
-    
+
     # Relationships
     opportunity: Mapped["UpsellOpportunity"] = relationship(lazy="selectin")
-    performed_by: Mapped["User"] = relationship(lazy="selectin")
+    performed_by: Mapped[Optional["User"]] = relationship(lazy="selectin")

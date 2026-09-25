@@ -58,6 +58,10 @@ class TransactionCreateRequest(BaseModel):
     category_id: UUID
     vendor_id: Optional[UUID] = None
     receipt_url: Optional[str] = None
+    # Multi-currency support (IAS 21 compliant)
+    currency: Optional[str] = Field("NGN", min_length=3, max_length=3)
+    exchange_rate: Optional[float] = Field(None, gt=0)
+    exchange_rate_source: Optional[str] = None
 
 
 class TransactionResponse(BaseModel):
@@ -80,7 +84,15 @@ class TransactionResponse(BaseModel):
     receipt_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    
+    # Multi-currency fields
+    currency: Optional[str] = None
+    exchange_rate: Optional[float] = None
+    exchange_rate_source: Optional[str] = None
+    functional_amount: Optional[float] = None
+    functional_vat_amount: Optional[float] = None
+    functional_total_amount: Optional[float] = None
+    realized_fx_gain_loss: Optional[float] = None
+
     class Config:
         from_attributes = True
 
@@ -171,6 +183,13 @@ async def list_transactions(
             receipt_url=t.receipt_url,
             created_at=t.created_at,
             updated_at=t.updated_at,
+            currency=t.currency,
+            exchange_rate=t.exchange_rate,
+            exchange_rate_source=t.exchange_rate_source,
+            functional_amount=t.functional_amount,
+            functional_vat_amount=t.functional_vat_amount,
+            functional_total_amount=t.functional_total_amount,
+            realized_fx_gain_loss=t.realized_fx_gain_loss,
         )
         for t in transactions
     ]
@@ -399,6 +418,13 @@ async def get_transaction(
         receipt_url=transaction.receipt_url,
         created_at=transaction.created_at,
         updated_at=transaction.updated_at,
+        currency=transaction.currency,
+        exchange_rate=transaction.exchange_rate,
+        exchange_rate_source=transaction.exchange_rate_source,
+        functional_amount=transaction.functional_amount,
+        functional_vat_amount=transaction.functional_vat_amount,
+        functional_total_amount=transaction.functional_total_amount,
+        realized_fx_gain_loss=transaction.realized_fx_gain_loss,
     )
 
 
@@ -495,6 +521,13 @@ async def update_transaction(
         receipt_url=transaction.receipt_url,
         created_at=transaction.created_at,
         updated_at=transaction.updated_at,
+        currency=transaction.currency,
+        exchange_rate=transaction.exchange_rate,
+        exchange_rate_source=transaction.exchange_rate_source,
+        functional_amount=transaction.functional_amount,
+        functional_vat_amount=transaction.functional_vat_amount,
+        functional_total_amount=transaction.functional_total_amount,
+        realized_fx_gain_loss=transaction.realized_fx_gain_loss,
     )
 
 
@@ -1132,4 +1165,11 @@ def transaction_to_response(transaction) -> TransactionResponse:
         receipt_url=transaction.receipt_url,
         created_at=transaction.created_at,
         updated_at=transaction.updated_at,
+        currency=transaction.currency,
+        exchange_rate=transaction.exchange_rate,
+        exchange_rate_source=transaction.exchange_rate_source,
+        functional_amount=transaction.functional_amount,
+        functional_vat_amount=transaction.functional_vat_amount,
+        functional_total_amount=transaction.functional_total_amount,
+        realized_fx_gain_loss=transaction.realized_fx_gain_loss,
     )

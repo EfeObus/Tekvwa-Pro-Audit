@@ -1421,6 +1421,86 @@ billing is reopened. 20 of the original 66 Finding-50 tables remain once this de
 
 ---
 
+## Finding 50 progress — upsell_opportunities and upsell_activities, zero migration needed (2026-09-25)
+
+`app/services/upsell_service.py` — the only real construction site for both models — already used
+the live tables' real column names directly (`signal`, `current_product`, `target_product`,
+`signal_data`, `confidence_score`, `auto_detected`, `next_action`, `next_action_date`), none of
+which existed on the stale model (which instead had `trigger_signal`, `current_tier`,
+`target_tier`, `trigger_data`, plus a large set of fields — `qualified_at`, `expected_close_date`,
+`last_contact_date`, `next_follow_up_date`, `contact_count`, `win_probability`, `notes` — with zero
+real usage anywhere). A pure model rewrite (Direction B) — **zero migration needed**, exactly the
+`bank_statements`/`support_tickets` pattern.
+
+- **`UpsellOpportunity`:** renamed `trigger_signal`→`signal`, `current_tier`→`current_product`,
+  `target_tier`→`target_product`, `trigger_data`→`signal_data`, `loss_reason`→`lost_reason`; added
+  `confidence_score`, `auto_detected`, `actual_mrr_increase`, `actual_arr_increase`, `next_action`,
+  `next_action_date` (all real DB columns, unmapped until now); removed `won_amount` (not a real
+  column at all) and the zero-usage fields listed above; fixed numeric precision
+  (`Numeric(12,2)`/`Numeric(14,2)` → `Numeric(15,2)`, matching the live columns).
+- **`UpsellActivity`:** renamed `opportunity_id`→`upsell_opportunity_id`; added `outcome`,
+  `next_action`, `next_action_date`; removed the phantom `NOT NULL` `performed_at` (not a real
+  column — the service never set it either); relaxed `performed_by_id` to nullable (`SET NULL` on
+  delete), matching the live FK.
+- **Two independent behavioral bugs fixed in `upsell_service.py`, found while tracing the model
+  drift:** `update_status()` had a copy-paste bug — `opportunity.won_amount = won_amount` followed
+  immediately by `opportunity.won_amount = won_amount * 12`, silently discarding the first
+  assignment, and `won_amount` isn't a real column anyway. Renamed the param to
+  `actual_mrr_increase` (matching `app/routers/upsell.py`'s `UpdateStatusRequest`, which already
+  called this method with that keyword — the router and service had already drifted apart from
+  each other) and now sets `actual_mrr_increase`/`actual_arr_increase` as two separate real columns.
+  `get_upsell_stats()`'s "won MRR this month" query summed the same phantom `won_amount` column —
+  changed to `actual_mrr_increase`.
+- **Third bug, in `dashboard_service.py`'s super-admin dashboard payload:** the `upsell_list`
+  section read `u.current_tier`, `u.target_tier`, and `u.trigger_reason` off each opportunity —
+  the first two were the old model's names (still wrong after the rewrite either way), and
+  `trigger_reason` was never a real attribute on any version of the model, old or new. Every call
+  to the super-admin dashboard endpoint has been throwing `AttributeError` on this line. Fixed to
+  `current_product`, `target_product`, and `signal.value`.
+
+**Verified via:** a new permanent regression test (`tests/test_upsell.py`, 5 tests covering
+opportunity creation, the win/actual-amount split, the loss-reason path, the stats query fix, and
+activity creation with the opportunity next-action side effect) exercising the real service
+methods rather than constructing the models directly, plus the full existing regression suite
+(`tests/test_payroll_advanced.py`, `tests/test_bank_reconciliation.py`,
+`tests/test_consolidation.py`, `tests/test_workflow_integration.py`, `tests/test_budget.py`,
+`tests/test_fixed_assets.py`, `tests/test_expense_claims.py`, `tests/test_support_tickets.py`).
+
+**Independent bug found and fixed while running the broader `tests/test_api.py` suite as a
+regression check (unrelated to upsell.py, caught incidentally):** `POST
+/entities/{id}/transactions` was crashing every single call with `AttributeError:
+'TransactionCreateRequest' object has no attribute 'currency'`. `app/routers/transactions.py`
+defines its own local `TransactionCreateRequest`/`TransactionResponse` classes rather than
+importing the richer ones in `app/schemas/transaction.py` (which already has the full IAS 21
+multi-currency field set from the 2026-01-27 FX migration) — the endpoint body was written against
+the richer schema's fields (`request.currency`, `request.exchange_rate`,
+`request.exchange_rate_source`) while the router's own local class never had them. Fixed by adding
+`currency`/`exchange_rate`/`exchange_rate_source` to the router's `TransactionCreateRequest`, and
+`currency`/`exchange_rate`/`exchange_rate_source`/`functional_amount`/`functional_vat_amount`/
+`functional_total_amount`/`realized_fx_gain_loss` to `TransactionResponse` and to all 5 of its
+construction sites in the router (create, get, list, update, and the `transaction_to_response`
+helper) — all previously silently omitting these fields rather than crashing, since they weren't
+accessed by name in those code paths. Confirmed via `tests/test_api.py -k Transaction` (3/3 pass,
+was 1 crashing before).
+
+**Also found, not fixed — local environment only, not a code bug:** the local scratch Postgres
+database `tekvwarho_proaudit` (used throughout this session for `\d` introspection, distinct from
+the `tekvwarho_proaudit_test` database pytest uses) has an `alembic_version` row pointing at
+`20260806_2230`, a revision that has never existed anywhere in this repo's git history. Its actual
+tables still look correct against every table checked, so this is a stale/foreign version-tracking
+artifact, not schema drift — but it means `alembic revision --autogenerate` can no longer run
+against this database at all (`Can't locate revision identified by '20260806_2230'`). Recreating
+this local scratch database was attempted and denied by the local sandbox's destructive-action
+guard; worked around it for this table pair by manually diffing the model against a direct `\d`
+capture instead of autogenerate (safe here specifically because zero DDL was needed either way).
+Autogenerate-based verification will need this local DB rebuilt (or repointed at a fresh one)
+before it can be used for future tables in this batch.
+
+**Status:** ✅ Fixed and tested locally, not yet committed (this table's commit/push is the very
+next step, same session). 18 of the original 66 Finding-50 tables remain once this deploys.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

@@ -172,7 +172,7 @@ class UpsellService:
         
         # Won MRR this month
         won_mrr = await self.db.execute(
-            select(func.sum(UpsellOpportunity.won_amount)).where(
+            select(func.sum(UpsellOpportunity.actual_mrr_increase)).where(
                 and_(
                     UpsellOpportunity.status == UpsellStatus.WON,
                     UpsellOpportunity.closed_at >= first_of_month
@@ -224,22 +224,21 @@ class UpsellService:
         self,
         opportunity_id: uuid.UUID,
         status: UpsellStatus,
-        notes: Optional[str] = None,
-        won_amount: Optional[Decimal] = None,
+        actual_mrr_increase: Optional[Decimal] = None,
         lost_reason: Optional[str] = None,
     ) -> UpsellOpportunity:
         """Update the status of an upsell opportunity."""
         opportunity = await self.get_opportunity(opportunity_id)
         if not opportunity:
             raise ValueError(f"Upsell opportunity {opportunity_id} not found")
-        
+
         opportunity.status = status
-        
+
         if status in [UpsellStatus.WON, UpsellStatus.LOST]:
             opportunity.closed_at = datetime.utcnow()
-            if status == UpsellStatus.WON and won_amount is not None:
-                opportunity.won_amount = won_amount
-                opportunity.won_amount = won_amount * 12
+            if status == UpsellStatus.WON and actual_mrr_increase is not None:
+                opportunity.actual_mrr_increase = actual_mrr_increase
+                opportunity.actual_arr_increase = actual_mrr_increase * 12
             if status == UpsellStatus.LOST and lost_reason:
                 opportunity.lost_reason = lost_reason
         
