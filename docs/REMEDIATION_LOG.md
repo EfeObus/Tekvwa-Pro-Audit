@@ -1339,6 +1339,81 @@ no migration. `proaudit-web` latest revision `proaudit-web-00039-xht`, `/health`
 
 ---
 
+## Finding 50 progress — payroll_advanced.py, all 11 tables in one batch (2026-09-25)
+
+`app/services/payroll_advanced_service.py` is the only real construction site for every model in
+this file, and (like `bank_reconciliations` and `support_tickets` before it) already used each
+model's real field names — none of which existed on the live tables. Covers Tier 1
+`compliance_snapshots`(35), `payroll_impact_previews`(40), `ytd_payroll_ledgers`(33),
+`opening_balance_imports`(29), `what_if_simulations`(28), `ctc_snapshots`(27),
+`payroll_exceptions`(10) plus Tier 2/3 `ghost_worker_detections`(16), `payslip_explanations`(15),
+`employee_variance_logs`(15), `payroll_decision_logs`(1) — 11 tables, one migration
+(`01cf410e050d`, `down_revision = 6415d481ab54`).
+
+- **`ComplianceSnapshot`:** added `notes` (real usage in the service, DB already had the column —
+  model-only fix, no migration needed for this field).
+- **`PayrollException`:** added `entity_id` (`NOT NULL` FK to `business_entities`) — the service's
+  `create_exception()` never had an entity to set it from directly, so it now fetches the
+  `PayrollRun` first and derives `entity_id=payroll_run.entity_id` before constructing the
+  exception; also added dormant `actual_value`/`recommendation`/`context_data` and
+  `resolved_by_id`/`resolution_note` (real DB columns, unmapped until now).
+  `EmployeeVarianceLog`: added `payroll_run_id` (nullable FK, `SET NULL` on delete) and
+  `flag_severity`/`is_reviewed`/`reviewed_by_id`/`reviewed_at`/`review_note`.
+- **Housekeeping found via a second `alembic revision --autogenerate` pass:** 7 of the 11 tables
+  (`ctc_snapshots`, `employee_variance_logs`, `ghost_worker_detections`, `payroll_decision_logs`,
+  `payroll_exceptions`, `payroll_impact_previews`, `payslip_explanations`) were missing
+  `updated_at` entirely; `opening_balance_imports` was missing `created_at`/`updated_at`/
+  `created_by_id`/`updated_by_id` entirely. Added all of them. New unique constraints added to
+  match real business rules already enforced only in application code:
+  `uq_compliance_period`, `uq_payroll_impact_preview_run`, `uq_ctc_entity_period`,
+  `uq_payslip_explanation_payslip`.
+- **Caught and fixed twice during drafting, before this reached a real database:** two `add_column`
+  migration entries for columns (`employee_variance_logs.payroll_run_id`,
+  `compliance_snapshots.notes`) that the live table already had — visible in my own earlier
+  introspection but missed when first drafting the migration. Removed both; the final migration
+  was re-verified via `alembic revision --autogenerate` showing zero remaining `add_column` calls
+  across all 11 tables before it was considered done.
+
+**Independent, unrelated bug found and fixed while standing up the new regression tests:** the
+local `.venv` created earlier this session (replacing a Python environment that had vanished
+between sessions) pointed at a `tekvwarho_proaudit_test` database that had only ever been built via
+`tests/conftest.py`'s `Base.metadata.create_all()`, never via real Alembic migrations. One column,
+`platform_api_keys.key_type`, is declared `SQLEnum(ApiKeyType, name="apikeytype",
+create_type=False)` — by design, its enum type is only ever created by its own migration
+(`20260126_1700_add_platform_api_keys.py`), not by `create_all()`. With the type missing, *every*
+test in the suite that touches `db_session` failed at table-creation time with
+`UndefinedObjectError: type "apikeytype" does not exist`, including tests unrelated to
+payroll_advanced.py or this session at all (confirmed by re-running the already-passing
+`tests/test_fixed_assets.py`, which failed identically). Not a CI risk — `.github/workflows/ci.yml`
+already falls through to a real `alembic upgrade head` against a fresh Postgres container (the
+referenced `scripts/create_railway_tables.py` doesn't exist, so the `||` fallback always engages
+alembic) — this was purely a gap in this one local dev environment. Fixed by running `alembic
+upgrade head` against `tekvwarho_proaudit_test` once; the enum type (and everything else) is now
+permanent for that database regardless of how many times `create_all()`/`drop_all()` cycle the
+tables around it.
+
+**Also fixed in the new tests themselves:** `PayslipExplanation.payslip_id` and
+`EmployeeVarianceLog.payslip_id` both carry a real `NOT NULL` FK to `payslips` — the first test
+draft used a random `uuid4()` for each, which passed model construction but failed at INSERT with
+`ForeignKeyViolationError`. Added a `_make_payslip()` test helper and pointed both tests at a real
+persisted `Payslip` row instead.
+
+**Verified via:** full migration-chain replay against a genuinely empty database (`alembic upgrade
+head` from scratch on `tekvwarho_proaudit_test`, all the way from the first migration through
+`01cf410e050d`), `alembic revision --autogenerate` showing zero remaining `add_column` calls for
+any of the 11 tables, and a new permanent regression test (`tests/test_payroll_advanced.py`, 11
+tests covering all 11 tables plus the `PayrollException.entity_id` derivation and
+`EmployeeVarianceLog.reason_code` service-level fixes) — 106 tests across
+`tests/test_payroll_advanced.py`, `tests/test_bank_reconciliation.py`,
+`tests/test_consolidation.py`, `tests/test_workflow_integration.py`, `tests/test_budget.py`,
+`tests/test_fixed_assets.py`, `tests/test_expense_claims.py`, and `tests/test_support_tickets.py`
+pass with no regressions.
+
+**Status:** ✅ Fixed and tested locally; commit/push/deploy pending (next step in this same
+session). 20 of the original 66 Finding-50 tables remain once this deploys.
+
+---
+
 ## Finding 52 (new, not in original 48) — the production migration job silently never ran migrations
 
 **Discovered:** 2026-09-20, immediately after deploying the Finding 50 fix (commit `82b2123`,

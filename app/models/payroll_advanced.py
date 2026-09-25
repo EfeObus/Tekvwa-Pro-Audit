@@ -249,7 +249,8 @@ class ComplianceSnapshot(BaseModel):
         server_default=func.now(),
         nullable=False,
     )
-    
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     __table_args__ = (
         UniqueConstraint('entity_id', 'period_month', 'period_year', name='uq_compliance_period'),
         Index('ix_compliance_entity_period', 'entity_id', 'period_year', 'period_month'),
@@ -406,10 +407,21 @@ class PayrollException(BaseModel):
     """
     Structured exception flags for payroll validation.
     Requires acknowledgement before approval.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): entity_id was missing entirely despite being NOT NULL
+    on the live table -- added and wired up in create_exception() via the payroll run's own
+    entity_id, since no caller of create_exception() had it directly in scope.
     """
-    
+
     __tablename__ = "payroll_exceptions"
-    
+
+    entity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("business_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     payroll_run_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payroll_runs.id", ondelete="CASCADE"),
@@ -447,7 +459,10 @@ class PayrollException(BaseModel):
     related_field: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     current_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     expected_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    
+    actual_value: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    recommendation: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    context_data: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+
     # Acknowledgement
     requires_acknowledgement: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False,
@@ -464,13 +479,19 @@ class PayrollException(BaseModel):
         DateTime(timezone=True), nullable=True,
     )
     acknowledgement_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+
     # Resolution
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
-    
+    resolved_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    resolution_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -893,24 +914,38 @@ class PayslipExplanation(BaseModel):
 class EmployeeVarianceLog(BaseModel):
     """
     Log of significant payroll variances requiring reason codes.
+
+    Finding 50 (docs/FINDING_50_SCOPE.md): previous_payslip_id/variance_type/reason_code/
+    reason_note/flag_threshold_percent (all real, all used by
+    PayrollAdvancedService.create_variance_log()/update_variance_reason()) had no DB equivalent.
+    The live table's own field_name/variance_reason/explanation are superseded duplicates of
+    variance_type/reason_code/reason_note above and stay unmapped. payroll_run_id/flag_severity/
+    is_reviewed/reviewed_by_id/reviewed_at/review_note are genuinely distinct dormant fields
+    (no code path sets them), added below for parity.
     """
-    
+
     __tablename__ = "employee_variance_logs"
-    
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     employee_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("employees.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
+    payroll_run_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("payroll_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     payslip_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payslips.id", ondelete="CASCADE"),
@@ -954,18 +989,31 @@ class EmployeeVarianceLog(BaseModel):
     
     # Auto-flagged
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    flag_severity: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     flag_threshold_percent: Mapped[Decimal] = mapped_column(
         Numeric(precision=5, scale=2),
         default=Decimal("5.00"),
         nullable=False,
     )
-    
+
+    # Review
+    is_reviewed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    reviewed_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    reviewed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    review_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
-    
+
     def __repr__(self) -> str:
         return f"<EmployeeVarianceLog(employee={self.employee_id}, variance={self.variance_percent}%)>"
 

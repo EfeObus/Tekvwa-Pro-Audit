@@ -1338,7 +1338,12 @@ class PayrollAdvancedService:
         Returns:
             Created PayrollException
         """
+        payroll_run = await self.db.get(PayrollRun, payroll_run_id)
+        if not payroll_run:
+            raise ValueError(f"Payroll run {payroll_run_id} not found")
+
         exception = PayrollException(
+            entity_id=payroll_run.entity_id,
             payroll_run_id=payroll_run_id,
             payslip_id=payslip_id,
             employee_id=employee_id,
