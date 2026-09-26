@@ -24,12 +24,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import (
-    get_current_active_user, 
-    require_organization_permission, 
+    get_current_active_user,
+    require_organization_permission,
     record_usage_event,
     require_feature,
+    require_entity_access,
 )
 from app.models.user import User, UserRole
+from app.models.entity import BusinessEntity
 from app.models.sku import Feature, UsageMetricType
 from app.utils.permissions import OrganizationPermission
 from app.models.fixed_asset import (
@@ -343,6 +345,7 @@ async def create_fixed_asset(
 )
 async def get_entity_assets(
     entity_id: UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     status: Optional[AssetStatus] = Query(None, description="Filter by status"),
     category: Optional[AssetCategory] = Query(None, description="Filter by category"),
     db: AsyncSession = Depends(get_db),
@@ -484,6 +487,7 @@ async def run_depreciation(
 )
 async def get_depreciation_schedule(
     entity_id: UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     fiscal_year_end: date = Query(..., description="Fiscal year end date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -591,6 +595,7 @@ async def dispose_asset(
 )
 async def get_asset_register_summary(
     entity_id: UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -612,6 +617,7 @@ async def get_asset_register_summary(
 )
 async def get_capital_gains_report(
     entity_id: UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: date = Query(..., description="Report start date"),
     end_date: date = Query(..., description="Report end date"),
     db: AsyncSession = Depends(get_db),
