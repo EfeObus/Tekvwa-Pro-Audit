@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_entity_id, require_feature
+from app.dependencies import get_current_user, get_current_entity_id, require_feature, require_entity_access
 from app.models.user import User
 from app.models.entity import BusinessEntity
 from app.models.sku import Feature
@@ -151,16 +151,24 @@ class YearEndSummaryResponse(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
-async def resolve_entity_id(
+async def resolve_and_verify_entity_id(
     db: AsyncSession,
     entity_id: Optional[uuid.UUID],
-    user: User
+    user: User,
 ) -> uuid.UUID:
-    """Resolve entity ID from parameter or user context."""
-    if entity_id:
-        return entity_id
-    
-    # Try to get entity from user's organization
+    """
+    Resolve entity_id from the parameter or the user's own organization, verifying access either way.
+
+    Replaces the deleted `resolve_entity_id` (Finding 18, docs/IMPLEMENTATION_ROADMAP.md Phase 2
+    Section 2.1) -- a confirmed fake safety net that returned a caller-supplied entity_id completely
+    unvalidated, only checking anything on the fallback path (no entity_id given at all). Uses
+    `require_entity_access` for the same access-check consistency as every other migrated router;
+    entity_id is optional here (unlike a plain path param elsewhere), so this can't be a Depends().
+    """
+    if entity_id is not None:
+        entity = await require_entity_access(entity_id=entity_id, current_user=user, db=db)
+        return entity.id
+
     if user.organization_id:
         result = await db.execute(
             select(BusinessEntity).where(
@@ -170,7 +178,7 @@ async def resolve_entity_id(
         entity = result.scalar_one_or_none()
         if entity:
             return entity.id
-    
+
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Entity ID is required"
@@ -196,7 +204,7 @@ async def get_year_end_checklist(
 ):
     """Get year-end closing checklist."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         checklist = await service.get_year_end_checklist(
@@ -205,6 +213,8 @@ async def get_year_end_checklist(
         )
         
         return checklist
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -230,7 +240,7 @@ async def generate_closing_entries(
 ):
     """Generate closing entries for year-end."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         result = await service.generate_closing_entries(
@@ -241,6 +251,8 @@ async def generate_closing_entries(
         )
         
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -264,7 +276,7 @@ async def get_closing_entries(
     from app.models.accounting import JournalEntry, JournalEntryType, FiscalYear
     
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         
         # Get fiscal year
         fy_result = await db.execute(
@@ -329,7 +341,7 @@ async def close_fiscal_year(
 ):
     """Close a fiscal year."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         result = await service.close_fiscal_year(
@@ -340,6 +352,8 @@ async def close_fiscal_year(
         )
         
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -360,13 +374,22 @@ async def reopen_fiscal_year(
     
 ):
     """Reopen a closed fiscal year."""
-    from sqlalchemy import select
+    from sqlalchemy import select, and_
     from app.models.accounting import FiscalYear
-    
+
     try:
-        # Get fiscal year
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
+
+        # Get fiscal year (scoped to the verified entity -- this endpoint previously accepted
+        # entity_id but never used it for anything, letting any fiscal_year_id be reopened
+        # regardless of which organization it actually belonged to)
         result = await db.execute(
-            select(FiscalYear).where(FiscalYear.id == fiscal_year_id)
+            select(FiscalYear).where(
+                and_(
+                    FiscalYear.id == fiscal_year_id,
+                    FiscalYear.entity_id == resolved_entity_id,
+                )
+            )
         )
         fiscal_year = result.scalar_one_or_none()
         
@@ -416,7 +439,7 @@ async def create_opening_balances(
 ):
     """Create opening balances for new fiscal year."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         result = await service.create_opening_balances(
@@ -427,6 +450,8 @@ async def create_opening_balances(
         )
         
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -450,7 +475,7 @@ async def get_opening_balances(
     from app.models.accounting import JournalEntry, JournalEntryLine, JournalEntryType, FiscalYear
     
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         
         # Get fiscal year
         fy_result = await db.execute(
@@ -526,7 +551,7 @@ async def lock_period(
 ):
     """Lock a fiscal period."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         result = await service.lock_period(
@@ -537,6 +562,8 @@ async def lock_period(
         )
         
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -558,7 +585,7 @@ async def unlock_period(
 ):
     """Unlock a fiscal period."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         result = await service.unlock_period(
@@ -569,6 +596,8 @@ async def unlock_period(
         )
         
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -590,7 +619,7 @@ async def get_locked_periods(
 ):
     """Get all locked periods."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         periods = await service.get_locked_periods(
@@ -599,6 +628,8 @@ async def get_locked_periods(
         )
         
         return periods
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
@@ -622,7 +653,7 @@ async def get_year_end_summary_report(
 ):
     """Get year-end summary report."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = YearEndClosingService(db)
         
         report = await service.get_year_end_summary_report(
@@ -631,6 +662,8 @@ async def get_year_end_summary_report(
         )
         
         return report
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -654,7 +687,7 @@ async def list_fiscal_years(
     from app.models.accounting import FiscalYear
     
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         
         query = select(FiscalYear).where(
             FiscalYear.entity_id == resolved_entity_id
@@ -681,6 +714,8 @@ async def list_fiscal_years(
             ],
             "total": len(years)
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 

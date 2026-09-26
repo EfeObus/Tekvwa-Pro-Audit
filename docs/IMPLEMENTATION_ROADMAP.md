@@ -643,10 +643,61 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       `entity_id: uuid.UUID` path params) and new `tests/test_reports_entity_access.py` (3 HTTP-level
       tests — this router has no SKU feature gate, unlike several prior files, so HTTP testing is
       practical here).
-- [ ] `tax_2026.py` — 4
-- [ ] `year_end.py` — 12 (**delete `resolve_entity_id` entirely** — it is a confirmed fake safety net,
-      not a helper worth keeping in any form)
-- [ ] `report_export.py` — 8 (same `resolve_entity_id` deletion)
+- [x] `tax_2026.py` — 4 (`generate_cit_self_assessment`, `generate_vat_self_assessment`,
+      `generate_annual_returns`, `export_for_taxpro_max`). **Done 2026-09-26 — plus two severe,
+      unrelated, pre-existing bugs found and fixed while investigating this file:**
+      1. **A crash affecting every other endpoint in this file.** Unlike the 4 above, this file's
+         ~35 other endpoints all call a **file-local** `verify_entity_access(entity_id, current_user,
+         db)` helper (distinct from the shared, known-buggy `app.dependencies.verify_entity_access`
+         used in 10 other files). This local helper called
+         `EntityService.get_entity_by_id(entity_id)` with only one argument, but that method requires
+         a second `user` argument with no default — every single call raised
+         `TypeError: get_entity_by_id() missing 1 required positional argument: 'user'`. Confirmed
+         live via a direct test: this crashed on every call, for every entity, regardless of
+         ownership — meaning ~35 endpoints across this file's entire 2026 Tax Reform surface (buyer
+         review, credit notes, VAT recovery, zero-rated sales, minimum ETR, CGT, development levy,
+         PIT reliefs, B2C reporting, penalties, PEPPOL export) were completely non-functional in
+         production. Fixed with a one-line change (pass `current_user` through); confirmed via a
+         direct test that it now correctly resolves the entity and rejects a foreign one.
+      2. **A router double-prefix making the entire file unreachable at its documented URLs.**
+         `app/routers/tax_2026.py`'s `router = APIRouter(prefix="/api/v1/tax-2026", ...)` already sets
+         its own full prefix (the same self-contained-prefix pattern `accounting.py`/`budget.py`/
+         `fx.py` use), but `main.py`'s `app.include_router(tax_2026.router, prefix="/api/v1/tax-2026",
+         ...)` added the identical prefix a second time — every endpoint in this file was only
+         actually reachable at `/api/v1/tax-2026/api/v1/tax-2026/{entity_id}/...`, not the sensible
+         URL any API consumer would call. Confirmed via the live OpenAPI schema before and after.
+         Fixed by removing the redundant `prefix=` argument from `main.py`'s `include_router` call.
+
+      Verified via `tests/test_tax_2026_entity_access.py` (4 tests: the crash fix, a scoped AST check
+      for just the 4 newly-protected functions, and an OpenAPI-schema check confirming no doubled
+      path remains). Deliberately **not** added to `tests/test_entity_access_isolation.py`'s
+      `MIGRATED_ROUTER_FILES`: doing so would require treating this file's local
+      `verify_entity_access` as a safe alternative to `Depends(require_entity_access)`, but the
+      *shared* `app.dependencies.verify_entity_access` (used in 10 other files, still an open,
+      documented "additive not restrictive" issue) has the same name — teaching the sweep to accept
+      any `verify_entity_access()` call as safe would incorrectly certify those 10 other files too.
+- [x] `year_end.py` — 12 (**delete `resolve_entity_id` entirely** — it is a confirmed fake safety net,
+      not a helper worth keeping in any form). **Done 2026-09-26.** Replaced with
+      `resolve_and_verify_entity_id` (calls `require_entity_access` when `entity_id` is provided —
+      can't use `Depends()` since the parameter is optional — and preserves the old "pick the
+      caller's own first entity" fallback when it isn't). `grep`-confirmed `resolve_entity_id` no
+      longer exists anywhere in this file. `reopen_fiscal_year` needed extra attention: it accepted
+      `entity_id` but never used it for anything at all — its `FiscalYear` lookup was scoped by
+      `fiscal_year_id` alone, letting any authenticated user reopen any organization's closed fiscal
+      year. Fixed by resolving/verifying `entity_id` and scoping that lookup to it too. Also fixed a
+      second, unrelated bug found while testing: 9 of the 12 endpoints wrapped their bodies in
+      `except ValueError / except Exception` with no `except HTTPException: raise` guard, so
+      `require_entity_access`'s 404 was being silently re-wrapped as a 500 (access was still
+      correctly denied, just with the wrong status code) — added the guard to all 9. Verified via
+      `tests/test_year_end_entity_access.py` (calls this router's helpers directly — Professional-tier
+      feature gate makes HTTP testing impractical here, same as other SKU-gated files) and the
+      existing 27-test `test_year_end.py` service-level suite passing unchanged.
+- [x] `report_export.py` — 8 (same `resolve_entity_id` deletion). **Done 2026-09-26 — identical fix to
+      `year_end.py`, including the same `except HTTPException: raise` gap on all 8 endpoints** (found
+      first here, via an HTTP-level test that unexpectedly got a 500 instead of 404, then confirmed
+      the same pattern in `year_end.py` too). `grep`-confirmed `resolve_entity_id` no longer exists
+      anywhere in this file. This router has no SKU feature gate, so `tests/test_report_export_entity_access.py`
+      includes both a direct-call suite and one real HTTP round trip proving the fixed 404.
 - [ ] `entities.py` — 1 (`restore_entity` — add an organization-match check, not just a role check)
 
 That is 34+17+23+3+1+4+16+10+3+6+21+4+12+8+1 = **164**, matching the audit's final confirmed count
@@ -1669,7 +1720,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` + `reports.py` migrated (138/164 endpoints per the original tally, 2026-09-26). 4 files / 25 endpoints remain (`tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` (`group_id`, 17 endpoints), `ml_ai.py` (`detect_anomalies`), `report_template.py` (`clone_template`'s `target_entity_id`), and `reports.py` (`subscribe_to_compliance_alerts`) each got a same-root-cause fix beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` + `reports.py` + `tax_2026.py` + `year_end.py` + `report_export.py` migrated (162/164 endpoints per the original tally, 2026-09-26). 1 file / 1 endpoint remains (`entities.py`). Multiple files got same-root-cause fixes beyond their original tallies — `consolidation.py` (`group_id`), `ml_ai.py` (`detect_anomalies`), `report_template.py` (`clone_template`'s `target_entity_id`), `reports.py` (`subscribe_to_compliance_alerts`), `tax_2026.py` (a crash affecting ~35 endpoints + a router double-prefix), and `year_end.py`/`report_export.py` (a shared `except Exception` bug silently converting 404s into 500s across 17 endpoints) — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

@@ -23,7 +23,7 @@ from sqlalchemy import select
 import io
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_entity_id
+from app.dependencies import get_current_user, get_current_entity_id, require_entity_access
 from app.models.user import User
 from app.models.entity import BusinessEntity
 from app.services.report_export_service import (
@@ -73,15 +73,25 @@ class ExportGeneralLedgerRequest(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
-async def resolve_entity_id(
+async def resolve_and_verify_entity_id(
     db: AsyncSession,
     entity_id: Optional[uuid.UUID],
-    user: User
+    user: User,
 ) -> uuid.UUID:
-    """Resolve entity ID from parameter or user context."""
-    if entity_id:
-        return entity_id
-    
+    """
+    Resolve entity_id from the parameter or the user's own organization, verifying access either way.
+
+    Replaces the deleted `resolve_entity_id` (Finding 18, docs/IMPLEMENTATION_ROADMAP.md Phase 2
+    Section 2.1) -- a confirmed fake safety net that returned a caller-supplied entity_id completely
+    unvalidated, only checking anything on the fallback path (no entity_id given at all). Uses
+    `require_entity_access` for the same access-check consistency as every other migrated router;
+    entity_id is optional here (unlike a plain path param elsewhere), so this can't be a Depends().
+    Identical fix to year_end.py's, which has the same helper.
+    """
+    if entity_id is not None:
+        entity = await require_entity_access(entity_id=entity_id, current_user=user, db=db)
+        return entity.id
+
     if user.organization_id:
         result = await db.execute(
             select(BusinessEntity).where(
@@ -91,7 +101,7 @@ async def resolve_entity_id(
         entity = result.scalar_one_or_none()
         if entity:
             return entity.id
-    
+
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Entity ID is required"
@@ -125,7 +135,7 @@ async def export_balance_sheet(
 ):
     """Export Balance Sheet report."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_balance_sheet(
@@ -142,6 +152,8 @@ async def export_balance_sheet(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -163,7 +175,7 @@ async def export_balance_sheet_get(
 ):
     """Export Balance Sheet report via GET."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_balance_sheet(
@@ -180,6 +192,8 @@ async def export_balance_sheet_get(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -203,7 +217,7 @@ async def export_income_statement(
 ):
     """Export Income Statement report."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_income_statement(
@@ -222,6 +236,8 @@ async def export_income_statement(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -245,7 +261,7 @@ async def export_income_statement_get(
 ):
     """Export Income Statement report via GET."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_income_statement(
@@ -264,6 +280,8 @@ async def export_income_statement_get(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -287,7 +305,7 @@ async def export_trial_balance(
 ):
     """Export Trial Balance report."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_trial_balance(
@@ -304,6 +322,8 @@ async def export_trial_balance(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -325,7 +345,7 @@ async def export_trial_balance_get(
 ):
     """Export Trial Balance report via GET."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_trial_balance(
@@ -342,6 +362,8 @@ async def export_trial_balance_get(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -365,7 +387,7 @@ async def export_general_ledger(
 ):
     """Export General Ledger report."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_general_ledger(
@@ -383,6 +405,8 @@ async def export_general_ledger(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -405,7 +429,7 @@ async def export_general_ledger_get(
 ):
     """Export General Ledger report via GET."""
     try:
-        resolved_entity_id = await resolve_entity_id(db, entity_id, current_user)
+        resolved_entity_id = await resolve_and_verify_entity_id(db, entity_id, current_user)
         service = FinancialReportExportService(db)
         
         content, filename = await service.export_general_ledger(
@@ -423,6 +447,8 @@ async def export_general_ledger_get(
                 "Content-Disposition": f'attachment; filename="{filename}"'
             }
         )
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
