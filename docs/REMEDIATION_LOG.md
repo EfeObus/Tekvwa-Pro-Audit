@@ -1761,7 +1761,49 @@ callers. Added both — zero migration needed.
 both fields, plus `tests/test_payslips.py`/`tests/test_payroll_advanced.py` (13 passed, no
 regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 10 of the
+**Status:** ✅ Fixed, tested, committed (`c181103`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 10 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — employee_loans and loan_repayments (2026-09-25)
+
+Two small, independent gaps found while investigating the Tier 3 "1 mismatched column" entries.
+
+- **`employee_loans.updated_by_id`:** the model's own comment already documented that this
+  table's migration added a FK for `created_by_id` but not `updated_by_id`, and read that as "the
+  plain (no-FK) `AuditMixin` column is used instead" — but the live table has **no
+  `updated_by_id` column at all**, not just a missing FK. `payroll_service.py`'s `update_loan()`
+  always sets `loan.updated_by_id = updated_by_id` unconditionally, so every loan update has
+  always failed with an `UndefinedColumnError`. Corrected the comment and added the plain
+  (no-FK) column the model already declares via `AuditMixin`. Also widened `loan_type` from
+  `String(30)` to `String(50)` to match the live column exactly.
+- **`loan_repayments.updated_at`:** `LoanRepayment` inherits `BaseModel` (id + `TimestampMixin`),
+  which always adds a `NOT NULL` `updated_at` with a server default — included in every `INSERT`
+  regardless of whether application code ever sets it. The live table only has `created_at`, so
+  every loan repayment creation has always failed the same way. Confirmed zero rows exist for
+  either table (this local scratch DB, not authoritative for production, but consistent with
+  every other "always crashing" table found this session), so no backfill needed.
+
+One migration (`88bc48bd3bee`) covers both.
+
+**Also reproduced, not a new bug:** while testing, `test_entity` (a fixture shared by nearly every
+test file this session) failed once with `invalid input value for enum businesstype:
+"LIMITED_COMPANY"`, then passed cleanly on an immediate retry with no code changes. This is the
+already-documented Finding 1 (enum casing) intersecting with Finding 51 (test-suite connection
+fragility) — `app/models/entity.py`'s `business_type` column uses `SQLEnum(BusinessType)` without
+`values_callable`, the same category of casing mismatch Finding 1 already tracks org-wide. Not
+pursued further here — it's explicitly out of scope for Finding 50 and already owned by an
+existing finding.
+
+**Verified via:** a new permanent regression test (`tests/test_employee_loans.py`) exercising the
+real `create_loan()`/`update_loan()` service methods plus a direct `LoanRepayment` insert, and the
+broader payroll regression suite (`tests/test_employee_loans.py`, `tests/test_payroll_runs.py`,
+`tests/test_payslips.py`, `tests/test_payroll_advanced.py`, `tests/test_api.py` — 36 passed, 1
+skipped, no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 8 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---

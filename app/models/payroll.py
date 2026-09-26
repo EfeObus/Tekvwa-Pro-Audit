@@ -1160,7 +1160,9 @@ class EmployeeLoan(BaseModel, AuditMixin):
 
     # Overrides AuditMixin's created_by_id only — this table's migration added a FK for
     # created_by_id but NOT updated_by_id (Finding 49, docs/REMEDIATION_LOG.md). updated_by_id
-    # intentionally keeps inheriting the mixin's plain (no-FK) column.
+    # intentionally keeps inheriting the mixin's plain (no-FK) column. That column genuinely
+    # exists on the live table (added by migration, see Finding 50 in docs/REMEDIATION_LOG.md,
+    # 2026-09-25) -- a since-corrected earlier assumption here read "no FK" as "no column at all."
     created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL", use_alter=True),
@@ -1180,9 +1182,9 @@ class EmployeeLoan(BaseModel, AuditMixin):
         nullable=False,
         index=True,
     )
-    
+
     loan_type: Mapped[str] = mapped_column(
-        String(30),
+        String(50),
         default=LoanType.LOAN.value,
         nullable=False,
     )
