@@ -2465,6 +2465,85 @@ makes HTTP-level testing impractical, same as `budget.py`/`fixed_assets.py`/`fx.
 remain in §2.1 proper: `report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`,
 `report_export.py`, `entities.py`.
 
+## Phase 2.1 continued — report_template.py migrated; a prescribed fix rejected after verification, plus two more discoveries (2026-09-26)
+
+`report_template.py`'s 6 endpoints all take `entity_id` as a **query** parameter (`str`, not
+`uuid.UUID`) rather than a path parameter — converted all 6 to `entity_id: uuid.UUID = Query(...)` so
+the type matches `require_entity_access`'s own signature, removing the now-redundant internal
+`uuid.UUID(entity_id)` calls at each site, then added `Depends(require_entity_access)`.
+
+**Finding 1 — the roadmap's own prescribed fix for this file doesn't work, verified before applying
+it.** The roadmap said: "for this file specifically, do not just add `require_entity_access`; also
+fix the underlying service method's `OR organization_id = :organization_id` pattern in
+`ReportTemplateService` to `AND`." The matching code is `list_templates`'s:
+
+```python
+conditions = [
+    or_(
+        ReportTemplate.entity_id == entity_id,
+        ReportTemplate.organization_id == organization_id
+    )
+]
+```
+
+Applying `and_` literally would require every row to match `entity_id` **and** `organization_id`
+simultaneously. But `ReportTemplate.organization_id` is nullable and, per its own column comment, is
+`"For organization-wide templates shared across entities"` — it's only ever set on genuine org-wide
+template rows. Confirmed `create_template`'s service method accepts `organization_id` as a parameter
+but the router **never passes it**, so every ordinary entity-specific template created through this
+router has `organization_id IS NULL`. An `and_` there would produce a query that matches zero rows for
+every normal template, breaking `list_templates` entirely for its overwhelmingly common case.
+
+Traced why the `OR` was flagged as a bug in the first place: before this fix, `entity_id` reaching this
+service method could be **any** UUID an attacker supplied, unvalidated — so the `entity_id ==
+entity_id` branch of the `OR` was exploitable on its own, regardless of the `organization_id` branch.
+Confirmed via `grep` that `ReportTemplateService` has exactly one call site in the whole codebase (this
+router) — so once `Depends(require_entity_access)` guarantees `entity_id` belongs to the caller's own
+organization *before* this service method ever runs, both branches of the `OR` are safe by
+construction: the `entity_id` branch is safe because `entity_id` is now pre-validated, and the
+`organization_id` branch is safe because `organization_id` is always the caller's own. Left the
+service query unchanged rather than apply the literal prescription and break the feature — this is the
+same category of "verify before applying a written instruction" as this session's earlier
+`last_payroll_id`/`ghost_worker_detections` corrections (see the Finding 49/50 log entry).
+
+**Finding 2 — a second, uncounted cross-tenant write.** `clone_template`'s request body carries an
+*optional* `target_entity_id` (clone the template to a different entity than the source), which had
+**no validation at all** — a caller could clone a template directly into another organization's
+entity. Not part of this file's "6 total" since it's nested in the request body, not a query/path
+parameter. Fixed the same way as `ml_ai.py`'s body-nested fields: an inline `require_entity_access`
+call when `target_entity_id` is provided (a `Depends()` can't be used since the field is optional).
+
+**Finding 3 — an unrelated, pre-existing routing bug, found while writing this file's tests, not
+fixed here.** Writing an HTTP-level test for `list_templates` (`GET
+/api/v1/entities/report-templates`) got a `422` instead of the expected `404`/`200`:
+
+```
+{"field":"path.entity_id","message":"Input should be a valid UUID, invalid character: found `r` at 1"}
+```
+
+Traced to `main.py`'s router registration order: `entities.router` (which has a bare `GET
+/{entity_id}`) is included with `prefix="/api/v1/entities"` *before* `report_template_router.router`
+(same prefix). Starlette matches routes in registration order, so `GET
+/api/v1/entities/report-templates` is caught by `entities.py::get_entity` first, which tries to parse
+the literal string `"report-templates"` as a UUID and 422s — `report_template.py`'s own `GET ""`
+handler is never reached. This is a genuine, currently-live production bug (this exact endpoint is
+unreachable over HTTP right now) but is unrelated to Finding 18 and not fixed here: reordering router
+registration to fix it risks colliding with `entities.py`'s other sub-paths
+(`/{entity_id}/summary`, `/{entity_id}/fiscal-periods`, etc.) in ways that need their own careful check,
+not a fix bundled into an access-control migration. Worked around it for `list_templates`'s own test
+coverage by relying on the AST structural sweep (which inspects the function signature directly,
+independent of whether the route is HTTP-reachable) instead of an HTTP test for that one endpoint.
+
+**Verification:** the AST structural sweep (`report_template.py`'s `entity_id` is a direct function
+parameter, unlike `ml_ai.py`'s body-nested case, so the general sweep covers all 6 endpoints
+correctly) plus new `tests/test_report_template_entity_access.py` (4 HTTP-level tests covering
+`create_template` and `clone_template`, including the `target_entity_id` fix).
+
+**Roadmap:** `report_template.py` checked off in §2.1's file list; Finding 18's traceability row
+updated to 117/164 against the original tally. The routing collision is flagged as a separate,
+out-of-scope finding for a future pass. 5 files / 46 endpoints remain in §2.1 proper: `reports.py`,
+`tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed

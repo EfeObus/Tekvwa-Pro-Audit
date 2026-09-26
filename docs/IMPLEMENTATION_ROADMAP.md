@@ -588,11 +588,52 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       router's Intelligence-add-on feature gate makes HTTP-level testing impractical, and 3 of the 4
       endpoints' `entity_id` isn't visible to the AST sweep at all since it's body-nested, not a
       function parameter — deliberately not added to `MIGRATED_ROUTER_FILES` for that reason).
-- [ ] `report_template.py` — 2 + 4 confirmed (`list_templates`, `create_template`,
+- [x] `report_template.py` — 2 + 4 confirmed (`list_templates`, `create_template`,
       `get_default_template`, `clone_template`) — **for this file specifically, do not just add
       `require_entity_access`; also fix the underlying service method's `OR organization_id =
       :organization_id` pattern in `ReportTemplateService` to `AND`, since the additive-not-restrictive
-      bug lives in the service, not just the router** — 6 total
+      bug lives in the service, not just the router** — 6 total. **Done 2026-09-26, with two findings
+      worth recording:**
+      1. **The literal "OR to AND" instruction, applied as written, breaks the feature.**
+         `list_templates`'s `or_(ReportTemplate.entity_id == entity_id, ReportTemplate.organization_id
+         == organization_id)` looked like the described bug, but `ReportTemplate.organization_id` is
+         nullable and, per its own column comment, is only ever set for genuine org-wide templates —
+         every normal entity-specific template (the overwhelming majority, since the router never
+         even passes `organization_id` into `create_template`) has `organization_id IS NULL`. A literal
+         `and_(...)` there would require `entity_id` match AND `organization_id` match simultaneously,
+         which is never true for an ordinary entity-specific template — `list_templates` would return
+         empty for every entity in the system. Confirmed `ReportTemplateService` has no other call site
+         in the codebase, so the actual cross-tenant gap this `OR` created is fully closed once
+         `entity_id` itself is pre-validated by the new `Depends(require_entity_access)` at the router
+         (both branches of the `OR` become safe once `entity_id` is guaranteed to belong to the
+         caller's own organization before the service ever runs) — left the service query as-is rather
+         than apply a fix that breaks the feature it's supposed to preserve.
+      2. **A second endpoint, not part of this file's "6 total," had an unvalidated cross-tenant
+         write:** `clone_template`'s request body carries an *optional* `target_entity_id` (clone to a
+         different entity than the source), which was never checked against the caller's organization
+         at all — a caller could clone a template directly into another organization's entity. Fixed
+         with an inline `require_entity_access` call on `target_entity_id` when provided (a `Depends()`
+         can't be used since it's optional and body-nested, same reasoning as `ml_ai.py`'s body-based
+         fixes).
+
+      Also converted this file's `entity_id: str = Query(...)` (all 6 endpoints) to `entity_id:
+      uuid.UUID = Query(...)` so the FastAPI-level type matches `require_entity_access`'s own
+      signature, removing the now-redundant internal `uuid.UUID(entity_id)` calls at each site.
+
+      **A third, unrelated, pre-existing bug discovered along the way (not Finding 18, not fixed
+      here):** `GET /api/v1/entities/report-templates` (`list_templates`) is unreachable in
+      production — `entities.py`'s `GET /{entity_id}` is registered before this router in `main.py`,
+      so Starlette's first-match-wins routing sends this exact URL to `entities.py::get_entity`
+      instead, which 422s trying to parse `"report-templates"` as a UUID. Confirmed via a live test
+      hitting the real HTTP path. Reordering router registration risks colliding with other
+      `entities.py` sub-paths and needs its own dedicated investigation, not a rushed fix bundled into
+      this migration — flagged here for a future, separate pass.
+
+      Verified via: the AST structural sweep (this file's `entity_id` is a direct function parameter,
+      unlike `ml_ai.py`'s body-nested case, so the general sweep covers it correctly); new
+      `tests/test_report_template_entity_access.py` (4 HTTP-level tests covering `create_template`
+      and `clone_template`, including the `target_entity_id` fix — `list_templates` has no HTTP test
+      here, for the routing-collision reason above, relying on the AST sweep instead for that one).
 - [ ] `reports.py` — 21
 - [ ] `tax_2026.py` — 4
 - [ ] `year_end.py` — 12 (**delete `resolve_entity_id` entirely** — it is a confirmed fake safety net,
@@ -1620,7 +1661,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` migrated (111/164 endpoints per the original tally, 2026-09-26). 6 files / 52 endpoints remain (`report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` got a same-root-cause `group_id` fix (17 endpoints) and `ml_ai.py` a 4th undercounted endpoint (`detect_anomalies`) beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` migrated (117/164 endpoints per the original tally, 2026-09-26). 5 files / 46 endpoints remain (`reports.py`, `tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` (`group_id`, 17 endpoints), `ml_ai.py` (`detect_anomalies`), and `report_template.py` (`clone_template`'s `target_entity_id`) each got a same-root-cause fix beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

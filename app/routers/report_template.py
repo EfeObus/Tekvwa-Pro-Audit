@@ -17,8 +17,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_entity_access
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.services.report_template_service import ReportTemplateService
 
 
@@ -257,17 +258,18 @@ class SectionResponse(BaseModel):
 
 @router.get("")
 async def list_templates(
-    entity_id: str = Query(..., description="Entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
     report_type: Optional[str] = Query(None, description="Filter by report type"),
     active_only: bool = Query(True, description="Only return active templates"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """List all templates available for an entity."""
     service = ReportTemplateService(db)
-    
+
     templates = await service.list_templates(
-        entity_id=uuid.UUID(entity_id),
+        entity_id=entity_id,
         report_type=report_type,
         active_only=active_only,
         organization_id=current_user.organization_id,
@@ -295,10 +297,11 @@ async def list_templates(
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_template(
-    entity_id: str = Query(..., description="Entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
     request: CreateTemplateRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """Create a new report template."""
     service = ReportTemplateService(db)
@@ -361,7 +364,7 @@ async def create_template(
     })
     
     template = await service.create_template(
-        entity_id=uuid.UUID(entity_id),
+        entity_id=entity_id,
         name=request.name,
         report_type=request.report_type,
         description=request.description,
@@ -533,22 +536,23 @@ async def delete_template(
 @router.post("/{template_id}/set-default")
 async def set_default_template(
     template_id: str,
-    entity_id: str = Query(..., description="Entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """Set a template as the default for its report type."""
     service = ReportTemplateService(db)
-    
+
     # Get template to find report type
     template = await service.get_template(uuid.UUID(template_id), include_sections=False)
-    
+
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
-    
+
     try:
         template = await service.set_default_template(
-            entity_id=uuid.UUID(entity_id),
+            entity_id=entity_id,
             template_id=uuid.UUID(template_id),
             report_type=template.report_type
         )
@@ -570,15 +574,16 @@ async def set_default_template(
 @router.get("/defaults/{report_type}")
 async def get_default_template(
     report_type: str,
-    entity_id: str = Query(..., description="Entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """Get the default template for a report type."""
     service = ReportTemplateService(db)
-    
+
     template = await service.get_default_template(
-        entity_id=uuid.UUID(entity_id),
+        entity_id=entity_id,
         report_type=report_type,
         organization_id=current_user.organization_id,
     )
@@ -602,16 +607,27 @@ async def get_default_template(
 @router.post("/{template_id}/clone")
 async def clone_template(
     template_id: str,
-    entity_id: str = Query(..., description="Source entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Source entity ID"),
     request: CloneTemplateRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """Clone a template."""
     service = ReportTemplateService(db)
-    
-    target_entity = uuid.UUID(request.target_entity_id) if request.target_entity_id else uuid.UUID(entity_id)
-    
+
+    if request.target_entity_id:
+        # target_entity_id is a second, optional entity_id nested in the request body -- cloning
+        # into it must be validated the same as the source entity_id, otherwise a caller could clone
+        # a template directly into another organization's entity (a cross-tenant write, not just a
+        # read). require_entity_access can't be used as a Depends() here since the field is optional.
+        target_entity_access = await require_entity_access(
+            entity_id=uuid.UUID(request.target_entity_id), current_user=current_user, db=db
+        )
+        target_entity = target_entity_access.id
+    else:
+        target_entity = entity_id
+
     try:
         new_template = await service.clone_template(
             template_id=uuid.UUID(template_id),
@@ -786,17 +802,18 @@ async def reorder_sections(
 
 @router.get("/history")
 async def get_generation_history(
-    entity_id: str = Query(..., description="Entity ID"),
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
     report_type: Optional[str] = Query(None, description="Filter by report type"),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ) -> Dict[str, Any]:
     """Get report generation history."""
     service = ReportTemplateService(db)
-    
+
     logs = await service.get_report_generation_history(
-        entity_id=uuid.UUID(entity_id),
+        entity_id=entity_id,
         report_type=report_type,
         limit=limit,
     )
