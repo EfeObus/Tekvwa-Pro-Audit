@@ -14,7 +14,7 @@ This module provides dependency injection for:
 import logging
 import uuid
 from uuid import UUID
-from typing import List, Optional, Union, Dict, Any
+from typing import TYPE_CHECKING, List, Optional, Union, Dict, Any
 
 from fastapi import Depends, HTTPException, status, Request
 
@@ -35,6 +35,14 @@ from app.utils.permissions import (
     has_platform_permission,
     has_organization_permission,
 )
+
+if TYPE_CHECKING:
+    # Only for the return-type annotations on require_entity_access/require_group_access below --
+    # the real imports stay local to those functions' bodies (matching this file's existing pattern
+    # elsewhere) to avoid importing them at module load time; this satisfies flake8's F821 check on
+    # the quoted forward-reference annotations without changing runtime import behavior.
+    from app.models.entity import BusinessEntity
+    from app.models.advanced_accounting import EntityGroup
 
 
 # HTTP Bearer token security
