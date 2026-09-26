@@ -1717,7 +1717,35 @@ closing while already here).
 newly-mapped columns, plus the existing payroll regression suite (`tests/test_payslips.py`,
 `tests/test_payroll_advanced.py`, `tests/test_api.py` — 33 passed, 1 skipped, no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 12 of the
+**Status:** ✅ Fixed, tested, committed (`1c28c44`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 12 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — sku_pricing, a silent-fallback bug rather than a crash (2026-09-25)
+
+`app/services/advanced_billing_service.py`'s `CurrencyService.get_pricing_for_currency()` reads
+foreign-currency prices via `getattr(pricing, f"base_price_monthly_{currency}", None)` — a pattern
+that only works if the model actually declares those columns. It didn't: `SKUPricing` had zero
+USD/EUR/GBP fields even though the live table has all 6
+(`base_price_monthly_usd`/`base_price_annual_usd`/`base_price_monthly_eur`/
+`base_price_annual_eur`/`base_price_monthly_gbp`/`base_price_annual_gbp`). The `getattr` default
+silently swallowed the mismatch instead of crashing — **every foreign-currency price lookup has
+always fallen back to live FX conversion from NGN**, silently ignoring any fixed foreign-currency
+price an admin configured directly in the database, with no error anywhere to signal why a
+configured USD price was never actually used. No construction site exists for `SKUPricing` in the
+codebase (rows are seeded directly), so this is a pure model addition — zero migration. `sku_tier`
+itself was already correctly typed as a native Postgres enum matching the model, unlike the
+VARCHAR-vs-enum mismatches found in `ml_jobs`/`risk_signals` earlier today.
+
+**Verified via:** a new permanent regression test (`tests/test_sku_pricing.py`) confirming a
+configured `base_price_monthly_usd`/`base_price_annual_usd` is read directly rather than triggering
+the NGN-conversion fallback, plus the existing billing regression suite
+(`tests/test_sku_pricing.py`, `tests/test_payment_transactions.py`, `tests/test_api.py` — 26
+passed, 1 skipped, no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 11 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---

@@ -116,6 +116,14 @@ class SKUPricing(BaseModel):
         comment="ISO currency code"
     )
 
+    # Fixed foreign-currency prices (avoids live FX conversion when configured)
+    base_price_monthly_usd: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+    base_price_annual_usd: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+    base_price_monthly_eur: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+    base_price_annual_eur: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+    base_price_monthly_gbp: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+    base_price_annual_gbp: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 2), nullable=True)
+
 
 class TenantSKU(BaseModel):
     """
