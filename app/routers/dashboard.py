@@ -22,7 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_active_user, require_entity_access
 from app.models.user import User, UserRole
 from app.models.organization import OrganizationType
 from app.services.dashboard_service import DashboardService
@@ -1213,8 +1213,13 @@ async def mark_all_alerts_read(
     current_user: User = Depends(get_current_active_user),
 ):
     """Mark all alerts as read."""
+    if entity_id is not None:
+        # entity_id is an optional filter here, so require_entity_access can't be used as a Depends()
+        # -- it would make the parameter mandatory. Check inline instead, same 404-on-mismatch contract.
+        await require_entity_access(entity_id=entity_id, current_user=current_user, db=db)
+
     # TODO: Update in database
-    
+
     return {
         "success": True,
         "message": "All alerts marked as read",
