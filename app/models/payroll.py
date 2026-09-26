@@ -748,6 +748,26 @@ class Payslip(BaseModel):
         default=Decimal("0.00"),
         nullable=False,
     )
+    meal_allowance: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    utility_allowance: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    overtime_pay: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    bonus: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
     other_earnings: Mapped[Decimal] = mapped_column(
         Numeric(precision=15, scale=2),
         default=Decimal("0.00"),
@@ -758,7 +778,7 @@ class Payslip(BaseModel):
         default=Decimal("0.00"),
         nullable=False,
     )
-    
+
     # Deductions
     paye_tax: Mapped[Decimal] = mapped_column(
         Numeric(precision=15, scale=2),
@@ -771,6 +791,26 @@ class Payslip(BaseModel):
         nullable=False,
     )
     nhf: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    loan_deduction: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    salary_advance_deduction: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    cooperative_deduction: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    union_dues: Mapped[Decimal] = mapped_column(
         Numeric(precision=15, scale=2),
         default=Decimal("0.00"),
         nullable=False,
@@ -811,9 +851,34 @@ class Payslip(BaseModel):
         nullable=False,
         comment="ITF contribution (1% of annual payroll / 12 - employer)",
     )
-    
+    hmo_employer: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    group_life_insurance: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+
     # Relief calculations (for PAYE)
     consolidated_relief: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    rent_relief: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    pension_relief: Mapped[Decimal] = mapped_column(
+        Numeric(precision=15, scale=2),
+        default=Decimal("0.00"),
+        nullable=False,
+    )
+    nhf_relief: Mapped[Decimal] = mapped_column(
         Numeric(precision=15, scale=2),
         default=Decimal("0.00"),
         nullable=False,
@@ -838,12 +903,13 @@ class Payslip(BaseModel):
     
     # Payment details
     bank_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    account_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    account_number: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     account_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     is_paid: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     paid_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    payment_reference: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     
     # Email/notifications
     is_emailed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

@@ -1689,7 +1689,35 @@ the comment path using `staff_id`), and the existing regression suite (`tests/te
 `tests/test_ml_jobs.py`, `tests/test_upsell.py`, `tests/test_payment_transactions.py`,
 `tests/test_support_tickets.py`, `tests/test_api.py` — 41 passed, 1 skipped, no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 13 of the
+**Status:** ✅ Fixed, tested, committed (`760f6f1`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 13 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — payslips, the first table found not actually crashing (2026-09-25)
+
+Unlike every other table fixed this session, `payslips` was not broken: every field the model
+already declared mapped to a real live column with a real default, and
+`app/services/payroll_service.py`'s real construction site never referenced any column beyond what
+the model already exposed. The drift here is the live table having **14 more real columns than
+the model exposes** — `meal_allowance`, `utility_allowance`, `overtime_pay`, `bonus`,
+`loan_deduction`, `salary_advance_deduction`, `cooperative_deduction`, `union_dues`,
+`hmo_employer`, `group_life_insurance`, `rent_relief`, `pension_relief`, `nhf_relief`, and
+`payment_reference` — none of which any code path currently sets. Not a crash risk today, but a
+live trap for the next contributor: setting `payslip.overtime_pay = x` on the current model would
+silently do nothing (a plain, unpersisted Python attribute, not a mapped column) rather than
+raising an error, exactly the kind of bug this whole effort exists to catch before it ships. Added
+all 14 to the model — **zero migration needed**, every column already exists. Also widened
+`account_number` from `String(20)` to `Text` to match the live column exactly (Nigerian account
+numbers are 10 digits in practice, so this was never a real truncation risk, just a mismatch worth
+closing while already here).
+
+**Verified via:** a new permanent regression test (`tests/test_payslips.py`) round-tripping all 14
+newly-mapped columns, plus the existing payroll regression suite (`tests/test_payslips.py`,
+`tests/test_payroll_advanced.py`, `tests/test_api.py` — 33 passed, 1 skipped, no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 12 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---
