@@ -1643,7 +1643,53 @@ the existing regression suite (`tests/test_ml_jobs.py`, `tests/test_upsell.py`,
 `tests/test_payment_transactions.py`, `tests/test_support_tickets.py`,
 `tests/test_payroll_advanced.py`, `tests/test_api.py` — 47 passed, 1 skipped, no regressions).
 
-**Status:** ✅ Fixed, tested locally, not yet committed (next step, same session). 15 of the
+**Status:** ✅ Fixed, tested, committed (`34952b9`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 15 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — risk_signals and risk_signal_comments, zero migration (2026-09-25)
+
+Closes out Tier 1 entirely (all 21 of the original 66-table list's most-mismatched tables are now
+fixed). `app/services/risk_signal_service.py`'s `create_risk_signal()` (the only real construction
+site) already used `auto_detected`/`detected_by_id`/`ml_model_id`/`evidence`/
+`recommended_actions`, and set `requires_immediate_action` directly on the instance after
+construction — none of which existed on the old model, which instead had a completely
+non-overlapping field set (`user_id`, `detection_source`, `evidence_data`, `assigned_at`,
+`escalated`/`escalated_at`/`escalated_to_id`, `parent_signal_id`, `auto_resolved`,
+`potential_impact_amount`) with zero real usage and no matching live column at all. The live table
+already had every column the service needed — a pure model rewrite, **zero migration**, the same
+pattern as `bank_statements`/`upsell_opportunities`/`ml_models` before it.
+
+- `signal_type`/`category`/`severity`/`status` were native SQLAlchemy/Postgres enums against
+  plain `VARCHAR` live columns — same fix as `ml_jobs` earlier today, requiring 6 `.value` accesses
+  removed across `app/routers/risk_signals.py`'s `_format_risk_signal`,
+  `risk_signal_service.py`'s `get_signals_by_category()`, and `dashboard_service.py`'s
+  `recent_risk_signals`/`risk_signals_list` payloads.
+- `risk_score` was `Integer` in the model but the live column is `double precision`, and
+  `_calculate_risk_score()` returns a rounded float — fixed to `Float`. `confidence_score` had the
+  same mismatch (`Numeric(5,2)` vs `double precision`), also fixed to `Float`.
+- **A third, independent, guaranteed crash found while reading `_calculate_risk_score()`:** its
+  `category_weights` dict has entries for `RiskCategory.REPUTATIONAL` and
+  `RiskCategory.PERFORMANCE` — neither of which existed as members of the `RiskCategory` enum at
+  all. Since `risk_score` is optional and `_calculate_risk_score()` runs whenever it's omitted
+  (true for nearly every real call), **every `create_risk_signal()` call without an explicit
+  `risk_score` has always raised `AttributeError` building that dict**, regardless of any column
+  drift. Added `REPUTATIONAL`/`PERFORMANCE` as real enum members (free — the live column is plain
+  `VARCHAR`, so any string value is valid; matches the weights the code already had assigned).
+- `RiskSignalComment.author_id` renamed to the live table's real `staff_id` (nullable, `SET NULL`
+  — the live column has no `NOT NULL` constraint despite the old model's `nullable=False`);
+  removed `is_internal` (zero usage, no live column).
+
+**Verified via:** a new permanent regression test (`tests/test_risk_signals.py`, 5 tests including
+one that specifically creates a signal *without* an explicit `risk_score` — the exact path that
+always crashed on `RiskCategory.REPUTATIONAL` — plus the acknowledge/assign/resolve lifecycle and
+the comment path using `staff_id`), and the existing regression suite (`tests/test_risk_signals.py`,
+`tests/test_ml_jobs.py`, `tests/test_upsell.py`, `tests/test_payment_transactions.py`,
+`tests/test_support_tickets.py`, `tests/test_api.py` — 41 passed, 1 skipped, no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 13 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---

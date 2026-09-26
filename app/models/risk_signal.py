@@ -16,9 +16,8 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
-from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Integer, Numeric, Enum as SQLEnum
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Float
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -47,6 +46,8 @@ class RiskCategory(str, Enum):
     CHURN = "churn"                   # Customer retention risk
     FRAUD = "fraud"                   # Potential fraud indicators
     DATA_QUALITY = "data_quality"     # Data integrity issues
+    REPUTATIONAL = "reputational"     # Brand/reputation risk
+    PERFORMANCE = "performance"       # Platform performance risk
 
 
 class RiskStatus(str, Enum):
@@ -133,173 +134,166 @@ class RiskSignal(BaseModel):
         index=True,
     )
     
-    # User affected (optional)
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
-    # Signal classification
+    # Signal classification -- plain String, not native Postgres enums. Same
+    # "converted for flexibility" pattern already documented in app/models/sku.py.
     signal_type: Mapped[RiskSignalType] = mapped_column(
-        SQLEnum(RiskSignalType),
+        String(100),
         nullable=False,
         index=True,
     )
-    
+
     category: Mapped[RiskCategory] = mapped_column(
-        SQLEnum(RiskCategory),
+        String(50),
         nullable=False,
         index=True,
     )
-    
+
     severity: Mapped[RiskSeverity] = mapped_column(
-        SQLEnum(RiskSeverity),
+        String(20),
         nullable=False,
         default=RiskSeverity.MEDIUM,
         index=True,
     )
-    
+
     status: Mapped[RiskStatus] = mapped_column(
-        SQLEnum(RiskStatus),
+        String(20),
         nullable=False,
         default=RiskStatus.OPEN,
         index=True,
     )
-    
+
     # Signal details
     title: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
-    
+
     description: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    
+
     # Risk scoring
-    risk_score: Mapped[int] = mapped_column(
-        Integer,
-        default=50,
+    risk_score: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True,
         comment="Risk score 0-100, higher = more severe"
     )
-    
-    confidence_score: Mapped[Decimal] = mapped_column(
-        Numeric(5, 2),
-        default=Decimal("0.75"),
-        comment="ML confidence in the signal 0.00-1.00"
-    )
-    
-    # Financial impact estimate
-    potential_impact_amount: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(15, 2),
+
+    confidence_score: Mapped[Optional[float]] = mapped_column(
+        Float,
         nullable=True,
-        comment="Estimated financial impact in Naira"
+        comment="ML confidence in the signal 0.0-1.0"
     )
-    
+
+    auto_detected: Mapped[Optional[bool]] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
     # Detection details
-    detected_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
+    detected_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True,
     )
-    
-    detection_source: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-        default="system",
-        comment="Source: ml_engine, rule_engine, manual, api_webhook"
+
+    detected_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
-    
+
+    ml_model_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+        comment="No FK constraint on the live table",
+    )
+
     # Evidence and context
-    evidence_data: Mapped[Optional[dict]] = mapped_column(
+    evidence: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         nullable=True,
         comment="JSON data supporting the signal"
     )
-    
+
+    recommended_actions: Mapped[Optional[List[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
+    )
+
+    requires_immediate_action: Mapped[Optional[bool]] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
+    # Acknowledgement
+    acknowledged: Mapped[Optional[bool]] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
+    acknowledged_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Assignment and resolution
     assigned_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
-    assigned_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    
+
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=True,
     )
-    
+
     resolved_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
+
     resolution_notes: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
-    # Escalation tracking
-    escalated: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-    )
-    
-    escalated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    
-    escalated_to_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
-    # Related signals (for grouping)
-    parent_signal_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("risk_signals.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
-    # Auto-resolved flag
-    auto_resolved: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        comment="True if resolved automatically by system"
-    )
-    
+
     # Relationships
     organization: Mapped[Optional["Organization"]] = relationship(
         back_populates="risk_signals",
         lazy="selectin"
     )
-    
-    user: Mapped[Optional["User"]] = relationship(
-        foreign_keys=[user_id],
+
+    detected_by: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[detected_by_id],
         lazy="selectin"
     )
-    
+
+    acknowledged_by: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[acknowledged_by_id],
+        lazy="selectin"
+    )
+
     assigned_to: Mapped[Optional["User"]] = relationship(
         foreign_keys=[assigned_to_id],
         lazy="selectin"
     )
-    
+
     resolved_by: Mapped[Optional["User"]] = relationship(
         foreign_keys=[resolved_by_id],
         lazy="selectin"
     )
-    
+
     def __repr__(self) -> str:
-        return f"<RiskSignal {self.signal_code}: {self.signal_type.value} ({self.severity.value})>"
+        return f"<RiskSignal {self.signal_code}: {self.signal_type} ({self.severity})>"
     
     @property
     def is_open(self) -> bool:
@@ -329,23 +323,17 @@ class RiskSignalComment(BaseModel):
         index=True,
     )
     
-    author_id: Mapped[uuid.UUID] = mapped_column(
+    staff_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=False,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
-    
+
     comment: Mapped[str] = mapped_column(
         Text,
         nullable=False,
     )
-    
-    is_internal: Mapped[bool] = mapped_column(
-        Boolean,
-        default=True,
-        comment="Internal comments not visible to tenant"
-    )
-    
+
     # Relationships
     risk_signal: Mapped["RiskSignal"] = relationship(lazy="selectin")
-    author: Mapped["User"] = relationship(lazy="selectin")
+    staff: Mapped[Optional["User"]] = relationship(lazy="selectin")

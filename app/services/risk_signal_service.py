@@ -227,7 +227,7 @@ class RiskSignalService:
             .where(RiskSignal.status.in_([RiskStatus.OPEN, RiskStatus.ACKNOWLEDGED]))
             .group_by(RiskSignal.category)
         )
-        return {str(row[0].value): row[1] for row in result.all()}
+        return {str(row[0]): row[1] for row in result.all()}
     
     async def acknowledge_signal(
         self,
