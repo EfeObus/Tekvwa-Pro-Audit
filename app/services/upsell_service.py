@@ -218,7 +218,7 @@ class UpsellService:
             ]))
             .group_by(UpsellOpportunity.upsell_type)
         )
-        return {str(row[0].value): row[1] for row in result.all()}
+        return {str(row[0]): row[1] for row in result.all()}
     
     async def update_status(
         self,

@@ -30,7 +30,6 @@ from app.models.payroll_advanced import (
     OpeningBalanceImport,
     PayrollDecisionLog,
     PayrollException,
-    PayrollImpactPreview,
     PayslipExplanation,
     VarianceReason,
     WhatIfSimulation,
@@ -109,26 +108,31 @@ class TestComplianceSnapshotPersistence:
 
 
 class TestPayrollImpactPreviewPersistence:
-    async def test_create_and_fetch(self, db_session: AsyncSession, test_entity: BusinessEntity):
+    async def test_generate_impact_preview_derives_entity_id(
+        self, db_session: AsyncSession, test_entity: BusinessEntity,
+    ):
+        """
+        Regression test for a Finding 49 gap: the live table's entity_id column is NOT NULL, but
+        the model never declared it at all, and generate_impact_preview() never set it either --
+        every real call has always crashed with a NotNullViolation. An earlier version of this
+        test constructed PayrollImpactPreview directly, bypassing generate_impact_preview()
+        entirely, which is exactly why this went undetected. Calling the real service here.
+        """
         run = await _make_payroll_run(db_session, test_entity, "PAY-2026-09")
-        preview = PayrollImpactPreview(
-            payroll_run_id=run.id,
-            current_gross=Decimal("1000000.00"),
-            current_net=Decimal("800000.00"),
-            previous_gross=Decimal("950000.00"),
-            previous_net=Decimal("760000.00"),
-            gross_variance=Decimal("50000.00"),
-            gross_variance_percent=Decimal("5.26"),
-            variance_drivers=[{"driver": "new_hires", "amount": "50000.00"}],
-            impact_summary="Gross pay increased 5.26% due to new hires.",
-        )
-        db_session.add(preview)
+        run.total_gross_pay = Decimal("1000000.00")
+        run.total_net_pay = Decimal("800000.00")
+        run.total_employees = 10
         await db_session.commit()
-        await db_session.refresh(preview)
+
+        service = PayrollAdvancedService(db_session)
+        preview = await service.generate_impact_preview(
+            entity_id=test_entity.id,
+            payroll_run_id=run.id,
+        )
 
         assert preview.id is not None
+        assert preview.entity_id == test_entity.id
         assert preview.current_gross == Decimal("1000000.00")
-        assert preview.variance_drivers[0]["driver"] == "new_hires"
 
 
 class TestPayrollExceptionPersistence:

@@ -1976,12 +1976,93 @@ suite (`tests/test_accounting_dimensions.py`, `tests/test_consolidation.py`,
 `tests/test_budget.py`, `tests/test_api.py` — 99 passed, 1 skipped, no regressions after the same
 already-documented transient `businesstype` enum-cache flake on the first run, resolved on retry).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). **0 of the
+**Status:** ✅ Fixed, tested, committed (`8852445`), and pushed to `origin/main`. **0 of the
 original 66 Finding-50 tables remain — Finding 50 is fully resolved in code.** Deploy to production
 remains blocked by the closed org billing account; nothing past commit `5cab0ec` has shipped yet.
 When billing reopens, the full backlog of commits from this session needs one deploy run
 (`gcloud builds submit --config cloudbuild.yaml --substitutions=_TAG=<hash> --project=tekvwarho-proaudit .`)
 to reach production, followed by the usual `verify-migration-applied`/`/health` checks.
+
+---
+
+## Finding 49 completion — the remaining 35 mismatches, and two systemic bugs found closing them out (2026-09-25)
+
+Per `docs/IMPLEMENTATION_ROADMAP.md` Phase 1.5, Finding 49 was last explicitly measured at 58 of
+93 mismatches closed (`docs/REMEDIATION_LOG.md`, "First real deploy" entry, 2026-09-19) before this
+session's whole Finding 50 detour began. Re-ran `scripts/check_fk_drift.py` against a database
+rebuilt from a genuinely empty state via the full Alembic chain (not `Base.metadata.create_all()`,
+which can never surface this class of bug) and found **19 remaining mismatches** — most of Finding
+49's remainder had already been closed as a side effect of today's Finding 50 work, confirming the
+two findings were always overlapping investigations of the same underlying drift.
+
+**Genuine gaps fixed (8 tables):**
+- **`payroll_impact_previews.entity_id`** — the single most severe finding of this pass. The live
+  column is `NOT NULL`, but the model never declared `entity_id` at all, and
+  `generate_impact_preview()` — despite already having `entity_id` as a parameter in scope — never
+  passed it into the `PayrollImpactPreview(...)` constructor. **Every impact-preview generation has
+  always crashed.** The existing regression test for this table (from the earlier payroll_advanced.py
+  Finding 50 batch) constructed `PayrollImpactPreview` directly rather than calling
+  `generate_impact_preview()`, which is exactly why this went undetected — rewritten to call the
+  real service method instead. Also added the table's other 3 real-but-dormant FK columns
+  (`employee_id`, `applied_by_id`, `created_by_id`) for completeness. Zero migration — `entity_id`
+  already existed on the live table.
+- **`what_if_simulations.employee_id`/`applied_by_id`** — real, dormant, nullable FK columns with
+  zero current callers. Added for completeness. Zero migration.
+- **`ytd_payroll_ledgers.last_payslip_id`** — a real, dormant FK column; added and wired into
+  `update_ytd_ledger_from_payroll()`'s existing `payslip` loop variable, which was already right
+  there and unused for this purpose. Zero migration.
+  - **Caught and corrected a mistake made while investigating this same table:** initially assumed
+    the model's existing `last_payroll_id` field was a typo for the live `last_payroll_run_id` FK
+    and renamed it — this was wrong. `last_payroll_run_id` is the *original* (2026-01-10) design;
+    `last_payroll_id` is a *separate*, correctly-added column from the earlier payroll_advanced.py
+    Finding 50 migration that the real service has always used. Reverted the rename before it was
+    committed; `last_payroll_run_id` is the one that's actually superseded and stays unmapped.
+- **`opening_balance_imports.imported_by_id`** — real, dormant, nullable FK column with zero
+  current callers. Added for completeness. Zero migration.
+
+**Already-documented, intentional exceptions (11 remaining mismatches, not bugs):** `ctc_snapshots.
+employee_id`, `expense_claims.approved_by`/`rejected_by`, `ghost_worker_detections.employee_id`,
+`intercompany_transactions`'s 4 legacy source/target columns, `ledger_entries.user_id`,
+`ml_jobs.target_organization_id`, and (newly confirmed this pass) `ytd_payroll_ledgers.
+last_payroll_run_id` — every one of these is a superseded column from an earlier design that a
+prior Finding 50 fix deliberately left in place, unmapped, with the reasoning already written into
+that table's model docstring or an earlier log entry. `scripts/check_fk_drift.py` cannot
+distinguish "forgotten" from "deliberately left" — this pass is the record of having checked each
+one by hand.
+
+**A second, independent, systemic bug found and fixed while investigating `ghost_worker_detections`
+and `payroll_exceptions` for Finding 49:** several `payroll_advanced.py` models declared
+`severity`/`exception_code`/`paye_status`/`pension_status`/`nhf_status`/`nsitf_status`/
+`itf_status`/`reason_code` as native SQLAlchemy `Enum` types, but the live columns are all plain
+`VARCHAR` — the exact same "native enum vs. live VARCHAR" bug already found and fixed in `ml_jobs`/
+`risk_signals`/`legal_holds` earlier today, invisible to every test in this session because
+`tests/conftest.py` builds tables via `Base.metadata.create_all()`, which faithfully creates
+whatever the model says (enum type included) rather than reflecting what a real migration actually
+built. Wrote a new, permanent tool for this exact class of bug —
+`scripts/check_enum_type_drift.py` — modeled on `check_fk_drift.py`: it walks every column in
+`Base.metadata` that's declared as a native `Enum`, and flags any whose live column isn't the
+`USER-DEFINED` (real Postgres enum) type SQLAlchemy expects. First run against a fully-migrated
+database found **32 such mismatches** across the whole codebase — of those, only the 8 in
+`payroll_advanced.py` (fixed here) and 4 in `upsell_opportunities` (`upsell_type`/`status`/
+`priority`/`signal` — fixed here too, since this file's own earlier Finding 50 pass touched
+`upsell.py` and should have caught this) were this session's direct responsibility to fix now. The
+**remaining 28** span tables never touched this session (`audit_runs`, `credit_notes`,
+`audit_findings`, `auditor_action_logs`, `audit_evidence`, `bank_accounts`, `pit_relief_documents`,
+`support_tickets`, and the whole bank-reconciliation/expense-claims families) and match — almost to
+the exact count — `docs/IMPLEMENTATION_ROADMAP.md` Phase 3.4's own anticipated "33 further
+candidates" for Finding 2. **Not fixed here** — that's explicitly scoped, pre-existing Phase 3 work,
+not a Finding 49/50 side effect, and is now precisely enumerable via
+`scripts/check_enum_type_drift.py` whenever Phase 3 starts.
+
+**Verified via:** `scripts/check_fk_drift.py` (11 mismatches remain, all confirmed intentional) and
+`scripts/check_enum_type_drift.py` (28 mismatches remain, all confirmed out-of-scope Phase 3 work)
+against a database rebuilt from empty via the full Alembic chain; the full
+`tests/test_payroll_advanced.py`/`tests/test_upsell.py` suites (16 passed, no regressions, after
+the same already-documented transient `businesstype` flake on the first run).
+
+**Status:** ✅ Finding 49 is closed — every remaining mismatch is a documented, intentional
+exception, not an oversight. Both new drift-check scripts are permanent, reusable tools (not
+scratch scripts), ready to wire into CI per Finding 49/Finding 1's own original recommendation.
 
 ---
 

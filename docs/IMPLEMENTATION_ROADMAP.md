@@ -1533,7 +1533,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | Finding | Sev | Phase | Section | Status |
 |---|---|---|---|---|
 | 1 (+1b, 1c) | P1 | 3 | 3.1-3.3 | ⬜ |
-| 2 | P2 | 3 | 3.4 | ⬜ |
+| 2 | P2 | 3 | 3.4 | ⬜ Now precisely quantified: `scripts/check_enum_type_drift.py` (added 2026-09-25) found 28 remaining "native Enum declared, live column is VARCHAR" mismatches — `audit_runs`, `credit_notes`, `audit_findings`, `auditor_action_logs`, `audit_evidence`, `bank_accounts`, `pit_relief_documents`, `support_tickets` (4 columns), and the bank-reconciliation/expense-claims families. Run the script for the exact current list before starting this section. |
 | 3 | P3 | 12 | 12.1 | ⬜ |
 | 4 | P3 | 12 | 12.2 | ⬜ |
 | 5 | P3 | 12 | 12.3 | ⬜ |
@@ -1546,7 +1546,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
 | 18 | P0 | 2 | 2.1 | ⬜ |
-| 19 | P2 | 1 | 1.4 | ⬜ |
+| 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |
 | 22 | P1 | 4 | 4.2 | ⬜ |
@@ -1554,7 +1554,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 24 | P2 | 10 | 10.2 | ⬜ |
 | 25 | P3 | *(comment-only fix — see note below)* | — | ⬜ |
 | 26 | P2 | 13 | 13.1 | ⬜ |
-| 27 | P0 | 4 | 4.1 | ⬜ |
+| 27 | P0 | 4 | 4.1 | 🟨 Functionally fixed 2026-09-25 (added the missing multi-currency fields to the router's local `TransactionCreateRequest`/`TransactionResponse` instead of the roadmap's prescribed method — deleting the duplicate and importing `app/schemas/transaction.py`'s canonical one). Crash is closed; the architectural cleanup this section actually calls for is still open. |
 | 28 | P0 | 4 | 4.3 | ⬜ |
 | 29 | P1 | 9 | 9.1 | ⬜ |
 | 30 | P2 | 9 | 9.2 | ⬜ |
@@ -1568,7 +1568,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 38 | P2 | 7 | 7.2 | ⬜ |
 | 39 | P1 | 5 | 5.3 | ⬜ |
 | 40 | P1 | 5 | 5.4 | ⬜ |
-| 41 | P0 | 1 | 1.1 | ⬜ |
+| 41 | P0 | 1 | 1.1 | ✅ Closed 2026-09-25 — turned out to be 3 missing columns (`target_entity_type`/`target_entity_id`/`changes`), not 2, plus a NOT NULL `entity_id`/`user_id` mismatch that made every failed-login attempt 500 instead of 401/429. See `docs/REMEDIATION_LOG.md`. |
 | 42 | P2 | 11 | 11.2 | ⬜ |
 | 43 | P2 | 11 | 11.3 | ⬜ |
 | 44 | P2 | 1 (partial), 12 (full) | 1.2, 12.5 | ⬜ |
@@ -1576,10 +1576,11 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 46 | P2 | 8 | 8.2 | ⬜ |
 | 47 | P2 | 8 | 8.3 | ⬜ |
 | 48 | P3 | 8 | 8.4 | ⬜ |
-| 49 (new, not in original 48) | P1 | 1 | 1.5 (57/93 fixed in Phase 0 already; 28 of the remaining 29 tables superseded by Finding 50; see `docs/REMEDIATION_LOG.md`) | 🟨 |
-| 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 (decision resolved 2026-09-19: additive-only, no row-count dependency; `intercompany_transactions` and `entity_groups` fixed and verified; 64 of 66 tables remain) | 🟨 |
-| 51 (new, not in original 48) | P1 (leaning) — CONFIRMED, reproduced twice, root-cause narrowed but not pinned to a specific test, see `docs/REMEDIATION_LOG.md` | 9 (tentative) | Not yet assigned | 🟨 |
+| 49 (new, not in original 48) | P1 | 1 | 1.5 | ✅ Closed 2026-09-25 — every remaining mismatch confirmed a documented, intentional exception (superseded legacy columns from earlier design changes), not an oversight. `scripts/check_fk_drift.py` is now a permanent tool. See `docs/REMEDIATION_LOG.md`. |
+| 50 (new, not in original 48) | P0/P1 (varies by table — see `docs/FINDING_50_SCOPE.md`) | 1 | 1.5 | ✅ Closed 2026-09-25 — all 66 of the original 66 tracked tables resolved in code. Deploy still blocked by the closed org billing account; nothing past commit `5cab0ec` has shipped. See `docs/FINDING_50_SCOPE.md`/`docs/REMEDIATION_LOG.md`. |
+| 51 (new, not in original 48) | P1 (leaning) — CONFIRMED, reproduced live 3+ times total (twice more on 2026-09-25 during Finding 49/50 work), a real `db_session` connection leak; recovers with a plain `kill` of the stuck process but root cause (why the leak happens) still not fixed | 9 (tentative) | Not yet assigned | 🟨 |
 | 52 (new, not in original 48) | P0, CONFIRMED — deploy pipeline's migration step silently never ran migrations | 0 (deployment baseline) | Fixed directly, not deferred — `cloudbuild.yaml` now pins the job's command every deploy plus a new verification step; see `docs/REMEDIATION_LOG.md` | ✅ |
+| 53 (new, not in original 48) | P3, CONFIRMED — `verify-migration-applied`'s `gcloud logging read` can false-fail a good deploy due to Cloud Logging propagation delay | 0 (deployment baseline) | Fixed directly — `cloudbuild.yaml`'s check now retries up to 6 times over ~30s before concluding the head marker genuinely isn't there; see `docs/REMEDIATION_LOG.md` | ✅ |
 
 **Note on Findings 12, 25, and 34 — not yet assigned a dedicated section above, added here for
 completeness rather than left off the table entirely:**

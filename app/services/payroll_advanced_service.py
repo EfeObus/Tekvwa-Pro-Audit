@@ -664,13 +664,13 @@ class PayrollAdvancedService:
                 calendar.append({
                     "month": month,
                     "status": "reviewed",
-                    "paye_status": s.paye_status.value,
+                    "paye_status": s.paye_status,
                     "paye_due": s.paye_due_date.isoformat() if s.paye_due_date else None,
                     "paye_amount": float(s.paye_amount_due),
-                    "pension_status": s.pension_status.value,
+                    "pension_status": s.pension_status,
                     "pension_due": s.pension_due_date.isoformat() if s.pension_due_date else None,
                     "pension_amount": float(s.pension_amount_due),
-                    "nhf_status": s.nhf_status.value,
+                    "nhf_status": s.nhf_status,
                     "nhf_due": s.nhf_due_date.isoformat() if s.nhf_due_date else None,
                     "nhf_amount": float(s.nhf_amount_due),
                     "has_penalty": s.total_penalty_exposure > 0,
@@ -869,6 +869,7 @@ class PayrollAdvancedService:
 
         # Create new preview
         preview = PayrollImpactPreview(
+            entity_id=entity_id,
             payroll_run_id=payroll_run_id,
             previous_payroll_id=previous_payroll_id,
             current_gross=current_gross,
@@ -1631,8 +1632,8 @@ class PayrollAdvancedService:
             "payroll_run_id": str(exception.payroll_run_id),
             "payslip_id": str(exception.payslip_id) if exception.payslip_id else None,
             "employee_id": str(exception.employee_id) if exception.employee_id else None,
-            "exception_code": exception.exception_code.value if exception.exception_code else None,
-            "severity": exception.severity.value if exception.severity else None,
+            "exception_code": exception.exception_code,
+            "severity": exception.severity,
             "title": exception.title,
             "description": exception.description,
             "related_field": exception.related_field,
@@ -2100,6 +2101,7 @@ class PayrollAdvancedService:
                 )
                 existing.months_processed += 1
                 existing.last_payroll_id = payroll_run_id
+                existing.last_payslip_id = payslip.id
             else:
                 # Create new ledger
                 new_ledger = YTDPayrollLedger(
@@ -2124,6 +2126,7 @@ class PayrollAdvancedService:
                     ),
                     months_processed=1,
                     last_payroll_id=payroll_run_id,
+                    last_payslip_id=payslip.id,
                 )
                 self.db.add(new_ledger)
             
@@ -2679,7 +2682,7 @@ Employer Contributions (Not deducted from your pay):
             "current_value": float(log.current_value),
             "variance_amount": float(log.variance_amount),
             "variance_percent": float(log.variance_percent),
-            "reason_code": log.reason_code.value if log.reason_code else None,
+            "reason_code": log.reason_code,
             "reason_note": log.reason_note,
             "is_flagged": log.is_flagged,
             "flag_threshold_percent": float(log.flag_threshold_percent),
@@ -3248,7 +3251,7 @@ Employer Contributions (Not deducted from your pay):
             "employee_2_name": employee_2_name,
             "duplicate_field": detection.duplicate_field,
             "duplicate_value": detection.duplicate_value,
-            "severity": detection.severity.value if detection.severity else "critical",
+            "severity": detection.severity if detection.severity else "critical",
             "is_resolved": detection.is_resolved,
             "resolution_note": detection.resolution_note,
             "resolved_by_id": str(detection.resolved_by_id) if detection.resolved_by_id else None,

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Optional, List, Dict, Any
 
 from sqlalchemy import (
     Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text,
-    Enum as SQLEnum, JSON, UniqueConstraint, Index, func
+    JSON, UniqueConstraint, Index, func
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -135,7 +135,7 @@ class ComplianceSnapshot(BaseModel):
     
     # PAYE Status
     paye_status: Mapped[ComplianceStatus] = mapped_column(
-        SQLEnum(ComplianceStatus),
+        String(30),
         default=ComplianceStatus.NOT_DUE,
         nullable=False,
     )
@@ -161,7 +161,7 @@ class ComplianceSnapshot(BaseModel):
     
     # Pension Status
     pension_status: Mapped[ComplianceStatus] = mapped_column(
-        SQLEnum(ComplianceStatus),
+        String(30),
         default=ComplianceStatus.NOT_DUE,
         nullable=False,
     )
@@ -185,7 +185,7 @@ class ComplianceSnapshot(BaseModel):
     
     # NHF Status
     nhf_status: Mapped[ComplianceStatus] = mapped_column(
-        SQLEnum(ComplianceStatus),
+        String(30),
         default=ComplianceStatus.NOT_DUE,
         nullable=False,
     )
@@ -204,7 +204,7 @@ class ComplianceSnapshot(BaseModel):
     
     # NSITF Status
     nsitf_status: Mapped[ComplianceStatus] = mapped_column(
-        SQLEnum(ComplianceStatus),
+        String(30),
         default=ComplianceStatus.NOT_DUE,
         nullable=False,
     )
@@ -221,7 +221,7 @@ class ComplianceSnapshot(BaseModel):
     
     # ITF Status
     itf_status: Mapped[ComplianceStatus] = mapped_column(
-        SQLEnum(ComplianceStatus),
+        String(30),
         default=ComplianceStatus.NOT_DUE,
         nullable=False,
     )
@@ -271,18 +271,43 @@ class PayrollImpactPreview(BaseModel):
     """
     
     __tablename__ = "payroll_impact_previews"
-    
+
+    entity_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("business_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
     payroll_run_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payroll_runs.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
     )
-    
+
     # Previous Period Reference
     previous_payroll_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payroll_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    employee_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("employees.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+
+    applied_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    created_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
     
@@ -442,16 +467,18 @@ class PayrollException(BaseModel):
         nullable=True,
     )
     
-    # Exception Details
+    # Exception Details -- plain String, not native Postgres enums (the live columns are
+    # VARCHAR(50)/VARCHAR(20)).
     exception_code: Mapped[ExceptionCode] = mapped_column(
-        SQLEnum(ExceptionCode),
+        String(50),
         nullable=False,
     )
+    # Plain String, not a native Postgres enum -- the live column is VARCHAR(20).
     severity: Mapped[ExceptionSeverity] = mapped_column(
-        SQLEnum(ExceptionSeverity),
+        String(20),
         nullable=False,
     )
-    
+
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
     
@@ -720,9 +747,18 @@ class YTDPayrollLedger(BaseModel):
     months_processed: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     
     # Last Updated
+    # last_payroll_run_id is a separate, superseded column from this table's original
+    # (2026-01-10) design -- last_payroll_id is the one the real service actually uses,
+    # added correctly by the earlier payroll_advanced.py Finding 50 migration. Left unmapped
+    # per this session's additive-only policy.
     last_payroll_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("payroll_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    last_payslip_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("payslips.id", ondelete="SET NULL"),
         nullable=True,
     )
     last_updated: Mapped[datetime] = mapped_column(
@@ -821,6 +857,12 @@ class OpeningBalanceImport(BaseModel, AuditMixin):
     )
     source_file: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     
+    imported_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Verification
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     verified_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
@@ -982,7 +1024,7 @@ class EmployeeVarianceLog(BaseModel):
     
     # Reason Code (Required for >5% variance)
     reason_code: Mapped[Optional[VarianceReason]] = mapped_column(
-        SQLEnum(VarianceReason),
+        String(50),
         nullable=True,
     )
     reason_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -1160,6 +1202,18 @@ class WhatIfSimulation(BaseModel):
         index=True,
     )
     
+    employee_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("employees.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    applied_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Simulation Details
     simulation_name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -1287,23 +1341,34 @@ class GhostWorkerDetection(BaseModel):
     """
     Ghost worker detection log.
     Flags duplicate BVNs, account numbers, etc.
+
+    Finding 49/50 (docs/REMEDIATION_LOG.md): the original migration
+    (20260110_1000_add_advanced_payroll_tables.py) created this table with a genuinely different
+    design than this model ever declared -- a single nullable employee_id + a related_employee_ids
+    JSONB array, detection_run_id/risk_score/risk_level/detection_details describing the run as a
+    whole, and no employee_1_id/employee_2_id/duplicate_field/duplicate_value/severity/detected_at
+    at all. The real construction site (PayrollAdvancedService's duplicate-BVN/account/NIN
+    detector) has always used those fields, so the earlier payroll_advanced.py Finding 50 migration
+    (01cf410e050d) already added them to the live table, and already used `severity` as a plain
+    String (matching the live column) -- this model just hadn't been updated to match yet, still
+    declaring `severity` as a native SQLAlchemy Enum. Fixed here, no migration needed.
     """
-    
+
     __tablename__ = "ghost_worker_detections"
-    
+
     entity_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("business_entities.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    
+
     # Detection Type
     detection_type: Mapped[str] = mapped_column(
         String(50), nullable=False,
         comment="duplicate_bvn, duplicate_account, duplicate_nin, etc.",
     )
-    
+
     # Affected Employees
     employee_1_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -1315,18 +1380,19 @@ class GhostWorkerDetection(BaseModel):
         ForeignKey("employees.id", ondelete="CASCADE"),
         nullable=False,
     )
-    
+
     # Duplicate Value
     duplicate_field: Mapped[str] = mapped_column(String(50), nullable=False)
     duplicate_value: Mapped[str] = mapped_column(String(255), nullable=False)
-    
-    # Severity
+
+    # Severity -- plain String, not a native Postgres enum, matching the same
+    # ExceptionSeverity column on PayrollException/EmployeeVarianceLog elsewhere in this file.
     severity: Mapped[ExceptionSeverity] = mapped_column(
-        SQLEnum(ExceptionSeverity),
+        String(20),
         default=ExceptionSeverity.CRITICAL,
         nullable=False,
     )
-    
+
     # Resolution
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     resolution_note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -1338,12 +1404,12 @@ class GhostWorkerDetection(BaseModel):
     resolved_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
-    
+
     detected_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
-    
+
     def __repr__(self) -> str:
         return f"<GhostWorkerDetection(type={self.detection_type}, field={self.duplicate_field})>"

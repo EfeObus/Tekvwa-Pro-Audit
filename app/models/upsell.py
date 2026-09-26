@@ -17,7 +17,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
 from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, Numeric, Enum as SQLEnum
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text, Numeric
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -105,27 +105,28 @@ class UpsellOpportunity(BaseModel):
     )
     
     # Opportunity details
+    # Plain String, not native Postgres enums -- the live columns are VARCHAR.
     upsell_type: Mapped[UpsellType] = mapped_column(
-        SQLEnum(UpsellType),
+        String(50),
         nullable=False,
     )
 
     status: Mapped[UpsellStatus] = mapped_column(
-        SQLEnum(UpsellStatus),
+        String(20),
         nullable=False,
         default=UpsellStatus.IDENTIFIED,
         index=True,
     )
 
     priority: Mapped[UpsellPriority] = mapped_column(
-        SQLEnum(UpsellPriority),
+        String(20),
         nullable=False,
         default=UpsellPriority.WARM,
     )
 
     # Signal that triggered
     signal: Mapped[UpsellSignal] = mapped_column(
-        SQLEnum(UpsellSignal),
+        String(50),
         nullable=False,
     )
 
@@ -240,7 +241,7 @@ class UpsellOpportunity(BaseModel):
     )
     
     def __repr__(self) -> str:
-        return f"<UpsellOpportunity {self.opportunity_code}: {self.upsell_type.value} ({self.status.value})>"
+        return f"<UpsellOpportunity {self.opportunity_code}: {self.upsell_type} ({self.status})>"
     
     @property
     def is_open(self) -> bool:
