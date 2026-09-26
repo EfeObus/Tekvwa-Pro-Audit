@@ -38,6 +38,7 @@ ROUTERS_DIR = FilePath(__file__).resolve().parent.parent / "app" / "routers"
 MIGRATED_ROUTER_FILES = [
     "accounting.py",
     "audit.py",
+    "budget.py",
 ]
 
 

@@ -16,8 +16,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_entity_id, require_feature
+from app.dependencies import get_current_user, get_current_entity_id, require_feature, require_entity_access
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.models.sku_enums import Feature
 from app.services.budget_service import BudgetService
 
@@ -139,6 +140,7 @@ class BudgetLineItemResponse(BaseModel):
 async def create_budget(
     data: BudgetCreate,
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -175,6 +177,7 @@ async def create_budget(
 @router.get("")
 async def list_budgets(
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     fiscal_year: Optional[int] = Query(None),
     status: Optional[str] = Query(None, description="draft, submitted, approved, active, closed"),
     db: AsyncSession = Depends(get_db),
@@ -211,6 +214,7 @@ async def list_budgets(
 @router.get("/active")
 async def get_active_budget(
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: Optional[date] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -248,6 +252,7 @@ async def get_active_budget(
 async def get_budget(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     include_line_items: bool = Query(True),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -314,6 +319,7 @@ async def update_budget(
     data: BudgetUpdate,
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -356,6 +362,7 @@ async def submit_budget_for_approval(
     data: BudgetSubmitForApproval,
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -383,6 +390,7 @@ async def process_budget_approval_decision(
     data: BudgetApprovalDecision,
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -410,6 +418,7 @@ async def process_budget_approval_decision(
 async def get_budget_approval_status(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -431,6 +440,7 @@ async def create_budget_revision(
     data: BudgetRevisionCreate,
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -463,6 +473,7 @@ async def create_budget_revision(
 async def get_budget_version_history(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -492,6 +503,7 @@ async def get_budget_version_history(
 async def approve_budget(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -517,6 +529,7 @@ async def approve_budget(
 async def activate_budget(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -546,6 +559,7 @@ async def add_budget_line_item(
     data: BudgetLineItemCreate,
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -582,6 +596,7 @@ async def add_budget_line_item(
 async def list_budget_line_items(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     line_type: Optional[str] = Query(None, description="revenue, expense, or capex"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -637,6 +652,7 @@ async def update_budget_line_item(
     budget_id: UUID = Path(...),
     line_item_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -666,6 +682,7 @@ async def delete_budget_line_item(
     budget_id: UUID = Path(...),
     line_item_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -683,6 +700,7 @@ async def delete_budget_line_item(
 async def import_chart_of_accounts(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     account_types: List[str] = Query(default=["revenue", "expense"]),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -713,6 +731,7 @@ async def import_chart_of_accounts(
 async def get_budget_variance(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     through_month: Optional[int] = Query(None, ge=1, le=12),
@@ -750,6 +769,7 @@ async def get_budget_variance(
 async def get_budget_variance_ytd(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     group_by: str = Query(default="account", description="account, category, or dimension"),
     alert_threshold: float = Query(default=10.0, ge=0, le=100, description="Variance % threshold for alerts"),
     db: AsyncSession = Depends(get_db),
@@ -840,6 +860,7 @@ async def get_budget_variance_ytd(
 async def get_budget_forecast(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     forecast_months: int = Query(default=3, ge=1, le=12),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -870,6 +891,7 @@ async def get_budget_forecast(
 async def get_department_budget_summary(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     dimension_type: str = Query(default="department"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -900,6 +922,7 @@ async def get_department_budget_summary(
 async def compare_budgets(
     budget_ids: List[UUID],
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -931,6 +954,7 @@ async def compare_budgets(
 async def sync_actuals_to_budget(
     budget_id: UUID = Path(...),
     entity_id: UUID = Path(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     sync_date: Optional[date] = Query(default=None, description="Sync through this date (defaults to today)"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

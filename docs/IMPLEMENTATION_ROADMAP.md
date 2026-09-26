@@ -515,8 +515,14 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       generalized to detect both styles (any function with an `entity_id` parameter, not just ones
       defaulted via `Path(...)`), verified against `budget.py` (still correctly flags 22 unmigrated
       functions) before and after the change.
-- [ ] `budget.py` — 18 read + 5 write (`create_budget`, `submit_budget_for_approval`,
-      `process_budget_approval_decision`, `create_budget_revision`, `approve_budget`) — 23 total
+- [x] `budget.py` — 18 read + 5 write (`create_budget`, `submit_budget_for_approval`,
+      `process_budget_approval_decision`, `create_budget_revision`, `approve_budget`) — 23 total.
+      **Done 2026-09-26.** All 23 `entity_id: UUID = Path(...)` params given
+      `Depends(require_entity_access)`. Note (out of Phase 2 scope, not fixed): spotted a pre-existing
+      bug in `get_budget_variance_ytd` — it calls `service.get_budget(entity_id, budget_id)` but
+      every other call site in this file uses `service.get_budget(budget_id, include_line_items)`,
+      i.e. `entity_id` is passed where `budget_id` is expected. Not an access-control issue and not
+      touched here; flag for Phase 3 or a dedicated bugfix.
 - [ ] `consolidation.py` — 2 + 1 write (`recycle_cta_on_disposal`, which additionally needs its
       `group_id`-to-organization check added, not just `entity_id`) — 3 total
 - [ ] `dashboard.py` — 1 write (`mark_all_alerts_read`) — the other 20 flagged in the audit's sweep are
@@ -1560,7 +1566,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` migrated (51/164 endpoints, 2026-09-26). 15 files / 113 endpoints remain. |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` migrated (74/164 endpoints, 2026-09-26). 14 files / 90 endpoints remain. |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |
