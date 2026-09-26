@@ -13,7 +13,7 @@ import uuid
 
 from sqlalchemy import (
     Column, String, Text, Boolean, Integer, BigInteger, Float, Date, DateTime,
-    ForeignKey, Numeric, JSON, Enum as SQLEnum, Index, UniqueConstraint, CheckConstraint
+    ForeignKey, Numeric, JSON, Enum as SQLEnum, Index, UniqueConstraint, CheckConstraint, func
 )
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
@@ -102,15 +102,14 @@ class AccountingDimension(BaseModel):
     
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     
-    dimension_type = Column(SQLEnum(DimensionType), nullable=False)
+    dimension_type = Column(SQLEnum(DimensionType, name="dimension_type"), nullable=False)
     code = Column(String(50), nullable=False)
-    name = Column(String(255), nullable=False)
+    name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     parent_id = Column(UUID(as_uuid=True), ForeignKey("accounting_dimensions.id"), nullable=True)
     
     is_active = Column(Boolean, default=True)
-    sort_order = Column(Integer, default=0)
-    extra_data = Column(JSON, nullable=True)  # Additional dimension-specific data
+    dimension_metadata = Column("metadata", JSON, nullable=True)
     
     # Relationships
     entity = relationship("BusinessEntity", back_populates="dimensions")
@@ -132,7 +131,7 @@ class TransactionDimension(BaseModel):
     dimension_id = Column(UUID(as_uuid=True), ForeignKey("accounting_dimensions.id"), nullable=False)
     
     allocation_percentage = Column(Numeric(5, 2), default=100.00)  # For split allocations
-    allocated_amount = Column(Numeric(18, 2), nullable=True)
+    allocated_amount = Column(Numeric(20, 2), nullable=True)
     
     __table_args__ = (
         UniqueConstraint('transaction_id', 'dimension_id', name='uq_transaction_dimension'),
@@ -874,9 +873,10 @@ class EntityGroupMember(BaseModel):
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False)
     
     ownership_percentage = Column(Numeric(5, 2), default=100.00)
-    consolidation_method = Column(String(20), default="full")  # full, proportional, equity
-    
+    consolidation_method = Column(String(50), default="full")  # full, proportional, equity
+
     is_parent = Column(Boolean, default=False)
+    joined_at = Column(DateTime, server_default=func.now())
     
     # ===========================================
     # IAS 21 CURRENCY TRANSLATION FIELDS

@@ -1935,8 +1935,53 @@ test_login_wrong_password`, which exercises this exact path end-to-end through t
 flow (`tests/test_audit_log.py`, `tests/test_api.py`, `tests/test_legal_holds.py`,
 `tests/test_budget.py` — 57 passed, 1 skipped, no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 3 of the
-original 66 Finding-50 tables remain once this deploys.
+**Status:** ✅ Fixed, tested, committed (`163b8b5`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 3 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the final count.
+
+---
+
+## Finding 50 progress — accounting_dimensions, transaction_dimensions, entity_group_members — the last 3 (2026-09-25)
+
+Closes out Finding 50 entirely: **all 66 of the original 66 tracked tables are now resolved.**
+
+- **`AccountingDimension`** — confirmed via a codebase-wide grep to have zero real construction
+  sites anywhere, genuinely dead code. `sort_order`/`extra_data` had no matching live column (the
+  live column is `metadata`, remapped to a `dimension_metadata` Python attribute via an explicit
+  column-name override, the same `Column("metadata", ...)` pattern used elsewhere in this
+  codebase to dodge SQLAlchemy's reserved `metadata` attribute). More importantly, its
+  `SQLEnum(DimensionType)` declaration had no explicit `name=`, so SQLAlchemy would have generated
+  bind casts against an auto-derived `dimensiontype` type that has never existed — the real live
+  enum type is `dimension_type` (with an underscore). Fixed both, plus narrowed `name` to match the
+  live column's real length. The live `dimension_type` enum type was also missing 3 of the Python
+  enum's 9 members (`location`, `sales_channel`, `product_line`) — added via migration
+  `5845b65e3876`, zero risk since adding enum values is purely additive.
+- **`TransactionDimension`** — also genuinely dead code. Inherits `BaseModel`, which always adds a
+  `NOT NULL` `updated_at` with a server default; the live table only had `created_at`. Same
+  migration adds it (same pattern as `loan_repayments`/`payslip_items` earlier this session), and
+  widens `allocated_amount` from `Numeric(18,2)` to the live column's real `Numeric(20,2)`.
+- **`EntityGroupMember`** — the one table of these three with a real, working construction site
+  (`app/services/consolidation_service.py`). Had a real, unmapped `joined_at` column
+  (server-defaulted, so not a crash, but a dead attribute no code could ever read) and a
+  `consolidation_method` narrower (`String(20)`) than the live column (`String(50)`) — harmless in
+  practice (real values top out at `"proportional"`, 12 chars) but closed while already here. Zero
+  migration needed — both fixes are model-only.
+
+**Verified via:** a new permanent regression test (`tests/test_accounting_dimensions.py`) —
+constructing all 9 `DimensionType` values against the live enum (the exact path that would have
+crashed on the type-name mismatch or the 3 missing values), a full `TransactionDimension` round
+trip confirming `updated_at`, and `add_group_member()` through the real
+`ConsolidationService` confirming `joined_at` populates — plus the broader accounting regression
+suite (`tests/test_accounting_dimensions.py`, `tests/test_consolidation.py`,
+`tests/test_budget.py`, `tests/test_api.py` — 99 passed, 1 skipped, no regressions after the same
+already-documented transient `businesstype` enum-cache flake on the first run, resolved on retry).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). **0 of the
+original 66 Finding-50 tables remain — Finding 50 is fully resolved in code.** Deploy to production
+remains blocked by the closed org billing account; nothing past commit `5cab0ec` has shipped yet.
+When billing reopens, the full backlog of commits from this session needs one deploy run
+(`gcloud builds submit --config cloudbuild.yaml --substitutions=_TAG=<hash> --project=tekvwarho-proaudit .`)
+to reach production, followed by the usual `verify-migration-applied`/`/health` checks.
 
 ---
 
