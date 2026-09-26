@@ -1620,7 +1620,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` migrated (111/164 endpoints per the original tally, 2026-09-26). 8 files / 53 endpoints remain. `consolidation.py` got a same-root-cause `group_id` fix (17 endpoints) and `ml_ai.py` a 4th undercounted endpoint (`detect_anomalies`) beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` migrated (111/164 endpoints per the original tally, 2026-09-26). 6 files / 52 endpoints remain (`report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` got a same-root-cause `group_id` fix (17 endpoints) and `ml_ai.py` a 4th undercounted endpoint (`detect_anomalies`) beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

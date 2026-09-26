@@ -2461,7 +2461,7 @@ makes HTTP-level testing impractical, same as `budget.py`/`fixed_assets.py`/`fx.
 
 **Roadmap:** all four files checked off in §2.1's file list; Finding 18's traceability row updated to
 111/164 against the original tally. `consolidation.py`'s `group_id` fix and `ml_ai.py`'s
-`detect_anomalies` fix are both noted as beyond their files' original counts. 8 files / ~53 endpoints
+`detect_anomalies` fix are both noted as beyond their files' original counts. 6 files / 52 endpoints
 remain in §2.1 proper: `report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`,
 `report_export.py`, `entities.py`.
 
