@@ -1893,7 +1893,49 @@ omitted-`account_code` path, plus the broader accounting regression suite
 `tests/test_api.py` — 108 passed, 1 skipped, no regressions after the same already-documented
 transient `businesstype` enum-cache flake on the first run, resolved on retry as before).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 4 of the
+**Status:** ✅ Fixed, tested, committed (`82429e9`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 4 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — audit_logs, a security-relevant 500 hiding in plain sight (2026-09-25)
+
+Separate from, and additional to, the already-known Finding 41 (`target_entity_type`/
+`target_entity_id` never migrated) — tracing this table's flagged "4 mismatched columns" to
+ground truth revealed the real picture: the original `create_table` migration (`20260103_1251`)
+created only 13 columns; a later NTAA-compliance migration (`20260103_1630`) added 8 more
+(`organization_id`/`impersonated_by_id`/`device_fingerprint`/`session_id`/`geo_location`/
+`nrs_irn`/`nrs_response`/`description`) but never added `target_entity_type`, `target_entity_id`,
+or `changes` — all three set unconditionally by `app/services/audit_service.py`'s `log_action()`,
+the single shared entry point called from **82+ places across the codebase**. Every audit log
+write has always failed with an `UndefinedColumnError`.
+
+**The fourth, independent, and most consequential piece:** the model's own `entity_id`/`user_id`
+fields are declared `Optional`, with comments explicitly documenting why — *"nullable for
+system-level events / unauthenticated actions like login failures."* The live columns (from the
+original migration) were `NOT NULL` regardless. `app/routers/auth.py`'s failed-login handler calls
+`log_action(business_entity_id=None, ..., user_id=None)` with **no surrounding try/except** — every
+single failed login attempt has always raised an unhandled `NotNullViolation` instead of returning
+the intended 401/429 response: a 500 error on the most security-critical, highest-traffic
+authentication path in the application. Relaxed both to nullable to match the model's
+already-correct, documented design.
+
+Migration `02c915f85794` adds `target_entity_type`/`target_entity_id`/`changes` and relaxes
+`entity_id`/`user_id`. `request_id` already existed on the live table from the original migration
+but was unmapped in the model — added there, no migration needed. Also widened
+`device_fingerprint` back up to `String(512)` (matching the NTAA migration's real column; the
+model had drifted down to 255 at some point).
+
+**Verified via:** two new permanent regression tests (`tests/test_audit_log.py`) — one mirroring
+the exact failed-login call shape (`business_entity_id=None`, `user_id=None`), one exercising a
+normal authenticated update that exercises `target_entity_type`/`target_entity_id`/`changes` —
+plus the broader regression suite including `tests/test_api.py`'s `TestAuthAPI::
+test_login_wrong_password`, which exercises this exact path end-to-end through the real HTTP login
+flow (`tests/test_audit_log.py`, `tests/test_api.py`, `tests/test_legal_holds.py`,
+`tests/test_budget.py` — 57 passed, 1 skipped, no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 3 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---

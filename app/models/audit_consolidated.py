@@ -291,7 +291,7 @@ class AuditLog(Base):
     ip_address: Mapped[Optional[str]] = mapped_column(INET, nullable=True)
     user_agent: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     device_fingerprint: Mapped[Optional[str]] = mapped_column(
-        String(255),
+        String(512),
         nullable=True,
         comment="Browser/device fingerprint for submission verification",
     )
@@ -299,6 +299,11 @@ class AuditLog(Base):
         String(100),
         nullable=True,
         comment="Session ID for tracking related actions",
+    )
+    request_id: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+        comment="Request ID for correlating logs across a single HTTP request",
     )
     
     # Geolocation (optional but helpful for fraud detection)
