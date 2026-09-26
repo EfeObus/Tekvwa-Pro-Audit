@@ -250,6 +250,38 @@ async def verify_entity_access(
         )
 
 
+async def require_entity_access(
+    entity_id: uuid.UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> "BusinessEntity":
+    """
+    Centralized entity-access-check dependency (Finding 18, docs/IMPLEMENTATION_ROADMAP.md Phase 2
+    Section 2.1). Use `Depends(require_entity_access)` in place of a raw `entity_id: uuid.UUID` path
+    parameter on any entity-scoped route -- this makes the access check mechanically checkable (a
+    route with a raw `entity_id` param and no `require_entity_access` dependency is, by definition,
+    unfixed) instead of relying on each call site hand-rolling its own check correctly.
+
+    Delegates to `EntityService.get_entity_by_id`, the one pattern in this codebase the audit found
+    already correct (`transactions.py::list_transactions`), rather than reimplementing the access
+    logic here a third time -- `verify_entity_access` above is a second, looser variant (grants
+    access on shared organization_id alone, without checking the user's own UserEntityAccess grants
+    unless the FIRST check already failed) that predates this fix; do not use it for new routes.
+
+    Returns the resolved BusinessEntity so route handlers that need it don't have to look it up
+    again.
+    """
+    from app.services.entity_service import EntityService
+
+    entity = await EntityService(db).get_entity_by_id(entity_id, current_user)
+    if not entity:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entity not found or access denied",
+        )
+    return entity
+
+
 def require_role(allowed_roles: list[UserRole]):
     """
     Dependency factory for organization role-based access control.

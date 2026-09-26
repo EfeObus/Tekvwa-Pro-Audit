@@ -495,11 +495,26 @@ instead of a raw `entity_id: uuid.UUID` path parameter. This makes the fix *mech
 unfixed) rather than relying on each of 164 hand-edits being individually correct.
 
 **Implement — organized by the audit's own file groupings, each its own commit within this section:**
-- [ ] `accounting.py` — 24 read endpoints (already correctly-shaped in the audit's original sweep) + 10
+- [x] `accounting.py` — 24 read endpoints (already correctly-shaped in the audit's original sweep) + 10
       write endpoints (`create_account`, `update_account`, `initialize_chart_of_accounts`,
       `create_fiscal_year`, `create_journal_entry`, `post_journal_entry`, `reverse_journal_entry`,
-      `post_to_general_ledger`, `close_fiscal_period`, `sync_gl_from_source_systems`) — 34 total
-- [ ] `audit.py` — 17 endpoints
+      `post_to_general_ledger`, `close_fiscal_period`, `sync_gl_from_source_systems`) — 34 total.
+      **Done 2026-09-26** (commit pending): all 34 endpoints given `Depends(require_entity_access)`
+      via the new centralized dependency in `app/dependencies.py`; verified by
+      `tests/test_entity_access_isolation.py` — 3 unit tests on `require_entity_access` itself, an
+      AST-based structural sweep (`TestEntityAccessDependencyWiring`) confirming zero unmigrated
+      `entity_id` params remain in the file, and 4 real HTTP-level tests
+      (`TestAccountingRouterEndToEnd`) proving a foreign-org `entity_id` is rejected with 404 on both
+      a read and a write endpoint, before any write occurs.
+- [x] `audit.py` — 17 endpoints. **Done 2026-09-26.** Notable variant: this file declares
+      `entity_id: uuid.UUID` as a bare path parameter (no explicit `Path(...)`) since its prefix is
+      set externally via `main.py`'s `include_router(..., prefix="/api/v1/entities")` rather than on
+      the router itself — confirmed via a one-off smoke test that FastAPI's dependency resolution
+      still threads the same `entity_id` into `require_entity_access` correctly regardless of which
+      style declares it. The AST structural check in `tests/test_entity_access_isolation.py` was
+      generalized to detect both styles (any function with an `entity_id` parameter, not just ones
+      defaulted via `Path(...)`), verified against `budget.py` (still correctly flags 22 unmigrated
+      functions) before and after the change.
 - [ ] `budget.py` — 18 read + 5 write (`create_budget`, `submit_budget_for_approval`,
       `process_budget_approval_decision`, `create_budget_revision`, `approve_budget`) — 23 total
 - [ ] `consolidation.py` — 2 + 1 write (`recycle_cta_on_disposal`, which additionally needs its
@@ -1545,7 +1560,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | ⬜ |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` migrated (51/164 endpoints, 2026-09-26). 15 files / 113 endpoints remain. |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

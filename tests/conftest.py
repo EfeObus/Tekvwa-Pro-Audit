@@ -263,6 +263,83 @@ async def test_invoice(
 async def auth_headers(test_user: User) -> dict:
     """Generate authorization headers for test user."""
     from app.utils.security import create_access_token
-    
+
     token = create_access_token(data={"sub": str(test_user.id)})
+    return {"Authorization": f"Bearer {token}"}
+
+
+# ===========================================
+# CROSS-TENANT ISOLATION FIXTURES (Finding 18, docs/IMPLEMENTATION_ROADMAP.md Phase 2)
+#
+# A second, fully independent organization/user/entity, for the parameterized
+# "Org A user + Org B entity_id -> 403/404" suite the audit recommended. Deliberately
+# reuses the exact same shape as test_organization/test_user/test_entity above (including
+# UserRole.OWNER) so that an admin/owner bypass on the WRONG organization is exactly what
+# these tests prove doesn't happen -- get_entity_by_id()'s organization_id filter must
+# reject cross-org access regardless of role.
+# ===========================================
+
+@pytest_asyncio.fixture
+async def other_organization(db_session: AsyncSession) -> Organization:
+    """A second, independent organization (Org B)."""
+    org = Organization(
+        id=uuid4(),
+        name="Other Test Organization",
+        slug="other-test-org",
+    )
+    db_session.add(org)
+    await db_session.commit()
+    await db_session.refresh(org)
+    return org
+
+
+@pytest_asyncio.fixture
+async def other_user(db_session: AsyncSession, other_organization: Organization) -> User:
+    """Org B's user -- same role (OWNER) as test_user, different organization."""
+    user = User(
+        id=uuid4(),
+        email="otheruser@example.com",
+        hashed_password=get_password_hash("TestPassword123!"),
+        first_name="Other",
+        last_name="User",
+        organization_id=other_organization.id,
+        role=UserRole.OWNER,
+        is_active=True,
+        is_verified=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def other_entity(db_session: AsyncSession, other_organization: Organization) -> BusinessEntity:
+    """Org B's business entity -- the foreign entity_id an Org A user must be rejected for."""
+    entity = BusinessEntity(
+        id=uuid4(),
+        name="Other Business Ltd",
+        organization_id=other_organization.id,
+        business_type=BusinessType.LIMITED_COMPANY,
+        tin="98765432-0001",
+        rc_number="RC987654",
+        address_line1="456 Other Street",
+        city="Abuja",
+        state="FCT",
+        email="other-business@example.com",
+        phone="+234 802 000 0000",
+        is_vat_registered=True,
+    )
+    db_session.add(entity)
+    await db_session.commit()
+    await db_session.refresh(entity)
+    return entity
+
+
+@pytest_asyncio.fixture
+async def other_auth_headers(other_user: User) -> dict:
+    """Generate authorization headers for Org B's user."""
+    from app.utils.security import create_access_token
+
+    token = create_access_token(data={"sub": str(other_user.id)})
     return {"Authorization": f"Bearer {token}"}

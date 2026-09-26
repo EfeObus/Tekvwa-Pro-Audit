@@ -2252,6 +2252,78 @@ worse than before.
 
 ---
 
+## Phase 2, Section 2.1 — `require_entity_access` built, `accounting.py` migrated (2026-09-26)
+
+**Finding 18** (P0, 164 confirmed cross-tenant IDOR endpoints across 17 router files) is now in
+progress. Per the roadmap's plan, one centralized dependency was built rather than patching call sites
+independently:
+
+```python
+async def require_entity_access(
+    entity_id: uuid.UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> BusinessEntity:
+    entity = await EntityService(db).get_entity_by_id(entity_id, current_user)
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entity not found or access denied")
+    return entity
+```
+
+Added to `app/dependencies.py`, immediately after the existing (and knowingly broken —
+see below) `verify_entity_access`. It delegates to `EntityService.get_entity_by_id`, the one
+pre-existing pattern in the codebase the audit confirmed correct (`entity.organization_id ==
+user.organization_id` filtering happens in the query itself, so no role — including OWNER — bypasses
+cross-organization isolation).
+
+**Known pre-existing issue documented, not fixed today:** `verify_entity_access` (the older helper,
+still used in 10 unrelated router files — bulk_operations, exports, inventory, invoices, receipts,
+search_analytics, sales, self_assessment, tax_2026, tax) has an "additive, not restrictive" bug: `if
+not has_access and entity.organization_id != user.organization_id` grants access whenever the
+organization matches, without requiring a specific `UserEntityAccess` grant. Out of scope for today
+(none of the 10 files it's used in are in Phase 2's 17-file list) but now documented in
+`require_entity_access`'s own docstring as a warning against reusing the old helper for new routes.
+
+**`accounting.py` (first of 17 files, 34 endpoints) migrated:** every endpoint's existing
+`entity_id: uuid.UUID = Path(...)` parameter got one additive line —
+`_entity_access: BusinessEntity = Depends(require_entity_access)` — inserted immediately after it.
+Zero endpoint bodies were touched. This relies on FastAPI's own dependency resolution: a path
+parameter declared in the router's `prefix=` is resolved once per request and supplied to every
+callable in the dependency tree that declares a matching parameter name, so the same real `entity_id`
+independently reaches both the endpoint and the new nested dependency.
+
+**Verification (`tests/test_entity_access_isolation.py`, new file):**
+- `TestRequireEntityAccess` — 3 unit tests calling `require_entity_access` directly: rejects a foreign
+  organization's entity (404), allows the caller's own organization's entity, rejects a nonexistent
+  entity (404). Uses new `other_organization`/`other_user`/`other_entity`/`other_auth_headers`
+  fixtures added to `tests/conftest.py` — a second, fully independent org/user/entity, deliberately
+  given the same `UserRole.OWNER` as the primary test user so these tests actually prove role doesn't
+  bypass organization isolation.
+- `TestEntityAccessDependencyWiring` — an AST-based structural sweep (`ast.parse`/`ast.walk`) over a
+  `MIGRATED_ROUTER_FILES` list (currently `["accounting.py"]`), asserting zero functions have a raw
+  `entity_id: uuid.UUID = Path(...)` parameter without a `Depends(require_entity_access)` alongside
+  it. Validated as non-trivial by confirming it correctly finds 22 unmigrated functions in the
+  untouched `budget.py`.
+- `TestAccountingRouterEndToEnd` — 4 real HTTP-level tests via the FastAPI test client: a read endpoint
+  (`GET .../chart-of-accounts`) and a write endpoint (`POST .../chart-of-accounts`) each tested against
+  both the caller's own entity (200/201) and a foreign org's entity (404) — the write case specifically
+  asserts the 404 happens *before* `create_account()` ever runs, not as a later failure.
+
+All 8 tests pass. Full regression suite re-run afterward (`pytest tests/`, excluding the
+pre-existing, unrelated `tests/test_api_endpoints.py::test_endpoint` collection error — a helper
+function misnamed such that pytest tries to collect it as a test; confirmed pre-dating this session
+via `git log`, not introduced by this change): no regressions from the `accounting.py` migration.
+
+**Roadmap:** `accounting.py` checked off in §2.1's file list; Finding 18's row in the Master Finding
+Traceability Table (§20) updated to 🟨 in progress, 34/164 endpoints done. 16 files (`audit.py`,
+`budget.py`, `consolidation.py`, `dashboard.py`, `fixed_assets.py`, `forensic_audit.py`, `fx.py`,
+`ml_ai.py`, `report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`, `report_export.py`,
+`entities.py`) and ~130 endpoints remain, followed by the single parameterized Org-A-vs-Org-B suite
+across all 164 endpoints the roadmap calls for, then Section 2.2's `UserEntityAccess` index/unique-
+constraint migration (blocked on a production data-integrity check this session cannot perform).
+
+---
+
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
 straightforward — the original audit's own instruction against skipping "simple" work applies equally
 here.)*

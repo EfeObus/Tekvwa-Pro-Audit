@@ -18,10 +18,11 @@ from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, require_entity_access
 from app.services.audit_service import AuditService
 from app.services.audit_vault_service import AuditVaultService
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.models.audit_consolidated import AuditAction
 
 router = APIRouter(tags=["Audit Trail"])
@@ -38,6 +39,7 @@ async def get_audit_logs(
     end_date: Optional[date] = Query(None, description="Filter to date"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -100,6 +102,7 @@ async def get_entity_history(
     entity_id: uuid.UUID,
     target_entity_type: str,
     target_entity_id: str,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -129,6 +132,7 @@ async def get_user_activity(
     user_id: uuid.UUID,
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -153,6 +157,7 @@ async def get_audit_summary(
     entity_id: uuid.UUID,
     start_date: date = Query(..., description="Report period start"),
     end_date: date = Query(..., description="Report period end"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -176,7 +181,10 @@ async def get_audit_summary(
 
 
 @router.get("/{entity_id}/audit/actions")
-async def list_audit_actions(entity_id: uuid.UUID):
+async def list_audit_actions(
+    entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
+):
     """List all available audit action types."""
     return {
         "actions": [
@@ -213,7 +221,10 @@ def _get_action_description(action: AuditAction) -> str:
 # ===========================================
 
 @router.get("/{entity_id}/audit/vault/info")
-async def get_vault_info(entity_id: uuid.UUID):
+async def get_vault_info(
+    entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
+):
     """
     Get Audit Vault information and capabilities.
     
@@ -248,6 +259,7 @@ async def get_vault_info(entity_id: uuid.UUID):
 @router.get("/{entity_id}/audit/vault/statistics")
 async def get_vault_statistics(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -289,6 +301,7 @@ async def get_vault_records(
     end_date: Optional[date] = Query(None, description="Filter to date"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -327,6 +340,7 @@ async def get_vault_records(
 async def get_vault_record_detail(
     entity_id: uuid.UUID,
     record_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -354,6 +368,7 @@ async def get_vault_record_detail(
 @router.get("/{entity_id}/audit/vault/retention-policy")
 async def get_retention_policy(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -369,6 +384,7 @@ async def get_retention_policy(
 @router.get("/{entity_id}/audit/vault/retention-timeline")
 async def get_retention_timeline(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -393,6 +409,7 @@ async def export_vault_records(
     fiscal_year: int,
     document_types: Optional[str] = Query(None, description="Comma-separated document types"),
     include_full_data: bool = Query(False, description="Include old/new values and device info"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -422,6 +439,7 @@ async def export_vault_records(
 async def get_compliance_report(
     entity_id: uuid.UUID,
     fiscal_year: int,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -444,6 +462,7 @@ async def get_compliance_report(
 async def verify_record_integrity(
     entity_id: uuid.UUID,
     record_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -468,6 +487,7 @@ async def verify_record_integrity(
 async def verify_fiscal_year_integrity(
     entity_id: uuid.UUID,
     fiscal_year: int,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -486,6 +506,7 @@ async def verify_fiscal_year_integrity(
 @router.get("/{entity_id}/audit/vault/fiscal-years")
 async def get_available_fiscal_years(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -515,6 +536,7 @@ async def set_legal_hold(
     record_id: uuid.UUID,
     enable: bool = Query(True, description="Enable or disable legal hold"),
     reason: Optional[str] = Query(None, description="Reason for legal hold"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

@@ -16,8 +16,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_entity_id, require_within_usage_limit
+from app.dependencies import get_current_user, get_current_entity_id, require_within_usage_limit, require_entity_access
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.models.accounting import (
     AccountType, JournalEntryStatus, JournalEntryType, FiscalPeriodStatus
 )
@@ -52,6 +53,7 @@ router = APIRouter(prefix="/api/v1/entities/{entity_id}/accounting", tags=["Acco
 @router.get("/chart-of-accounts", response_model=List[ChartOfAccountsResponse])
 async def list_chart_of_accounts(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     account_type: Optional[AccountType] = Query(None, description="Filter by account type"),
     is_active: bool = Query(True, description="Filter by active status"),
     include_headers: bool = Query(True, description="Include header accounts"),
@@ -72,6 +74,7 @@ async def list_chart_of_accounts(
 @router.get("/chart-of-accounts/tree", response_model=ChartOfAccountsTree)
 async def get_chart_of_accounts_tree(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -137,6 +140,7 @@ async def get_chart_of_accounts_tree(
 @router.post("/chart-of-accounts", response_model=ChartOfAccountsResponse, status_code=status.HTTP_201_CREATED)
 async def create_account(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: ChartOfAccountsCreate = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -175,6 +179,7 @@ async def create_account(
 @router.get("/chart-of-accounts/{account_id}", response_model=ChartOfAccountsResponse)
 async def get_account(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     account_id: uuid.UUID = Path(..., description="Account ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -190,6 +195,7 @@ async def get_account(
 @router.put("/chart-of-accounts/{account_id}", response_model=ChartOfAccountsResponse)
 async def update_account(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     account_id: uuid.UUID = Path(..., description="Account ID"),
     data: ChartOfAccountsUpdate = ...,
     db: AsyncSession = Depends(get_db),
@@ -213,6 +219,7 @@ async def update_account(
 @router.post("/chart-of-accounts/initialize", response_model=List[ChartOfAccountsResponse])
 async def initialize_chart_of_accounts(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -242,6 +249,7 @@ async def initialize_chart_of_accounts(
 @router.get("/fiscal-years", response_model=List[FiscalYearResponse])
 async def list_fiscal_years(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -253,6 +261,7 @@ async def list_fiscal_years(
 @router.post("/fiscal-years", response_model=FiscalYearResponse, status_code=status.HTTP_201_CREATED)
 async def create_fiscal_year(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: FiscalYearCreate = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -275,6 +284,7 @@ async def create_fiscal_year(
 @router.get("/fiscal-years/current", response_model=FiscalYearResponse)
 async def get_current_fiscal_year(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -292,6 +302,7 @@ async def get_current_fiscal_year(
 @router.get("/fiscal-periods/for-date", response_model=FiscalPeriodResponse)
 async def get_period_for_date(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     entry_date: date = Query(..., description="Date to find period for"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -314,6 +325,7 @@ async def get_period_for_date(
 @router.get("/journal-entries", response_model=JournalEntryListResponse)
 async def list_journal_entries(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: Optional[date] = Query(None, description="Filter from date"),
     end_date: Optional[date] = Query(None, description="Filter to date"),
     status: Optional[JournalEntryStatus] = Query(None, description="Filter by status"),
@@ -350,6 +362,7 @@ async def list_journal_entries(
 @router.post("/journal-entries", response_model=JournalEntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_journal_entry(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: JournalEntryCreate = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -401,6 +414,7 @@ async def create_journal_entry(
 @router.get("/journal-entries/{entry_id}", response_model=JournalEntryResponse)
 async def get_journal_entry(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     entry_id: uuid.UUID = Path(..., description="Journal Entry ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -416,6 +430,7 @@ async def get_journal_entry(
 @router.post("/journal-entries/{entry_id}/post", response_model=JournalEntryResponse)
 async def post_journal_entry(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     entry_id: uuid.UUID = Path(..., description="Journal Entry ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -452,6 +467,7 @@ async def post_journal_entry(
 @router.post("/journal-entries/{entry_id}/reverse", response_model=JournalEntryResponse)
 async def reverse_journal_entry(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     entry_id: uuid.UUID = Path(..., description="Journal Entry ID"),
     reversal_date: date = Query(..., description="Date for reversal entry"),
     reason: str = Query(..., min_length=5, description="Reason for reversal"),
@@ -481,6 +497,7 @@ async def reverse_journal_entry(
 @router.post("/gl/post", response_model=GLPostingResponse)
 async def post_to_general_ledger(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     request: GLPostingRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -521,6 +538,7 @@ async def post_to_general_ledger(
 @router.get("/reports/trial-balance", response_model=TrialBalanceReport)
 async def get_trial_balance(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -533,6 +551,7 @@ async def get_trial_balance(
 @router.get("/reports/income-statement", response_model=IncomeStatementReport)
 async def get_income_statement(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: date = Query(..., description="Period start date"),
     end_date: date = Query(..., description="Period end date"),
     db: AsyncSession = Depends(get_db),
@@ -546,6 +565,7 @@ async def get_income_statement(
 @router.get("/reports/balance-sheet", response_model=BalanceSheetReport)
 async def get_balance_sheet(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -558,6 +578,7 @@ async def get_balance_sheet(
 @router.get("/reports/cash-flow-statement", response_model=CashFlowStatementReport)
 async def get_cash_flow_statement(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: date = Query(..., description="Start date of reporting period"),
     end_date: date = Query(..., description="End date of reporting period"),
     db: AsyncSession = Depends(get_db),
@@ -582,6 +603,7 @@ async def get_cash_flow_statement(
 @router.get("/periods/{period_id}/close-checklist", response_model=PeriodCloseChecklist)
 async def get_period_close_checklist(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     period_id: uuid.UUID = Path(..., description="Fiscal Period ID"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -597,6 +619,7 @@ async def get_period_close_checklist(
 @router.post("/periods/close", response_model=PeriodCloseResponse)
 async def close_fiscal_period(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     request: PeriodCloseRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -624,6 +647,7 @@ async def close_fiscal_period(
 @router.get("/fixed-assets/summary", response_model=FixedAssetRegisterSummary)
 async def get_fixed_asset_summary(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -648,6 +672,7 @@ async def get_fixed_asset_summary(
 @router.get("/fixed-assets/validate", response_model=GLFixedAssetValidation)
 async def validate_fixed_asset_gl_balances(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Validation date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -676,6 +701,7 @@ async def validate_fixed_asset_gl_balances(
 @router.get("/reports/balance-sheet-enhanced", response_model=EnhancedBalanceSheetReport)
 async def get_enhanced_balance_sheet(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     include_fixed_asset_details: bool = Query(True, description="Include detailed fixed asset breakdown"),
     validate_fixed_assets: bool = Query(True, description="Validate GL vs Fixed Asset Register"),
@@ -712,6 +738,7 @@ async def get_enhanced_balance_sheet(
 @router.get("/source-systems/inventory")
 async def get_inventory_summary_for_gl(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -735,6 +762,7 @@ async def get_inventory_summary_for_gl(
 @router.get("/source-systems/accounts-receivable")
 async def get_ar_aging_summary(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -758,6 +786,7 @@ async def get_ar_aging_summary(
 @router.get("/source-systems/accounts-payable")
 async def get_ap_aging_summary(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -781,6 +810,7 @@ async def get_ap_aging_summary(
 @router.get("/source-systems/payroll")
 async def get_payroll_summary_for_gl(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     period_start: date = Query(..., description="Period start date"),
     period_end: date = Query(..., description="Period end date"),
     db: AsyncSession = Depends(get_db),
@@ -812,6 +842,7 @@ async def get_payroll_summary_for_gl(
 @router.get("/source-systems/bank")
 async def get_bank_summary_for_gl(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -835,6 +866,7 @@ async def get_bank_summary_for_gl(
 @router.get("/source-systems/expense-claims")
 async def get_expense_claims_summary_for_gl(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -857,6 +889,7 @@ async def get_expense_claims_summary_for_gl(
 @router.get("/source-systems/summary")
 async def get_gl_source_system_summary(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: date = Query(..., description="Report date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -893,6 +926,7 @@ async def get_gl_source_system_summary(
 @router.post("/sync-from-source-systems")
 async def sync_gl_from_source_systems(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: Optional[date] = Query(None, description="Sync as of date (defaults to today)"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -931,6 +965,7 @@ async def sync_gl_from_source_systems(
 @router.post("/recalculate-balances")
 async def recalculate_gl_balances(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
