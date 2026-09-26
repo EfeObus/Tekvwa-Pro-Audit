@@ -634,7 +634,15 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       `tests/test_report_template_entity_access.py` (4 HTTP-level tests covering `create_template`
       and `clone_template`, including the `target_entity_id` fix — `list_templates` has no HTTP test
       here, for the routing-collision reason above, relying on the AST sweep instead for that one).
-- [ ] `reports.py` — 21
+- [x] `reports.py` — 21. **Done 2026-09-26 — fixed all 22, not 21.** The excluded 22nd endpoint,
+      `subscribe_to_compliance_alerts`, was deemed low-risk by the original audit because its
+      underlying service call is an unimplemented stub (nothing is read or persisted). Added
+      `Depends(require_entity_access)` to it anyway: the check is harmless on a no-op endpoint and
+      pre-emptively covers it once the stub is implemented for real, rather than relying on whoever
+      implements it later to remember the check. Verified via the AST structural sweep (all 22, bare
+      `entity_id: uuid.UUID` path params) and new `tests/test_reports_entity_access.py` (3 HTTP-level
+      tests — this router has no SKU feature gate, unlike several prior files, so HTTP testing is
+      practical here).
 - [ ] `tax_2026.py` — 4
 - [ ] `year_end.py` — 12 (**delete `resolve_entity_id` entirely** — it is a confirmed fake safety net,
       not a helper worth keeping in any form)
@@ -1661,7 +1669,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` migrated (117/164 endpoints per the original tally, 2026-09-26). 5 files / 46 endpoints remain (`reports.py`, `tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` (`group_id`, 17 endpoints), `ml_ai.py` (`detect_anomalies`), and `report_template.py` (`clone_template`'s `target_entity_id`) each got a same-root-cause fix beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` + `reports.py` migrated (138/164 endpoints per the original tally, 2026-09-26). 4 files / 25 endpoints remain (`tax_2026.py`, `year_end.py`, `report_export.py`, `entities.py`). `consolidation.py` (`group_id`, 17 endpoints), `ml_ai.py` (`detect_anomalies`), `report_template.py` (`clone_template`'s `target_entity_id`), and `reports.py` (`subscribe_to_compliance_alerts`) each got a same-root-cause fix beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

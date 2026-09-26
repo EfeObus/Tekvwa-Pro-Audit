@@ -13,11 +13,12 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_active_user, require_entity_access
 from app.services.reports_service import ReportsService
 from app.services.audit_service import AuditService
 from app.models.audit_consolidated import AuditAction
 from app.models.user import User
+from app.models.entity import BusinessEntity
 
 router = APIRouter()
 
@@ -32,6 +33,7 @@ async def get_profit_loss_report(
     start_date: date = Query(..., description="Report period start date"),
     end_date: date = Query(..., description="Report period end date"),
     include_details: bool = Query(False, description="Include transaction details"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -66,6 +68,7 @@ async def get_cash_flow_report(
     entity_id: uuid.UUID,
     start_date: date = Query(..., description="Report period start date"),
     end_date: date = Query(..., description="Report period end date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -98,6 +101,7 @@ async def get_income_expense_summary(
     entity_id: uuid.UUID,
     start_date: date = Query(..., description="Report period start date"),
     end_date: date = Query(..., description="Report period end date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -119,6 +123,7 @@ async def get_income_expense_summary(
 @router.get("/{entity_id}/reports/dashboard")
 async def get_dashboard_metrics(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -144,6 +149,7 @@ async def get_dashboard_metrics(
 async def get_compliance_health(
     entity_id: uuid.UUID,
     include_alerts: bool = Query(True, description="Include threshold alerts"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -183,6 +189,7 @@ async def get_compliance_health(
 @router.get("/{entity_id}/reports/compliance-health/thresholds")
 async def get_compliance_thresholds(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -206,6 +213,7 @@ async def get_compliance_thresholds(
 async def get_compliance_alerts(
     entity_id: uuid.UUID,
     severity: Optional[str] = Query(None, description="Filter by severity: critical, warning, info"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -235,6 +243,7 @@ async def get_compliance_alerts(
 async def subscribe_to_compliance_alerts(
     entity_id: uuid.UUID,
     alert_types: list = Query(["critical", "warning"], description="Alert types to subscribe to"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -268,6 +277,7 @@ async def get_vat_return_report(
     entity_id: uuid.UUID,
     year: int = Query(..., ge=2020, le=2100, description="Tax year"),
     month: int = Query(..., ge=1, le=12, description="Tax month"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -295,6 +305,7 @@ async def get_paye_summary_report(
     entity_id: uuid.UUID,
     year: int = Query(..., ge=2020, le=2100, description="Tax year"),
     month: Optional[int] = Query(None, ge=1, le=12, description="Tax month (optional)"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -321,6 +332,7 @@ async def get_wht_summary_report(
     entity_id: uuid.UUID,
     start_date: date = Query(..., description="Report period start date"),
     end_date: date = Query(..., description="Report period end date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -346,6 +358,7 @@ async def get_wht_summary_report(
 async def get_cit_report(
     entity_id: uuid.UUID,
     fiscal_year: int = Query(..., ge=2020, le=2100, description="Fiscal year"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -376,6 +389,7 @@ async def get_cit_report(
 async def get_trial_balance(
     entity_id: uuid.UUID,
     as_of_date: date = Query(..., description="Trial balance as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -400,6 +414,7 @@ async def get_trial_balance(
 async def get_balance_sheet(
     entity_id: uuid.UUID,
     as_of_date: date = Query(..., description="Balance sheet as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -425,6 +440,7 @@ async def get_balance_sheet(
 async def get_fixed_assets_report(
     entity_id: uuid.UUID,
     as_of_date: date = Query(..., description="Report as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -455,6 +471,7 @@ async def export_profit_loss_pdf(
     entity_id: uuid.UUID,
     start_date: date = Query(..., description="Report period start date"),
     end_date: date = Query(..., description="Report period end date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -490,6 +507,7 @@ async def export_profit_loss_pdf(
 async def export_trial_balance_pdf(
     entity_id: uuid.UUID,
     as_of_date: date = Query(..., description="Trial balance as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -518,6 +536,7 @@ async def export_trial_balance_pdf(
 async def export_fixed_assets_pdf(
     entity_id: uuid.UUID,
     as_of_date: date = Query(..., description="Report as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -618,6 +637,7 @@ async def get_aged_payables(
     as_of_date: Optional[date] = Query(None, description="Aging as of date (defaults to today)"),
     vendor_id: Optional[uuid.UUID] = Query(None, description="Filter by specific vendor"),
     min_amount: Optional[float] = Query(None, ge=0, description="Minimum amount threshold"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -714,6 +734,7 @@ async def get_aged_receivables(
     customer_id: Optional[uuid.UUID] = Query(None, description="Filter by specific customer"),
     min_amount: Optional[float] = Query(None, ge=0, description="Minimum amount threshold"),
     exceeds_credit_limit: Optional[bool] = Query(None, description="Filter customers exceeding credit limit"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -812,6 +833,7 @@ async def get_aged_receivables(
 async def export_aged_payables_pdf(
     entity_id: uuid.UUID,
     as_of_date: Optional[date] = Query(None, description="Aging as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):
@@ -841,6 +863,7 @@ async def export_aged_payables_pdf(
 async def export_aged_receivables_pdf(
     entity_id: uuid.UUID,
     as_of_date: Optional[date] = Query(None, description="Aging as of date"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ):

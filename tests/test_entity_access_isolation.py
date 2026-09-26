@@ -46,6 +46,7 @@ MIGRATED_ROUTER_FILES = [
     "forensic_audit.py",
     "fx.py",
     "report_template.py",
+    "reports.py",
     # ml_ai.py is NOT added here: 3 of its 4 in-scope endpoints (forecast_cash_flow, predict_growth,
     # detect_anomalies) take entity_id nested inside a POST request body, not as a function parameter
     # this AST sweep can see -- adding it would silently skip verifying them (no entity_id param means
