@@ -356,7 +356,7 @@ class PAYEService:
             select(
                 func.count(PAYERecord.id).label("employee_count"),
                 func.coalesce(func.sum(PAYERecord.gross_salary), 0).label("total_gross"),
-                func.coalesce(func.sum(PAYERecord.tax_amount), 0).label("total_tax"),
+                func.coalesce(func.sum(PAYERecord.paye_tax), 0).label("total_tax"),
             )
             .where(PAYERecord.entity_id == entity_id)
             .where(PAYERecord.period_year == year)

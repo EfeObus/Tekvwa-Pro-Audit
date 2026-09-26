@@ -409,15 +409,66 @@ class VATCalculator:
 
 ### 6.2 Multi-Tenancy Strategy
 
-**Approach:** Shared database with tenant isolation via `entity_id`
+**Approach:** Shared database with tenant isolation via `entity_id`. All financial tables include an
+`entity_id` foreign key to `business_entities`, which in turn belongs to an `organization`.
 
-```sql
--- All financial tables include entity_id
--- Row-Level Security (RLS) enforces isolation
+**Enforcement is at the application layer, not the database layer.** An earlier version of this
+document described row-level security (a `CREATE POLICY ... USING (entity_id IN (...))` clause) as
+the isolation mechanism; that was never actually implemented. The real, current mechanism — added
+2026-09-26 while closing Finding 18 (docs/PRODUCTION_AUDIT_2026.md), 164 confirmed cross-tenant IDOR
+endpoints across 17 router files — is a single, centralized FastAPI dependency:
 
-CREATE POLICY entity_isolation ON transactions
-  USING (entity_id IN (SELECT entity_id FROM user_entity_access WHERE user_id = current_user_id()));
+```python
+# app/dependencies.py
+async def require_entity_access(
+    entity_id: uuid.UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> BusinessEntity:
+    entity = await EntityService(db).get_entity_by_id(entity_id, current_user)
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entity not found or access denied")
+    return entity
 ```
+
+**This is the mandatory pattern for any new endpoint that takes an `entity_id`:**
+
+```python
+@router.get("/{entity_id}/some-resource")
+async def get_some_resource(
+    entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),  # add this line
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    ...
+```
+
+FastAPI resolves a path/query parameter once per request and supplies it to every callable in the
+dependency tree that declares a matching parameter name — so adding `Depends(require_entity_access)`
+as an extra parameter is sufficient; no endpoint body needs to change. `EntityService.get_entity_by_id`
+filters by `BusinessEntity.organization_id == current_user.organization_id` in the query itself
+(platform staff are the one intentional exception, matching their support-access role), so no role —
+including OWNER — bypasses cross-organization isolation.
+
+If `entity_id` is an *optional* query parameter (a `Depends()` would make it mandatory), call the
+dependency inline instead, only when a value is actually provided:
+
+```python
+if entity_id is not None:
+    await require_entity_access(entity_id=entity_id, current_user=current_user, db=db)
+```
+
+For a `group_id`-keyed resource (e.g. consolidation entity groups) that has its own organization
+ownership, use the equivalent `require_group_access` dependency rather than reimplementing the check.
+
+**Do not use** the older `verify_entity_access` helper in `app/dependencies.py` for new code — it
+predates this fix and has a known "additive, not restrictive" bug (grants access on shared
+`organization_id` alone, without requiring a specific `UserEntityAccess` grant); it remains in place
+only because 10 pre-existing router files still depend on it and fixing those is tracked separately.
+
+Full remediation history for Finding 18, including several same-root-cause gaps and unrelated
+crash bugs discovered and fixed while closing it, is in `docs/REMEDIATION_LOG.md`'s Phase 2 entries.
 
 ### 6.3 Audit Trail Design
 

@@ -383,7 +383,7 @@ class ReportsService:
         query = select(
             func.count(PAYERecord.id).label("employee_count"),
             func.sum(PAYERecord.gross_salary).label("total_gross"),
-            func.sum(PAYERecord.tax_amount).label("total_paye"),
+            func.sum(PAYERecord.paye_tax).label("total_paye"),
         ).where(PAYERecord.entity_id == entity_id).where(PAYERecord.period_year == year)
         
         if month:

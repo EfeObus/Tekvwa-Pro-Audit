@@ -177,6 +177,13 @@ Tekvwa Pro Audit uses a **multi-tenant, entity-scoped architecture** where:
                            └───────────────────────────────────────────────────────────────┘
 ```
 
+**Access enforcement note:** this diagram shows the *data* relationships (an entity belongs to one
+organization; a user may have specific per-entity grants via `USER_ENTITY_ACCESS`). The actual
+*enforcement* that a request for a given `entity_id` belongs to the caller's own organization happens
+at the application layer, not via a database constraint or row-level security policy — see
+`docs/TECHNICAL_ARCHITECTURE.md` §6.2 for the `require_entity_access` dependency every entity-scoped
+API endpoint must use.
+
 ---
 
 ## 4. Accounting Module ERD

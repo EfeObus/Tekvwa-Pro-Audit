@@ -309,6 +309,39 @@ def calculate_paye(annual_salary: Decimal) -> PAYEResult:
     pass
 ```
 
+### Multi-Tenant Entity Access (Mandatory)
+
+Any new endpoint that takes an `entity_id` **must** use the centralized `require_entity_access`
+dependency (`app/dependencies.py`) to verify the caller's organization owns that entity — this is not
+optional, and PRs adding an entity-scoped endpoint without it will be asked to add it:
+
+```python
+@router.get("/{entity_id}/some-resource")
+async def get_some_resource(
+    entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),  # required
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    ...
+```
+
+If `entity_id` is an optional query parameter, call the dependency inline instead (a `Depends()`
+would make the parameter mandatory):
+
+```python
+if entity_id is not None:
+    await require_entity_access(entity_id=entity_id, current_user=current_user, db=db)
+```
+
+Use the equivalent `require_group_access` for a `group_id`-keyed resource with its own organization
+ownership. Do not use the older `verify_entity_access` helper for new code (see
+`docs/TECHNICAL_ARCHITECTURE.md` §6.2 for why). See `tests/test_entity_access_isolation.py` for the
+AST-based structural check and unit tests that verify this pattern, and
+`tests/test_phase2_comprehensive_entity_isolation.py` for the parameterized cross-tenant regression
+suite — any new entity-scoped router file added to Phase 2's migrated set should extend one of these
+rather than hand-rolling a new test pattern.
+
 ### Testing Guidelines
 
 ```python

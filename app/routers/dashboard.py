@@ -1410,6 +1410,64 @@ async def get_kpis(
     return kpis
 
 
+@router.get("/kpis/comparison")
+async def compare_kpis(
+    entity_id: uuid.UUID = Query(..., description="Entity ID"),
+    current_period: KPIPeriod = Query(KPIPeriod.MONTH),
+    compare_period: KPIPeriod = Query(KPIPeriod.MONTH),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Compare KPIs between two periods.
+
+    Returns side-by-side comparison with change percentages.
+    """
+    if not current_user.is_platform_staff:
+        if not has_organization_permission(current_user.role, OrganizationPermission.VIEW_REPORTS):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied: view_reports required"
+            )
+
+    # Placeholder comparison data
+    return {
+        "current_period": current_period.value,
+        "compare_period": compare_period.value,
+        "comparison": {
+            "revenue": {
+                "current": 15500000.00,
+                "previous": 13777777.78,
+                "change_amount": 1722222.22,
+                "change_percent": 12.5,
+            },
+            "expenses": {
+                "current": 8750000.00,
+                "previous": 8306451.61,
+                "change_amount": 443548.39,
+                "change_percent": 5.3,
+            },
+            "net_profit": {
+                "current": 4250000.00,
+                "previous": 3471326.16,
+                "change_amount": 778673.84,
+                "change_percent": 22.4,
+            },
+            "tax_health": {
+                "current": 85,
+                "previous": 78,
+                "change_amount": 7,
+                "change_percent": 9.0,
+            },
+        },
+    }
+
+
+# `/kpis/comparison` (above) must be registered before this route: FastAPI/Starlette matches routes
+# in registration order, and this catch-all `{category}` pattern would otherwise shadow the literal
+# `/kpis/comparison` path, treating "comparison" as an (invalid) category value. Confirmed live: this
+# collision made compare_kpis completely unreachable in production (a 422 on every call) until fixed
+# 2026-09-26 -- see docs/REMEDIATION_LOG.md's Phase 2.1 entries.
 @router.get("/kpis/{category}")
 async def get_kpi_detail(
     category: KPICategory,
@@ -1499,59 +1557,6 @@ async def get_kpi_detail(
             "category": category.value,
             "message": "Detailed breakdown not yet implemented",
         }
-
-
-@router.get("/kpis/comparison")
-async def compare_kpis(
-    entity_id: uuid.UUID = Query(..., description="Entity ID"),
-    current_period: KPIPeriod = Query(KPIPeriod.MONTH),
-    compare_period: KPIPeriod = Query(KPIPeriod.MONTH),
-    db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_active_user),
-):
-    """
-    Compare KPIs between two periods.
-    
-    Returns side-by-side comparison with change percentages.
-    """
-    if not current_user.is_platform_staff:
-        if not has_organization_permission(current_user.role, OrganizationPermission.VIEW_REPORTS):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Permission denied: view_reports required"
-            )
-    
-    # Placeholder comparison data
-    return {
-        "current_period": current_period.value,
-        "compare_period": compare_period.value,
-        "comparison": {
-            "revenue": {
-                "current": 15500000.00,
-                "previous": 13777777.78,
-                "change_amount": 1722222.22,
-                "change_percent": 12.5,
-            },
-            "expenses": {
-                "current": 8750000.00,
-                "previous": 8306451.61,
-                "change_amount": 443548.39,
-                "change_percent": 5.3,
-            },
-            "net_profit": {
-                "current": 4250000.00,
-                "previous": 3471326.16,
-                "change_amount": 778673.84,
-                "change_percent": 22.4,
-            },
-            "tax_health": {
-                "current": 85,
-                "previous": 78,
-                "change_amount": 7,
-                "change_percent": 9.0,
-            },
-        },
-    }
 
 
 # ===========================================

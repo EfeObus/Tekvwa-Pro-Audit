@@ -2775,6 +2775,113 @@ yet started):**
 4. The "Document" step: updating `docs/DATA_MODEL_ERD.md`/`docs/TECHNICAL_ARCHITECTURE.md`/
    `CONTRIBUTING.md` with `require_entity_access` as the documented standard pattern.
 
+## Phase 2.1's own comprehensive test step: the single parameterized suite, 6 more unrelated bugs found and 2 fixed, documentation step (2026-09-26)
+
+Built `tests/test_phase2_comprehensive_entity_isolation.py` — the "single parameterized pytest
+fixture... one parameterized test that hits every entity-scoped route with a foreign entity ID and
+asserts rejection" the roadmap's own §2.1 test step calls for. Scope: every GET endpoint (88 of them)
+across 7 of the 17 migrated files whose path structure allows reliable automated discovery and
+parameter synthesis from the live OpenAPI schema (`accounting.py`, `audit.py`, `budget.py`,
+`fixed_assets.py`, `forensic_audit.py`, `fx.py`, `reports.py` — see the suite's own docstring for
+exactly why the other 10 files aren't included here and what covers them instead). Each endpoint runs
+as two independent, fully-parametrized pytest cases (176 total): called with a foreign organization's
+`entity_id` (must always get `require_entity_access`'s specific 404), and called with the caller's own
+(must never get that specific 404).
+
+**Two engineering problems solved along the way, both instructive:**
+
+1. **A single shared test session across ~180 requests is fragile in exactly the way this codebase's
+   own tests already avoid.** The first draft ran all endpoints in one test function sharing one
+   `client`/`db_session`. A single unrelated 500 partway through poisoned the whole shared Postgres
+   transaction for every request after it, and a later `db_session.rollback()` recovery attempt hit
+   the same async-lazy-loading `MissingGreenlet` issue documented earlier in this project's session
+   history. Fixed by properly parametrizing with `pytest.mark.parametrize` instead — each endpoint
+   gets its own fully independent fixture set, exactly like every other test in this suite, and
+   `app.openapi()` (synchronous, no client needed) does the endpoint discovery at collection time.
+2. **A bare 404 status code can't distinguish "entity access denied" from "this specific record
+   doesn't exist yet."** Many endpoints legitimately 404 against a freshly-created, empty test entity
+   (`"No active budget found"`, `"Fiscal year not found"`, etc.) for reasons that have nothing to do
+   with Finding 18. Disambiguated by checking for `require_entity_access`'s exact, literal detail
+   string (`"Entity not found or access denied"`) rather than the status code alone — a real
+   cross-tenant rejection always carries this specific message; a business-logic 404 never does.
+
+**Primary result: 100% of the 88 endpoints correctly reject a foreign organization's `entity_id` —
+zero exceptions.** This is the actual Finding 18 property the roadmap wanted proven, and it held
+across every single endpoint tested.
+
+**Secondary result: running the "own entity should work" side of the check surfaced 7 more genuine,
+severe, pre-existing bugs — all completely unrelated to entity access, all crashes on every call
+regardless of who's asking:**
+
+| Endpoint | Bug | Fixed? |
+|---|---|---|
+| `reports.py::get_paye_summary_report` | `PAYERecord.tax_amount` referenced; the real column is `paye_tax` | **Fixed** (1-line rename) |
+| (found alongside it) `tax_calculators/paye_service.py`'s PAYE summary | Identical `PAYERecord.tax_amount` typo, different call site | **Fixed** (1-line rename) |
+| `reports.py::export_aged_payables_pdf` | `ReportsService.export_aged_payables_pdf` doesn't exist at all | Documented, not fixed — needs real implementation |
+| `reports.py::export_aged_receivables_pdf` | Same: `export_aged_receivables_pdf` doesn't exist | Documented, not fixed |
+| `fixed_assets.py::get_depreciation_schedule` | Router passes a `fiscal_year_end: date`; service only accepts `fiscal_year: int` | Documented, not fixed — needs a date→fiscal-year mapping decision |
+| `fixed_assets.py::get_capital_gains_report` | Router passes `start_date`/`end_date`; service only accepts `fiscal_year: int` | Documented, not fixed |
+| `accounting.py`'s AR aging query (hit via 2 endpoints: `source-systems/accounts-receivable`, `source-systems/summary`) | `InvoiceStatus.OVERDUE` and `InvoiceStatus.PARTIAL` don't exist on the real enum (only `PARTIALLY_PAID`) | Documented, not fixed — needs a decision on how "overdue" should actually be derived (likely `due_date` comparison, not a stored status) |
+
+The 2 one-line renames were fixed immediately (same class of trivial, unambiguous crash fix as
+`tax_2026.py`'s missing-argument bug and `entities.py::restore_entity`'s `ImportError` earlier in this
+phase). The other 5 are genuine contract mismatches or missing implementations — fixing them requires
+a real design decision (how should a date range map to a fiscal year? how should "overdue" actually
+be computed?), not a safe rename, so they're recorded as `xfail` with the specific reason in the test
+file itself and left for a dedicated pass, consistent with how this phase has handled every other
+bug of this size (the `report_template.py` routing collision, the `YearEndClosingService` systemic
+gap).
+
+**A related, quantified-but-not-fixed finding:** the `except HTTPException: raise` gap fixed in
+`year_end.py`/`report_export.py` (silently converting `require_entity_access`'s 404s into 500s) is
+not isolated to those two files. A quick repo-wide count of `except Exception as e:` blocks lacking a
+preceding `except HTTPException` guard found the same pattern in **27 more router files** (including
+`forensic_audit.py`, 10 instances; `admin_platform_staff.py`, 10; `business_intelligence.py`, 6, among
+others) — potentially 90+ more endpoints where a legitimate `HTTPException` from anywhere in the call
+stack gets silently re-wrapped as a 500. Not fixed here (well beyond Phase 2.1's scope), but
+quantified precisely enough that a future dedicated pass doesn't have to rediscover the scope from
+scratch.
+
+**One more routing collision found and fixed while writing the confirmed-safe regression suite.**
+`test_compare_kpis_still_returns_hardcoded_placeholder_data` failed with a `422` instead of `200`:
+`{"field":"path.category","message":"Input should be 'revenue', 'expenses', ... or 'liquidity'"}`.
+`dashboard.py` registers `GET /kpis/{category}` *before* `GET /kpis/comparison` — Starlette matches
+routes in registration order, so every call to `/kpis/comparison` was being caught by the
+`{category}` catch-all first, with `"comparison"` rejected as an invalid category value.
+`compare_kpis` (the confirmed-safe endpoint this suite exists to verify) was completely unreachable
+in production. Unlike the `report_template.py` collision (a cross-file, cross-router ordering issue
+in `main.py`, left documented rather than fixed, since reordering there risks colliding with other
+`entities.py` sub-paths), this one is a same-file, low-risk fix: moved `compare_kpis`'s definition to
+before `get_kpi_detail`'s in the source file. Verified via the same regression test (now `200`) and a
+one-off check that `get_kpi_detail` itself still routes correctly afterward (confirmed via its own
+distinct 404 message, from its own pre-existing per-entity access check, not a routing artifact).
+
+**Documentation step:** `docs/TECHNICAL_ARCHITECTURE.md` §6.2 corrected — it previously described
+tenant isolation as enforced via a PostgreSQL row-level-security policy, which was never actually
+implemented; replaced with the real mechanism (`require_entity_access`) and the pattern for optional
+`entity_id` parameters and `group_id`-keyed resources. `docs/CONTRIBUTING.md` gained a "Multi-Tenant
+Entity Access (Mandatory)" section pointing new endpoint authors at the same pattern and the two test
+suites that verify it. `docs/DATA_MODEL_ERD.md`'s organization/entity/user diagram gained a one-line
+cross-reference note clarifying that the diagram shows data relationships, not enforcement.
+
+**Roadmap:** Phase 2 Section 2.1 is now fully complete per its own stated gate — all 4 of its
+remaining items (the file migrations, the comprehensive test suite, the confirmed-safe regression
+re-check below, and this documentation step) are done. Only Section 2.2 (blocked on a production
+data-integrity check this session cannot perform) remains open in Phase 2.
+
+## Phase 2.1's other stated regression: re-verifying the "24 confirmed safe" bucket (2026-09-26)
+
+Built `tests/test_phase2_confirmed_safe_regression.py`, covering the 9 endpoints the roadmap's own
+§2.1 regression step names explicitly (of the audit's full 24 — the rest are in files Phase 2.1 never
+touched, so carry no regression risk from this phase): `dashboard.py`'s `get_dashboard`,
+`get_widget_layout`, `update_widget_layout`, `compare_kpis`; `notifications.py`'s
+`list_notifications`, `mark_all_as_read`; `reports.py`'s `subscribe_to_compliance_alerts`; `auth.py`'s
+`get_dashboard`; `views.py`'s `set_entity`. Verified each still uses its originally-documented safe
+pattern (unimplemented stubs never referencing `entity_id`, mandatory `user_id`-based query scoping,
+delegation to an already-correct service method, or — for `set_entity` — no data access at all, just
+an `httponly` cookie). None of these were touched during this phase's migration work; this suite
+exists to prove that claim mechanically rather than leave it as an unverified docstring assertion.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
