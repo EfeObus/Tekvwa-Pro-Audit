@@ -20,8 +20,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_current_user, require_feature
+from app.dependencies import get_current_user, require_feature, require_entity_access
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.models.sku_enums import Feature
 from app.schemas.accounting import (
     ExchangeRateCreate, ExchangeRateResponse,
@@ -50,6 +51,7 @@ router = APIRouter(
 @router.get("/exchange-rates")
 async def get_exchange_rates(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     base_currency: str = Query("NGN", description="Base currency"),
     rate_date: Optional[date] = Query(None, description="Rate date"),
     db: AsyncSession = Depends(get_db),
@@ -73,6 +75,7 @@ async def get_exchange_rates(
 @router.get("/exchange-rates/{from_currency}/{to_currency}")
 async def get_exchange_rate(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     from_currency: str = Path(..., min_length=3, max_length=3),
     to_currency: str = Path(..., min_length=3, max_length=3),
     rate_date: Optional[date] = Query(None, description="Rate date"),
@@ -104,6 +107,7 @@ async def get_exchange_rate(
 @router.post("/exchange-rates", response_model=ExchangeRateResponse)
 async def create_exchange_rate(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: ExchangeRateCreate = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -132,6 +136,7 @@ async def create_exchange_rate(
 @router.post("/convert", response_model=CurrencyConversionResponse)
 async def convert_currency(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: CurrencyConversionRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -175,6 +180,7 @@ async def convert_currency(
 @router.get("/exposure")
 async def get_fx_exposure(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     as_of_date: Optional[date] = Query(None, description="As of date"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -209,6 +215,7 @@ async def get_fx_exposure(
 @router.get("/exposure/{currency}")
 async def get_fx_exposure_by_currency(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     currency: str = Path(..., min_length=3, max_length=3),
     as_of_date: Optional[date] = Query(None, description="As of date"),
     db: AsyncSession = Depends(get_db),
@@ -234,6 +241,7 @@ async def get_fx_exposure_by_currency(
 @router.post("/realized-gain-loss", response_model=FXRevaluationResponse)
 async def calculate_realized_fx_gain_loss(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: RealizedFXGainLossRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -278,6 +286,7 @@ async def calculate_realized_fx_gain_loss(
 @router.post("/period-end-revaluation")
 async def run_period_end_revaluation(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     data: PeriodEndRevaluationRequest = ...,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -321,6 +330,7 @@ async def run_period_end_revaluation(
 @router.get("/reports/gain-loss")
 async def get_fx_gain_loss_report(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     start_date: date = Query(..., description="Report start date"),
     end_date: date = Query(..., description="Report end date"),
     currency: Optional[str] = Query(None, description="Filter by currency"),
@@ -349,6 +359,7 @@ async def get_fx_gain_loss_report(
 @router.get("/reports/fx-accounts")
 async def get_fx_accounts(
     entity_id: uuid.UUID = Path(..., description="Entity ID"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
