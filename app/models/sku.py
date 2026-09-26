@@ -503,7 +503,13 @@ class PaymentTransaction(BaseModel):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    
+
+    tenant_sku_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenant_skus.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     # Paystack references
     reference: Mapped[str] = mapped_column(
         String(100),
@@ -559,7 +565,7 @@ class PaymentTransaction(BaseModel):
     )
     
     # Fee tracking
-    paystack_fee_kobo: Mapped[Optional[int]] = mapped_column(
+    fee_kobo: Mapped[Optional[int]] = mapped_column(
         BigInteger,
         nullable=True,
         comment="Paystack transaction fee in kobo"
@@ -594,6 +600,11 @@ class PaymentTransaction(BaseModel):
         nullable=True,
         comment="card, bank_transfer, ussd, etc."
     )
+    channel: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="Paystack payment channel"
+    )
     card_type: Mapped[Optional[str]] = mapped_column(
         String(50),
         nullable=True,
@@ -603,34 +614,56 @@ class PaymentTransaction(BaseModel):
         String(4),
         nullable=True,
     )
-    bank_name: Mapped[Optional[str]] = mapped_column(
+    card_exp_month: Mapped[Optional[str]] = mapped_column(
+        String(2),
+        nullable=True,
+    )
+    card_exp_year: Mapped[Optional[str]] = mapped_column(
+        String(4),
+        nullable=True,
+    )
+    card_bank: Mapped[Optional[str]] = mapped_column(
         String(100),
         nullable=True,
     )
-    
+    card_brand: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+    customer_email: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+    customer_code: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    callback_url: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     # Timestamps - with indexes for date range queries (#43)
-    initiated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        nullable=False,
-        default=datetime.utcnow,
-        index=True,
-        comment="When payment was initiated - indexed for reporting"
-    )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
+    paid_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
         index=True,
-        comment="When payment was confirmed - indexed for reporting"
+        comment="When payment was confirmed successful",
     )
-    expires_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
+    verified_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
-        comment="When payment intent expires"
+        comment="When payment was verified with the provider",
+    )
+    failed_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="When payment failed",
     )
     
     # Webhook tracking
     webhook_received_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
     )
     webhook_event_id: Mapped[Optional[str]] = mapped_column(
@@ -640,8 +673,16 @@ class PaymentTransaction(BaseModel):
     )
     
     # Error tracking
-    failure_reason: Mapped[Optional[str]] = mapped_column(
-        String(500),
+    error_code: Mapped[Optional[str]] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+    error_message: Mapped[Optional[str]] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    retry_count: Mapped[Optional[int]] = mapped_column(
+        Integer,
         nullable=True,
     )
     gateway_response: Mapped[Optional[str]] = mapped_column(
@@ -649,26 +690,26 @@ class PaymentTransaction(BaseModel):
         nullable=True,
         comment="Raw gateway response message"
     )
-    
+
     # Full response storage (for debugging/audit)
     paystack_response: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON,
         nullable=True,
         comment="Full Paystack API response"
     )
-    
+
     # Custom metadata
     custom_metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
         JSON,
         nullable=True,
         comment="Custom metadata for the transaction"
     )
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    
+
     # Refund tracking
     refunded_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
         comment="When refund was processed"
     )
@@ -715,10 +756,10 @@ class PaymentTransaction(BaseModel):
     @property
     def fee_naira(self) -> Optional[int]:
         """Get Paystack fee in Naira."""
-        if self.paystack_fee_kobo:
-            return self.paystack_fee_kobo // 100
+        if self.fee_kobo:
+            return self.fee_kobo // 100
         return None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
@@ -733,9 +774,10 @@ class PaymentTransaction(BaseModel):
             "billing_cycle": self.billing_cycle,
             "payment_method": self.payment_method,
             "card_last4": self.card_last4,
-            "initiated_at": self.initiated_at.isoformat() if self.initiated_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
-            "failure_reason": self.failure_reason,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "paid_at": self.paid_at.isoformat() if self.paid_at else None,
+            "failed_at": self.failed_at.isoformat() if self.failed_at else None,
+            "failure_reason": self.error_message,
         }
 
 

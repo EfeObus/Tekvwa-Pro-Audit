@@ -1496,8 +1496,78 @@ capture instead of autogenerate (safe here specifically because zero DDL was nee
 Autogenerate-based verification will need this local DB rebuilt (or repointed at a fresh one)
 before it can be used for future tables in this batch.
 
-**Status:** ✅ Fixed and tested locally, not yet committed (this table's commit/push is the very
-next step, same session). 18 of the original 66 Finding-50 tables remain once this deploys.
+**Status:** ✅ Fixed, tested, committed (`293595e`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account (same as the payroll_advanced.py fix above) — not attempted.
+18 of the original 66 Finding-50 tables remained after this one; see the next entry for the
+current count.
+
+---
+
+## Finding 50 progress — payment_transactions, worst structural break found so far (2026-09-25)
+
+`app/services/billing_service.py`'s two real construction sites for `PaymentTransaction`
+(`create_payment_intent()`, and the invoice-payment webhook handler) always passed
+`transaction_type="payment"` or `"subscription"` — but the live column's Postgres type was the
+`transactiontype` **enum shared with the unrelated accounting `Transaction` model**, whose only
+members are `INCOME`/`EXPENSE`. Every real insert has always failed with `invalid input value for
+enum transactiontype`. Independently, the old model also had a `NOT NULL` `initiated_at` column
+with a Python-side default that never existed on the live table at all — so every insert attempt
+already failed before `transaction_type` was ever reached. **This table has never been able to
+hold a single row.** Every Paystack payment/subscription/webhook flow that touches
+`payment_transactions` has been silently broken since this table was introduced.
+
+- **Column type fix (migration `b4aa55783317`):** `transaction_type` changed from the shared
+  `transactiontype` enum to `VARCHAR(50)` with `server_default='subscription'`, matching this same
+  table's sibling columns (`tier`, `billing_cycle`, `intelligence_addon`) — the model's own
+  pre-existing comment says these were deliberately converted from enum to VARCHAR "for
+  flexibility"; `transaction_type` was evidently meant to get the same treatment and didn't. The
+  shared `transactiontype` enum itself is untouched (still used by `transactions.transaction_type`).
+- **Renames (model-only, DB already correct, zero migration):** `paystack_fee_kobo`→`fee_kobo`,
+  `bank_name`→`card_bank`, `failure_reason`→`error_message` (the last one found only after a
+  post-fix field-by-field diff against a fresh `\d` capture — `payment_tx.failure_reason = ...` at
+  6 call sites across every failure/refund-failure branch in `billing_service.py` was silently
+  writing to an attribute with no matching column at all, meaning no failure reason has ever been
+  persisted for a failed payment).
+- **Added (model-only, real DB columns already there, zero migration):** `tenant_sku_id`,
+  `channel`, `card_exp_month`, `card_exp_year`, `card_brand`, `customer_email`, `customer_code`,
+  `callback_url`, `paid_at`, `verified_at`, `failed_at`, `error_code`, `retry_count`, `notes`.
+  `app/routers/billing.py`'s `PaymentTransactionResponse` construction already read `tx.channel`,
+  `tx.card_brand`, and `tx.paid_at` directly off the ORM object — confirming these were already
+  real, expected attributes the router depended on, just never mapped.
+- **Removed (model-only, no matching DB column, ever):** `initiated_at` (unused anywhere, but
+  `NOT NULL` with a default — guaranteed to crash every single insert on its own), `completed_at`
+  (used at 8 call sites; the live table actually has three distinct columns —`paid_at`/
+  `verified_at`/`failed_at` — so each of the 8 sites was re-pointed at the semantically correct one
+  instead of a single generic timestamp; one site in `_handle_charge_success()` was fully redundant
+  with an adjacent `paid_at` assignment and simply removed), `expires_at` (real usage exists, but
+  on the unrelated `PaymentIntent` dataclass, not this ORM model), `user_agent` (zero usage).
+- **Timezone fix:** `webhook_received_at` and `refunded_at` were declared as plain `DateTime` (no
+  `timezone=True`) despite the live columns being `timestamp with time zone` — silently "worked" in
+  production only because every call site used the deprecated timezone-naive `datetime.utcnow()`;
+  caught by this table's own new regression test using the modern `datetime.now(timezone.utc)`
+  pattern, which raised `can't subtract offset-naive and offset-aware datetimes` on insert. Fixed
+  to `DateTime(timezone=True)` on both columns to accept either correctly, matching the
+  `support_ticket_service.py` fix from earlier this session.
+
+**Verified via:** a full migration-chain replay from empty through `b4aa55783317` on
+`tekvwarho_proaudit_test`; a direct `ALTER TABLE`/`\d` round-trip against the local scratch
+database (autogenerate itself still can't run there — see the note on the previous entry — so this
+table's DB change was verified by hand); a new permanent regression test
+(`tests/test_payment_transactions.py`, 4 tests mirroring both real construction sites and the
+success/failure update paths byte-for-byte); and the full existing regression suite plus
+`tests/test_api.py` (137 tests, no regressions).
+
+**Also found and fixed while running tests, unrelated to this table's code:** the previously
+diagnosed Finding 51 test-suite hang (a `db_session` connection/transaction leak) reproduced live
+during this work — a `pytest tests/` run left a Postgres backend `idle in transaction` on
+`tekvwarho_proaudit_test` for over 40 minutes, which then blocked every subsequent test run's
+`CREATE TABLE`/`ALTER TABLE` in `create_all()` with a lock wait. Killing the leaked process
+(`kill -9`) unblocked it immediately — confirms the leak is a real, live-reproducible connection
+leak (not just a theoretical risk), and that recovery is a one-line `kill`, not a Postgres restart.
+Finding 51's actual root cause (why the leak happens) is still not fixed.
+
+**Status:** ✅ Fixed, tested locally, not yet committed (next step, same session). 17 of the
+original 66 Finding-50 tables remain once this deploys.
 
 ---
 

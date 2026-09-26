@@ -1556,7 +1556,7 @@ class BillingService:
                 "type": last_payment.payment_method or "card",
                 "card_type": last_payment.card_type,
                 "last4": last_payment.card_last4,
-                "bank": last_payment.bank_name,
+                "bank": last_payment.card_bank,
             }
         
         if not has_payment_method:
@@ -1976,8 +1976,8 @@ class BillingService:
             # Update transaction record if exists
             if payment_tx:
                 payment_tx.status = "failed"
-                payment_tx.completed_at = datetime.utcnow()
-                payment_tx.failure_reason = result.message
+                payment_tx.failed_at = datetime.utcnow()
+                payment_tx.error_message = result.message
                 payment_tx.gateway_response = result.message
                 payment_tx.error_code = BillingErrorCode.PAYMENT_FAILED.value
                 if result.metadata:
@@ -2005,8 +2005,8 @@ class BillingService:
                 )
                 
                 payment_tx.status = "failed"
-                payment_tx.completed_at = datetime.utcnow()
-                payment_tx.failure_reason = f"Amount mismatch: expected {expected_amount_kobo}, got {verified_amount_kobo}"
+                payment_tx.failed_at = datetime.utcnow()
+                payment_tx.error_message = f"Amount mismatch: expected {expected_amount_kobo}, got {verified_amount_kobo}"
                 payment_tx.error_code = BillingErrorCode.INVALID_AMOUNT.value
                 
                 return PaymentResult(
@@ -2023,18 +2023,19 @@ class BillingService:
         # Update transaction record with success details
         if payment_tx:
             payment_tx.status = "success"
-            payment_tx.completed_at = result.paid_at or datetime.utcnow()
+            payment_tx.paid_at = result.paid_at or datetime.utcnow()
+            payment_tx.verified_at = datetime.utcnow()
             payment_tx.gateway_response = result.message
             payment_tx.error_code = BillingErrorCode.SUCCESS.value
-            
+
             if result.metadata:
                 payment_tx.paystack_response = result.metadata
                 payment_tx.payment_method = result.metadata.get("channel")
                 payment_tx.card_type = result.metadata.get("card_type")
                 payment_tx.card_last4 = result.metadata.get("last4")
-                payment_tx.bank_name = result.metadata.get("bank")
+                payment_tx.card_bank = result.metadata.get("bank")
                 if result.metadata.get("fees"):
-                    payment_tx.paystack_fee_kobo = result.metadata["fees"]
+                    payment_tx.fee_kobo = result.metadata["fees"]
             
             logger.info(f"Updated payment transaction {payment_tx.id}: status=success")
         
@@ -2129,7 +2130,7 @@ class BillingService:
         if payment_tx:
             payment_tx.status = "success"
             payment_tx.paid_at = datetime.utcnow()
-            payment_tx.completed_at = datetime.utcnow()
+            payment_tx.verified_at = datetime.utcnow()
             payment_tx.webhook_received_at = datetime.utcnow()
             payment_tx.webhook_event_id = str(data.get("id", ""))
             payment_tx.gateway_response = data.get("gateway_response")
@@ -2137,9 +2138,9 @@ class BillingService:
             payment_tx.payment_method = data.get("channel")
             payment_tx.card_type = authorization.get("card_type")
             payment_tx.card_last4 = authorization.get("last4")
-            payment_tx.bank_name = authorization.get("bank")
+            payment_tx.card_bank = authorization.get("bank")
             if data.get("fees"):
-                payment_tx.paystack_fee_kobo = data["fees"]
+                payment_tx.fee_kobo = data["fees"]
             
             logger.info(f"Updated payment transaction {payment_tx.id} via webhook: status=success")
         
@@ -2472,11 +2473,11 @@ class BillingService:
         
         if payment_tx:
             payment_tx.status = "failed"
-            payment_tx.completed_at = datetime.utcnow()
+            payment_tx.failed_at = datetime.utcnow()
             payment_tx.webhook_received_at = datetime.utcnow()
             payment_tx.webhook_event_id = str(data.get("id", ""))
             payment_tx.gateway_response = data.get("gateway_response")
-            payment_tx.failure_reason = data.get("message", "Payment failed")
+            payment_tx.error_message = data.get("message", "Payment failed")
             payment_tx.paystack_response = data
             
             logger.info(f"Updated payment transaction {payment_tx.id} via webhook: status=failed")
@@ -2690,14 +2691,14 @@ class BillingService:
                 payment_tx.status = "success"
                 if paid_at_str:
                     try:
-                        payment_tx.completed_at = datetime.fromisoformat(paid_at_str.replace("Z", "+00:00"))
+                        payment_tx.paid_at = datetime.fromisoformat(paid_at_str.replace("Z", "+00:00"))
                     except:
-                        payment_tx.completed_at = datetime.utcnow()
+                        payment_tx.paid_at = datetime.utcnow()
                 else:
-                    payment_tx.completed_at = datetime.utcnow()
+                    payment_tx.paid_at = datetime.utcnow()
             elif invoice_status == "failed":
                 payment_tx.status = "failed"
-                payment_tx.failure_reason = data.get("message", "Invoice payment failed")
+                payment_tx.error_message = data.get("message", "Invoice payment failed")
             elif invoice_status == "cancelled":
                 payment_tx.status = "cancelled"
             
@@ -2859,7 +2860,7 @@ class BillingService:
         
         if payment_tx:
             # Update transaction with failure info (but don't mark as refunded)
-            payment_tx.failure_reason = f"Refund failed: {failure_reason}"
+            payment_tx.error_message = f"Refund failed: {failure_reason}"
             payment_tx.refund_reference = transfer_code
             
             # Store transfer failure details
@@ -2950,7 +2951,7 @@ class BillingService:
                 payment_tx.refunded_at = now
             elif status == "failed":
                 payment_tx.status = "failed"
-                payment_tx.failure_reason = f"Refund failed: {merchant_note or customer_note}"
+                payment_tx.error_message = f"Refund failed: {merchant_note or customer_note}"
             
             payment_tx.refund_amount_kobo = amount_kobo
             payment_tx.refund_reference = str(refund_id)
