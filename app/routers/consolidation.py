@@ -16,9 +16,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.database import get_db
-from app.dependencies import get_current_user, get_current_entity_id, require_feature
+from app.dependencies import (
+    get_current_user,
+    get_current_entity_id,
+    require_feature,
+    require_entity_access,
+    require_group_access,
+)
 from app.models.user import User
 from app.models.entity import BusinessEntity
+from app.models.advanced_accounting import EntityGroup
 from app.services.consolidation_service import ConsolidationService
 from app.services.feature_flags import Feature
 
@@ -151,6 +158,7 @@ async def list_entity_groups(
 @router.get("/groups/{group_id}")
 async def get_entity_group(
     group_id: UUID,
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -180,6 +188,7 @@ async def get_entity_group(
 async def add_group_member(
     group_id: UUID,
     data: GroupMemberAdd,
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -218,6 +227,7 @@ async def add_group_member(
 @router.get("/groups/{group_id}/members", response_model=List[GroupMemberResponse])
 async def list_group_members(
     group_id: UUID,
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -235,6 +245,7 @@ async def get_consolidated_trial_balance(
     group_id: UUID,
     as_of_date: date = Query(default=None),
     include_eliminations: bool = Query(default=True),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -274,6 +285,7 @@ async def get_consolidated_trial_balance(
 async def get_consolidated_balance_sheet(
     group_id: UUID,
     as_of_date: date = Query(default=None),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -308,6 +320,7 @@ async def get_consolidated_income_statement(
     group_id: UUID,
     start_date: date = Query(...),
     end_date: date = Query(...),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -341,6 +354,7 @@ async def get_consolidated_cash_flow_statement(
     group_id: UUID,
     start_date: date = Query(...),
     end_date: date = Query(...),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -374,6 +388,7 @@ async def get_consolidated_cash_flow_statement(
 async def get_consolidation_worksheet(
     group_id: UUID,
     as_of_date: date = Query(default=None),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -407,6 +422,7 @@ async def get_segment_report(
     start_date: date = Query(...),
     end_date: date = Query(...),
     segment_by: str = Query(default="entity", description="entity, geography, or business_line"),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -444,6 +460,7 @@ async def get_segment_report(
 async def create_elimination_entry(
     group_id: UUID,
     data: EliminationEntryCreate,
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -478,6 +495,7 @@ async def create_elimination_entry(
 async def list_elimination_entries(
     group_id: UUID,
     as_of_date: date = Query(default=None),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -512,8 +530,10 @@ async def get_currency_translation_report(
     functional_currency: str = Query(..., description="Entity's functional currency"),
     presentation_currency: str = Query(default="NGN", description="Group presentation currency"),
     as_of_date: date = Query(default=None),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ):
     """
     Generate currency translation report for foreign subsidiary per IAS 21.
@@ -547,6 +567,7 @@ async def get_currency_translation_report(
 async def get_minority_interest_report(
     group_id: UUID,
     as_of_date: date = Query(default=None),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -590,6 +611,7 @@ async def get_translation_history(
     entity_id: Optional[UUID] = Query(default=None, description="Filter by specific entity"),
     start_date: Optional[date] = Query(default=None, description="Start date for history"),
     end_date: Optional[date] = Query(default=None, description="End date for history"),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -605,8 +627,14 @@ async def get_translation_history(
     - Full audit trail of translation adjustments
     - Supports year-over-year CTA movement analysis
     """
+    if entity_id is not None:
+        # entity_id is an optional filter here (unlike the other group_id endpoints, which take a
+        # required entity_id), so require_entity_access can't be used as a Depends() -- it would make
+        # the parameter mandatory. Check inline instead, same 404-on-mismatch contract.
+        await require_entity_access(entity_id=entity_id, current_user=current_user, db=db)
+
     service = ConsolidationService(db)
-    
+
     try:
         history = await service.get_translation_history(
             group_id=group_id,
@@ -633,6 +661,7 @@ async def get_oci_cta_report(
     group_id: UUID,
     as_of_date: date = Query(default=None, description="Reporting date"),
     comparative_date: Optional[date] = Query(default=None, description="Prior period date for comparison"),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -669,8 +698,10 @@ async def recycle_cta_on_disposal(
     entity_id: UUID = Query(..., description="Entity being disposed"),
     disposal_date: date = Query(..., description="Date of disposal"),
     disposal_percentage: float = Query(default=100, ge=0, le=100, description="% being disposed"),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
 ):
     """
     Recycle CTA to profit/loss on disposal of foreign subsidiary.
@@ -702,6 +733,7 @@ async def recycle_cta_on_disposal(
 async def translate_all_subsidiaries(
     group_id: UUID,
     translation_date: date = Query(default=None, description="Translation date (defaults to today)"),
+    _group_access: EntityGroup = Depends(require_group_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

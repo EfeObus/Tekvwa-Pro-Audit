@@ -2322,6 +2322,82 @@ Traceability Table (§20) updated to 🟨 in progress, 34/164 endpoints done. 16
 across all 164 endpoints the roadmap calls for, then Section 2.2's `UserEntityAccess` index/unique-
 constraint migration (blocked on a production data-integrity check this session cannot perform).
 
+## Phase 2.1 continued — audit.py, budget.py migrated; consolidation.py migrated with a discovered scope expansion (2026-09-26)
+
+**`audit.py` (17 endpoints):** same pattern as `accounting.py`, with one variant worth recording: this
+file's routes are `/{entity_id}/audit/...` with the `/api/v1/entities` prefix set externally in
+`main.py`'s `include_router(...)`, not on the router itself, so `entity_id` is declared as a bare
+`entity_id: uuid.UUID` parameter (no explicit `Path(...)`) rather than defaulted via `Path(...)` as in
+`accounting.py`. Confirmed via a one-off smoke test that FastAPI's dependency resolution threads the
+same `entity_id` into `require_entity_access` correctly either way. The AST structural sweep in
+`tests/test_entity_access_isolation.py` was generalized to detect both declaration styles (any function
+with an `entity_id` parameter, not just ones defaulted via `Path(...)`), re-verified against `budget.py`
+(still correctly flagged 22 unmigrated functions at the time) before and after the change.
+
+**`budget.py` (23 endpoints):** straightforward migration, all `entity_id: UUID = Path(...)` params.
+Existing 32-test `test_budget.py` service-level suite passed unchanged. Noted but did not fix an
+unrelated pre-existing bug spotted in `get_budget_variance_ytd`: it calls
+`service.get_budget(entity_id, budget_id)` but every other call site in the file uses
+`service.get_budget(budget_id, include_line_items)` — `entity_id` is passed where `budget_id` is
+expected. Not an access-control issue, out of Phase 2's scope; flagged in the roadmap for a future pass.
+
+**`consolidation.py` — the file where this section's scope grew.** The roadmap counted only 3 endpoints
+for this file (`recycle_cta_on_disposal` plus 2 reads, all keyed on a raw `entity_id` query parameter).
+While implementing the roadmap's own explicit instruction to give `recycle_cta_on_disposal` "its
+`group_id`-to-organization check... not just `entity_id`", traced `ConsolidationService.
+get_entity_group(group_id)`:
+
+```python
+async def get_entity_group(self, group_id: uuid.UUID) -> Optional[EntityGroup]:
+    result = await self.db.execute(select(EntityGroup).where(EntityGroup.id == group_id))
+    return result.scalar_one_or_none()
+```
+
+No `organization_id` filter at all. Every one of this router's 17 `group_id`-keyed endpoints
+(`get_entity_group`, `add_group_member`, `list_group_members`, all 4 consolidated-statement reports,
+the worksheet, segment report, both elimination endpoints, the currency-translation/CTA/minority-
+interest reports, and both disposal/translate write endpoints) call this or an equivalent unscoped
+lookup — meaning any authenticated user from any organization could view or mutate any other
+organization's consolidated financial statements by supplying/guessing a `group_id` UUID. This is the
+same root-cause defect Finding 18 targets (a resource looked up by ID with no tenant check), just keyed
+on `group_id` instead of `entity_id`, and the original audit's per-file count for this file evidently
+didn't catch it — it only counted the 3 `entity_id`-based endpoints.
+
+Given the severity (full financial-statement exposure across organizations) and that the fix is the
+exact same pattern already proven for `entity_id`, this was treated as an in-scope extension of Finding
+18 for this file rather than deferred as a separate, undocumented gap:
+
+- Added `require_group_access` to `app/dependencies.py`, directly after `require_entity_access` —
+  identical shape, checking `EntityGroup.organization_id == current_user.organization_id` instead.
+- Applied `Depends(require_group_access)` to all 17 `group_id`-keyed endpoints (not just the 3 the
+  roadmap originally scoped).
+- Applied `Depends(require_entity_access)` to the 2 endpoints with a *required* `entity_id` query
+  parameter (`get_currency_translation_report`, `recycle_cta_on_disposal`); for `get_translation_history`,
+  where `entity_id` is an *optional* filter, added an inline `await require_entity_access(...)` call
+  instead (a hard `Depends()` would have made the parameter mandatory, changing the endpoint's contract).
+
+**Verification:** new `TestRequireGroupAccess` unit tests (rejects a foreign org's group, allows the
+caller's own org's group, rejects a nonexistent group) in `tests/test_entity_access_isolation.py`.
+Router-level HTTP tests weren't practical here — `consolidation.py`'s router requires the
+Enterprise-tier `Feature.CONSOLIDATION` gate, which the default test fixtures (Core tier) don't satisfy,
+so any request 403s before reaching `require_group_access` — confirmed this is exactly what happens (a
+403 from the SKU gate, not a 404 from the access check) when first attempting an HTTP-level smoke test,
+before switching to calling the dependency directly instead. The AST structural sweep was generalized
+further: it now also flags `group_id` parameters lacking `Depends(require_group_access)`, recognizes
+`Depends(get_current_entity_id)` as a second valid guard for `entity_id` (used correctly by
+`create_entity_group`/`list_entity_groups`, which derive `entity_id` from the caller's own accessible
+entities and were never part of the vulnerability), recognizes an inline `require_entity_access(...)`
+call in the function body as valid for optional-filter parameters, and now only inspects
+`@router.<method>(...)`-decorated route handlers (a plain helper like
+`get_organization_id_from_entity`, which takes an already-validated `entity_id` from its caller, was a
+false positive before this last refinement). The existing 43-test `test_consolidation.py` service-level
+suite passed unchanged.
+
+**Roadmap:** `audit.py`, `budget.py`, `consolidation.py` all checked off in §2.1's file list; Finding
+18's traceability row updated to reflect 77/164 endpoints done against the original tally, plus the
+17-endpoint `group_id` fix noted separately since it wasn't part of that original count. 13 files / ~87
+endpoints remain in §2.1 proper.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed

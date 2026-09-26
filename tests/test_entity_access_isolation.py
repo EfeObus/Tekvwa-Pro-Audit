@@ -18,6 +18,7 @@ Two layers of test, matching the roadmap's own stated verification method:
    `MIGRATED_ROUTER_FILES` below as it's completed.
 """
 import ast
+import uuid as uuid_module
 from pathlib import Path as FilePath
 
 import pytest
@@ -25,7 +26,8 @@ from fastapi import HTTPException
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import require_entity_access
+from app.dependencies import require_entity_access, require_group_access
+from app.models.advanced_accounting import EntityGroup
 from app.models.entity import BusinessEntity
 from app.models.organization import Organization
 from app.models.user import User
@@ -39,6 +41,7 @@ MIGRATED_ROUTER_FILES = [
     "accounting.py",
     "audit.py",
     "budget.py",
+    "consolidation.py",
 ]
 
 
@@ -77,8 +80,6 @@ class TestRequireEntityAccess:
         db_session: AsyncSession,
         test_user: User,
     ):
-        import uuid as uuid_module
-
         with pytest.raises(HTTPException) as exc_info:
             await require_entity_access(
                 entity_id=uuid_module.uuid4(),
@@ -88,15 +89,113 @@ class TestRequireEntityAccess:
         assert exc_info.value.status_code == 404
 
 
+class TestRequireGroupAccess:
+    """
+    Direct unit tests for `require_group_access` (app/dependencies.py), the group_id-keyed
+    counterpart to `require_entity_access` discovered while migrating `consolidation.py`:
+    `ConsolidationService.get_entity_group` looked up `EntityGroup` by `group_id` alone, with no
+    `organization_id` check at all, across every one of that router's group-scoped endpoints -- a
+    same-root-cause cross-tenant IDOR gap the original audit's per-file endpoint count for this file
+    (3) did not capture, since it only counted the `entity_id`-based endpoints. See
+    docs/REMEDIATION_LOG.md's Phase 2 entry for `consolidation.py` for the full discovery writeup.
+
+    Router-level HTTP tests aren't practical here (consolidation.py's router requires the
+    Enterprise-tier `Feature.CONSOLIDATION` gate, which the default test fixtures don't have, so any
+    request 403s before reaching `require_group_access`) -- these call the dependency directly instead,
+    same pattern as `TestRequireEntityAccess` above.
+    """
+
+    async def test_rejects_foreign_organizations_group(
+        self,
+        db_session: AsyncSession,
+        other_organization: Organization,
+        other_entity: BusinessEntity,
+        test_user: User,
+    ):
+        foreign_group = EntityGroup(
+            id=uuid_module.uuid4(),
+            organization_id=other_organization.id,
+            name="Other Org Group",
+            parent_entity_id=other_entity.id,
+        )
+        db_session.add(foreign_group)
+        await db_session.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_access(
+                group_id=foreign_group.id,
+                current_user=test_user,
+                db=db_session,
+            )
+        assert exc_info.value.status_code == 404
+
+    async def test_allows_own_organizations_group(
+        self,
+        db_session: AsyncSession,
+        test_organization: Organization,
+        test_entity: BusinessEntity,
+        test_user: User,
+    ):
+        own_group = EntityGroup(
+            id=uuid_module.uuid4(),
+            organization_id=test_organization.id,
+            name="Own Org Group",
+            parent_entity_id=test_entity.id,
+        )
+        db_session.add(own_group)
+        await db_session.commit()
+
+        result = await require_group_access(
+            group_id=own_group.id,
+            current_user=test_user,
+            db=db_session,
+        )
+        assert result.id == own_group.id
+
+    async def test_rejects_nonexistent_group(
+        self,
+        db_session: AsyncSession,
+        test_user: User,
+    ):
+        with pytest.raises(HTTPException) as exc_info:
+            await require_group_access(
+                group_id=uuid_module.uuid4(),
+                current_user=test_user,
+                db=db_session,
+            )
+        assert exc_info.value.status_code == 404
+
+
 class TestEntityAccessDependencyWiring:
     """AST-based structural check: every entity-scoped endpoint in a migrated file must use
-    Depends(require_entity_access), not just a raw entity_id path parameter."""
+    Depends(require_entity_access) (or the group_id-keyed Depends(require_group_access), for
+    consolidation.py's group-scoped endpoints), not just a raw entity_id/group_id parameter."""
+
+    # Dependencies that are an acceptable substitute for a direct Depends(require_entity_access) on
+    # an `entity_id` parameter: get_current_entity_id derives entity_id from the user's own
+    # cookie/accessible-entity list, so it can never resolve to a foreign organization's entity --
+    # see consolidation.py's create_entity_group/list_entity_groups.
+    SAFE_ENTITY_ID_DEPENDENCIES = ("require_entity_access", "get_current_entity_id")
+
+    def _calls_require_entity_access_in_body(self, node) -> bool:
+        """Fallback for params like consolidation.py's get_translation_history, where entity_id is an
+        *optional* filter -- Depends(require_entity_access) can't be used (it would make the param
+        mandatory), so the check is inlined in the function body instead."""
+        for child in ast.walk(node):
+            if (
+                isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id == "require_entity_access"
+            ):
+                return True
+        return False
 
     def _find_unmigrated_functions(self, filename: str) -> list[str]:
-        """A function is unmigrated if it takes an `entity_id` parameter at all (whether given an
-        explicit `Path(...)` default, as in accounting.py, or left as a bare path parameter resolved
-        implicitly from the route template, as in audit.py) and none of its parameter defaults wire in
-        `Depends(require_entity_access)`."""
+        """A function is unmigrated if it takes an `entity_id` and/or `group_id` parameter at all
+        (whether given an explicit `Path(...)`/`Query(...)` default, or left as a bare path parameter
+        resolved implicitly from the route template) and isn't provably guarded: via a
+        Depends(require_entity_access) / Depends(require_group_access) / Depends(get_current_entity_id)
+        default, or (entity_id only) an inline require_entity_access(...) call in the body."""
         source = (ROUTERS_DIR / filename).read_text()
         tree = ast.parse(source, filename=filename)
         unmigrated = []
@@ -105,16 +204,31 @@ class TestEntityAccessDependencyWiring:
             if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
 
+            # Only route handlers are in scope -- plain helper functions (e.g. consolidation.py's
+            # get_organization_id_from_entity) may legitimately take an already-validated entity_id
+            # with no Depends() of their own, since the caller did the access check.
+            is_route_handler = any(
+                isinstance(dec, ast.Call) and "router" in ast.dump(dec.func)
+                for dec in node.decorator_list
+            )
+            if not is_route_handler:
+                continue
+
             all_args = [*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs]
             has_entity_id_param = any(arg.arg == "entity_id" for arg in all_args)
+            has_group_id_param = any(arg.arg == "group_id" for arg in all_args)
 
             all_defaults = [*node.args.defaults, *node.args.kw_defaults]
-            has_require_entity_access = any(
-                default is not None and "require_entity_access" in ast.dump(default)
-                for default in all_defaults
-            )
+            default_srcs = [ast.dump(d) for d in all_defaults if d is not None]
 
-            if has_entity_id_param and not has_require_entity_access:
+            has_entity_access = any(
+                any(dep in s for dep in self.SAFE_ENTITY_ID_DEPENDENCIES) for s in default_srcs
+            ) or (has_entity_id_param and self._calls_require_entity_access_in_body(node))
+            has_group_access = any("require_group_access" in s for s in default_srcs)
+
+            if has_entity_id_param and not has_entity_access:
+                unmigrated.append(node.name)
+            elif has_group_id_param and not has_group_access:
                 unmigrated.append(node.name)
 
         return unmigrated

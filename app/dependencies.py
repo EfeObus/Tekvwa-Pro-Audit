@@ -282,6 +282,42 @@ async def require_entity_access(
     return entity
 
 
+async def require_group_access(
+    group_id: uuid.UUID,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> "EntityGroup":
+    """
+    Centralized cross-tenant access check for consolidation entity groups, the group_id-keyed
+    counterpart to `require_entity_access` above.
+
+    Discovered while migrating `app/routers/consolidation.py` for Finding 18: `EntityGroup` lookups
+    throughout that file (`ConsolidationService.get_entity_group`) filter by `group_id` alone, with no
+    `organization_id` check at all -- unlike the `entity_id` pattern this same phase already covers,
+    this gap was not counted in the original audit's per-file endpoint tally for this file, and is
+    fixed here as a same-root-cause extension of Finding 18 rather than a separate finding. See
+    docs/REMEDIATION_LOG.md's Phase 2 entry for `consolidation.py` for the full discovery writeup.
+
+    Use `Depends(require_group_access)` in place of a raw `group_id: uuid.UUID` path parameter on any
+    group-scoped consolidation route.
+    """
+    from app.models.advanced_accounting import EntityGroup
+
+    result = await db.execute(
+        select(EntityGroup).where(
+            EntityGroup.id == group_id,
+            EntityGroup.organization_id == current_user.organization_id,
+        )
+    )
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Entity group not found or access denied",
+        )
+    return group
+
+
 def require_role(allowed_roles: list[UserRole]):
     """
     Dependency factory for organization role-based access control.
