@@ -349,7 +349,7 @@ class MLJobService:
             select(MLModel.model_type, func.count(MLModel.id))
             .group_by(MLModel.model_type)
         )
-        models_by_type = {str(row[0].value): row[1] for row in by_type.all()}
+        models_by_type = {str(row[0]): row[1] for row in by_type.all()}
         
         return {
             "total": total_count,

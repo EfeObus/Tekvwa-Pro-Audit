@@ -1566,7 +1566,84 @@ during this work — a `pytest tests/` run left a Postgres backend `idle in tran
 leak (not just a theoretical risk), and that recovery is a one-line `kill`, not a Postgres restart.
 Finding 51's actual root cause (why the leak happens) is still not fixed.
 
-**Status:** ✅ Fixed, tested locally, not yet committed (next step, same session). 17 of the
+**Status:** ✅ Fixed, tested, committed (`1bc2c8a`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 17 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — ml_jobs and ml_models, two more genuinely-different-design tables (2026-09-25)
+
+`app/services/ml_job_service.py` is the only real construction site for both models.
+
+**`ml_models` — pure model rewrite, zero migration:** the live table already matched the
+service's real field names exactly (`model_name`, `model_version`, `feature_names`, `model_path`,
+`precision_score`, `recall_score`, `training_samples_count`) — the model class had entirely
+different names for the same concepts (`name`, `version`, `feature_columns`, `artifact_path`,
+`precision`, `recall`, `training_data_size`) plus a `model_code` unique `NOT NULL` column with no
+live column at all, and 6 more zero-usage fields (`is_production`, `trained_at`,
+`training_duration_seconds`, `artifact_size_mb`, `total_predictions`, `avg_inference_time_ms`).
+Rewritten to match the live table and real usage exactly — same pattern as
+`bank_statements`/`support_tickets`/`upsell_opportunities` before it.
+
+**`ml_jobs` — mixed drift, one small migration (`5a3098d47860`):**
+- `job_name`, `queued_at` were always sent by `create_ml_job()` but never existed on the live
+  table at all — every real call has always failed with `UndefinedColumnError`. Added both
+  (confirmed structurally unable to hold a row beforehand, so no backfill needed).
+- `organization_id` was also always sent by `create_ml_job()`, but the live table's real column is
+  `target_organization_id` — grepped the whole codebase and found zero references to
+  `target_organization_id` anywhere, so it's dead, unmapped, and left in place per this session's
+  additive-only policy; added a new `organization_id` column matching the model instead of
+  renaming.
+- `job_type`/`status`/`priority` were declared as native SQLAlchemy/Postgres enums
+  (`SQLEnum(MLJobType)` etc.) while the live columns are plain `VARCHAR` — same "converted for
+  flexibility" pattern already documented in `app/models/sku.py` for `tier`/`billing_cycle`/
+  `intelligence_addon`. Fixed to plain `String` columns (model-only, matches DB, no migration) —
+  `MLJobType`/`MLJobStatus`/`MLJobPriority` are all `(str, Enum)` so this needs no service changes,
+  but did require removing 4 `.value` accesses in `app/routers/ml_jobs.py`'s `_format_ml_job`/
+  `_format_ml_model` and one in `ml_job_service.py`'s `get_models_stats()`, all of which would
+  otherwise crash with `AttributeError: 'str' object has no attribute 'value'` once the column
+  stopped returning real enum instances.
+- `worker_id`, `results`, `metrics`, `output_files`, `error_details` already existed on the live
+  table but were completely unmapped in the model — `start_job()`/`complete_job()`/`fail_job()`
+  were silently discarding these writes (plain, unpersisted Python instance attributes) even after
+  a job could successfully be created. Added all 5 to the model.
+- `execution_time_seconds` was declared `Float` in the model but is `integer` on the live table,
+  and the service always does `int(...)` before assigning it — fixed the model to `Integer`.
+- Removed 13 zero-usage phantom fields with no live column at all: `input_data_source`,
+  `input_record_count`, `output_record_count`, `results_summary`, `predictions_count`,
+  `anomalies_detected`, `memory_usage_mb`, `cpu_usage_percent`, `error_traceback`,
+  `triggered_by_id`, `trigger_source`, `is_recurring`, `recurrence_pattern`.
+- `queued_at`/`started_at`/`completed_at`/`scheduled_for` were declared `DateTime(timezone=True)`
+  while the live columns are `timestamp without time zone`, and every write already uses naive
+  `datetime.utcnow()` — relaxed to plain `DateTime` to match the live table exactly, avoiding the
+  exact aware/naive mismatch already found and fixed twice this session (support_tickets,
+  payment_transactions), even though this specific mismatch wasn't yet causing a live crash.
+
+**Independent bugs found and fixed in `app/services/dashboard_service.py`'s super-admin payload,
+while checking every real caller of these two models (same file that also had the `upsell_list`
+bug earlier this session):**
+- `ml_jobs_list`/`ml_models_list` read `j.job_type.value`/`j.status.value`/`m.model_type.value`
+  (broken by the enum→string fix above, so fixed alongside it), `m.version` (real field is
+  `model_version`), `m.accuracy_score` (never existed under any version of the model — real field
+  is `accuracy`), `m.total_predictions` (never existed on the live table under any name — set to a
+  literal `0` with a comment rather than inventing a fake value), and `m.last_trained_at` (never
+  existed under any name — mapped to `last_used_at`, the closest real timestamp available).
+- `support_tickets_list` read `t.requester_email`/`t.requester_name` — leftover from *before*
+  today's session's `SupportTicket` rewrite; the real fields are `reporter_email`/`reporter_name`.
+  Found by inspection while already in this file for the ML fields; not exercised by
+  `tests/test_support_tickets.py` since that test covers the service layer, not this dashboard
+  endpoint.
+
+**Verified via:** a full migration-chain replay from empty through `5a3098d47860` on
+`tekvwarho_proaudit_test`; a new permanent regression test (`tests/test_ml_jobs.py`, 5 tests
+covering job creation, the full start→complete lifecycle, the fail path, model creation, and the
+activate/deactivate/stats path — all through the real service, not direct model construction); and
+the existing regression suite (`tests/test_ml_jobs.py`, `tests/test_upsell.py`,
+`tests/test_payment_transactions.py`, `tests/test_support_tickets.py`,
+`tests/test_payroll_advanced.py`, `tests/test_api.py` — 47 passed, 1 skipped, no regressions).
+
+**Status:** ✅ Fixed, tested locally, not yet committed (next step, same session). 15 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---

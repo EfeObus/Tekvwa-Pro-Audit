@@ -16,9 +16,8 @@ import uuid
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import TYPE_CHECKING, Optional, List
-from decimal import Decimal
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Integer, Numeric, Float, Enum as SQLEnum
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, Integer, Float
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -26,7 +25,6 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.organization import Organization
-    from app.models.user import User
 
 
 class MLJobType(str, Enum):
@@ -80,42 +78,46 @@ class MLJob(BaseModel):
     
     # Job identification
     job_id: Mapped[str] = mapped_column(
-        String(50),
+        String(100),
         unique=True,
         nullable=False,
         index=True,
         comment="Unique job reference (e.g., MLJ-2026-0001)"
     )
-    
+
     job_name: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
-    
+
     # Job type and classification
+    # Note: plain String, not a native Postgres enum -- job_type/status/priority were
+    # deliberately kept as VARCHAR on the live table (same "converted for flexibility"
+    # pattern documented in app/models/sku.py for tier/billing_cycle/intelligence_addon).
+    # MLJobType/MLJobStatus/MLJobPriority are all (str, Enum), so plain string columns work.
     job_type: Mapped[MLJobType] = mapped_column(
-        SQLEnum(MLJobType),
+        String(50),
         nullable=False,
         index=True,
     )
-    
+
     status: Mapped[MLJobStatus] = mapped_column(
-        SQLEnum(MLJobStatus),
+        String(20),
         nullable=False,
         default=MLJobStatus.QUEUED,
         index=True,
     )
-    
+
     priority: Mapped[MLJobPriority] = mapped_column(
-        SQLEnum(MLJobPriority),
+        String(20),
         nullable=False,
         default=MLJobPriority.NORMAL,
     )
-    
+
     # Organization context (optional - some jobs are platform-wide)
     organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("organizations.id", ondelete="CASCADE"),
+        ForeignKey("organizations.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
@@ -133,140 +135,91 @@ class MLJob(BaseModel):
         nullable=True,
         comment="Job configuration parameters"
     )
-    
-    # Input data
-    input_data_source: Mapped[Optional[str]] = mapped_column(
-        String(255),
-        nullable=True,
-        comment="Source of input data"
-    )
-    
-    input_record_count: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-    )
-    
+
     # Execution timing
     queued_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=False,
     )
-    
+
     started_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=True,
     )
-    
+
     completed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=True,
     )
-    
+
     # Progress tracking
     progress_percent: Mapped[int] = mapped_column(
         Integer,
         default=0,
         comment="0-100 progress percentage"
     )
-    
+
     current_step: Mapped[Optional[str]] = mapped_column(
         String(255),
         nullable=True,
         comment="Current processing step"
     )
-    
-    # Results
-    output_record_count: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
+
+    worker_id: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
     )
-    
-    results_summary: Mapped[Optional[dict]] = mapped_column(
+
+    # Results
+    results: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         nullable=True,
-        comment="Summary of job results"
     )
-    
-    # For inference jobs - number of predictions
-    predictions_count: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
+
+    metrics: Mapped[Optional[dict]] = mapped_column(
+        JSONB,
+        nullable=True,
     )
-    
-    anomalies_detected: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
+
+    output_files: Mapped[Optional[List[str]]] = mapped_column(
+        JSONB,
+        nullable=True,
     )
-    
+
     # Performance metrics
-    execution_time_seconds: Mapped[Optional[float]] = mapped_column(
-        Float,
+    execution_time_seconds: Mapped[Optional[int]] = mapped_column(
+        Integer,
         nullable=True,
     )
-    
-    memory_usage_mb: Mapped[Optional[float]] = mapped_column(
-        Float,
-        nullable=True,
-    )
-    
-    cpu_usage_percent: Mapped[Optional[float]] = mapped_column(
-        Float,
-        nullable=True,
-    )
-    
+
     # Error handling
     error_message: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
-    error_traceback: Mapped[Optional[str]] = mapped_column(
-        Text,
+
+    error_details: Mapped[Optional[dict]] = mapped_column(
+        JSONB,
         nullable=True,
     )
-    
+
     retry_count: Mapped[int] = mapped_column(
         Integer,
         default=0,
     )
-    
+
     max_retries: Mapped[int] = mapped_column(
         Integer,
         default=3,
     )
-    
-    # Triggered by
-    triggered_by_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-    
-    trigger_source: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-        default="manual",
-        comment="manual, scheduled, api, webhook"
-    )
-    
+
     # Scheduling
     scheduled_for: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=True,
         comment="For scheduled jobs"
     )
-    
-    is_recurring: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-    )
-    
-    recurrence_pattern: Mapped[Optional[str]] = mapped_column(
-        String(100),
-        nullable=True,
-        comment="Cron expression for recurring jobs"
-    )
-    
+
     # Relationships
     organization: Mapped[Optional["Organization"]] = relationship(
         lazy="selectin"
@@ -276,13 +229,9 @@ class MLJob(BaseModel):
         back_populates="jobs",
         lazy="selectin"
     )
-    
-    triggered_by: Mapped[Optional["User"]] = relationship(
-        lazy="selectin"
-    )
-    
+
     def __repr__(self) -> str:
-        return f"<MLJob {self.job_id}: {self.job_type.value} ({self.status.value})>"
+        return f"<MLJob {self.job_id}: {self.job_type} ({self.status})>"
     
     @property
     def duration(self) -> Optional[timedelta]:
@@ -312,138 +261,97 @@ class MLModel(BaseModel):
     )
     
     # Model identification
-    model_code: Mapped[str] = mapped_column(
-        String(50),
-        unique=True,
-        nullable=False,
-        index=True,
-        comment="Unique model code (e.g., MDL-ANOM-001)"
-    )
-    
-    name: Mapped[str] = mapped_column(
+    model_name: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
+        index=True,
     )
-    
+
+    model_version: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
     description: Mapped[Optional[str]] = mapped_column(
         Text,
         nullable=True,
     )
-    
-    # Model type
+
+    # Model type -- plain String, see the note on MLJob.job_type above.
     model_type: Mapped[MLJobType] = mapped_column(
-        SQLEnum(MLJobType),
+        String(50),
         nullable=False,
+        index=True,
     )
-    
+
     # Algorithm details
     algorithm: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
         comment="e.g., IsolationForest, GradientBoostingClassifier"
     )
-    
-    framework: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
+
+    framework: Mapped[Optional[str]] = mapped_column(
+        String(100),
+        nullable=True,
         default="scikit-learn",
         comment="ML framework used"
     )
-    
-    # Versioning
-    version: Mapped[str] = mapped_column(
-        String(20),
-        nullable=False,
-        default="1.0.0",
-    )
-    
-    is_active: Mapped[bool] = mapped_column(
+
+    is_active: Mapped[Optional[bool]] = mapped_column(
         Boolean,
         default=True,
         index=True,
     )
-    
-    is_production: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        comment="Currently serving production traffic"
-    )
-    
+
     # Performance metrics
-    accuracy: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 4),
+    accuracy: Mapped[Optional[float]] = mapped_column(
+        Float,
         nullable=True,
-        comment="Model accuracy 0.0000-1.0000"
+        comment="Model accuracy 0.0-1.0"
     )
-    
-    precision: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 4),
-        nullable=True,
-    )
-    
-    recall: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 4),
-        nullable=True,
-    )
-    
-    f1_score: Mapped[Optional[Decimal]] = mapped_column(
-        Numeric(5, 4),
-        nullable=True,
-    )
-    
-    # Training info
-    trained_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    
-    training_data_size: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-    )
-    
-    training_duration_seconds: Mapped[Optional[float]] = mapped_column(
+
+    precision_score: Mapped[Optional[float]] = mapped_column(
         Float,
         nullable=True,
     )
-    
+
+    recall_score: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    f1_score: Mapped[Optional[float]] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    training_samples_count: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
     # Model artifact
-    artifact_path: Mapped[Optional[str]] = mapped_column(
+    model_path: Mapped[Optional[str]] = mapped_column(
         String(500),
         nullable=True,
         comment="Path to saved model file"
     )
-    
-    artifact_size_mb: Mapped[Optional[float]] = mapped_column(
-        Float,
-        nullable=True,
-    )
-    
+
     # Hyperparameters
     hyperparameters: Mapped[Optional[dict]] = mapped_column(
         JSONB,
         nullable=True,
     )
-    
+
     # Feature configuration
-    feature_columns: Mapped[Optional[List[str]]] = mapped_column(
+    feature_names: Mapped[Optional[List[str]]] = mapped_column(
         JSONB,
         nullable=True,
     )
-    
-    # Inference stats
-    total_predictions: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-    )
-    
-    avg_inference_time_ms: Mapped[Optional[float]] = mapped_column(
-        Float,
-        nullable=True,
-    )
-    
+
     last_used_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+        DateTime,
         nullable=True,
     )
     
@@ -454,4 +362,4 @@ class MLModel(BaseModel):
     )
     
     def __repr__(self) -> str:
-        return f"<MLModel {self.model_code}: {self.name} v{self.version}>"
+        return f"<MLModel {self.model_name} v{self.model_version}>"
