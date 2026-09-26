@@ -598,6 +598,69 @@ class TestBudgetPersistence:
 
 
 # =============================================================================
+# BUDGET LINE ITEM PERSISTENCE (Finding 50, docs/FINDING_50_SCOPE.md, 2026-09-25)
+#
+# app/services/budget_service.py's three real construction sites for BudgetLineItem all set
+# total_budget -- extensively read/written throughout budget_service.py and app/routers/budget.py
+# -- but the live table had no total_budget column at all (it had a NOT NULL, no-default
+# annual_amount instead, which the model never references). Every BudgetLineItem creation has
+# always failed with an UndefinedColumnError.
+# =============================================================================
+
+class TestBudgetLineItemPersistence:
+    """Regression coverage for Finding 50's BudgetLineItem column drift."""
+
+    async def test_add_line_item_with_monthly_amounts(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        service = BudgetService(db_session)
+        budget = await service.create_budget(
+            entity_id=test_entity.id,
+            name="FY2026 Operating Budget",
+            fiscal_year=2026,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+            created_by_id=test_user.id,
+        )
+
+        line_item = await service.add_budget_line_item(
+            budget_id=budget.id,
+            account_name="Rent Expense",
+            line_type="expense",
+            monthly_amounts={"jan": Decimal("30000.00"), "feb": Decimal("30000.00")},
+        )
+
+        assert line_item.id is not None
+        assert line_item.total_budget == Decimal("60000.00")
+        assert line_item.jan_amount == Decimal("30000.00")
+
+    async def test_add_line_item_without_account_code(
+        self, db_session: AsyncSession, test_entity, test_user,
+    ):
+        """account_code is optional in add_budget_line_item() -- must be nullable on the live table."""
+        service = BudgetService(db_session)
+        budget = await service.create_budget(
+            entity_id=test_entity.id,
+            name="FY2026 Operating Budget",
+            fiscal_year=2026,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+            created_by_id=test_user.id,
+        )
+
+        line_item = await service.add_budget_line_item(
+            budget_id=budget.id,
+            account_name="Miscellaneous",
+            line_type="expense",
+            total_budget=Decimal("10000.00"),
+        )
+
+        assert line_item.id is not None
+        assert line_item.account_code is None
+        assert line_item.total_budget == Decimal("10000.00")
+
+
+# =============================================================================
 # RUN TESTS
 # =============================================================================
 

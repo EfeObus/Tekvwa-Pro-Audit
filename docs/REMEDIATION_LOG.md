@@ -1859,7 +1859,41 @@ live schema), plus the existing regression suite (`tests/test_legal_holds.py`,
 `tests/test_risk_signals.py`, `tests/test_ml_jobs.py`, `tests/test_api.py` — 33 passed, 1 skipped,
 no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 5 of the
+**Status:** ✅ Fixed, tested, committed (`e90fa52`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 5 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — budget_line_items, the second-worst structural break found this session (2026-09-25)
+
+`app/services/budget_service.py`'s three real construction sites for `BudgetLineItem` all set
+`total_budget` — extensively read and written throughout `budget_service.py` and
+`app/routers/budget.py` (dozens of references across totals, variance, forecasting, and dimension
+rollups) — but the live table has **no `total_budget` column at all**. It instead has a `NOT
+NULL`, no-default `annual_amount` column the model never references. **Every `BudgetLineItem`
+creation has always failed** with an `UndefinedColumnError` on `total_budget`, and even past that
+would have failed on the `annual_amount` `NOT NULL` violation next — this is the entire budget
+line-item feature, not an edge case. Also relaxed `account_code` to nullable to match the model:
+`add_budget_line_item()`'s public signature allows it to be omitted (`Optional[str] = None`), but
+the live column was `NOT NULL`.
+
+Fixed via migration `98bdd0ac439d`: added `total_budget` (nullable, `server_default='0'`),
+relaxed `annual_amount` and `account_code` to nullable. `annual_amount` is left in place, unmapped
+— nothing in the codebase references it. Confirmed structurally unable to hold a row beforehand
+(no rows exist), so no backfill needed. Zero model changes — `BudgetLineItem` already declared
+every field correctly; this was a pure Direction-A (migrate DB to match model) fix, the same
+category as `ledger_entries`/`budgets`/`account_balances` earlier this session.
+
+**Verified via:** two new permanent regression tests added to `tests/test_budget.py`
+(`TestBudgetLineItemPersistence`), one exercising `add_budget_line_item()` with monthly amounts
+(computing `total_budget` the same way production code does) and one specifically covering the
+omitted-`account_code` path, plus the broader accounting regression suite
+(`tests/test_budget.py`, `tests/test_consolidation.py`, `tests/test_workflow_integration.py`,
+`tests/test_api.py` — 108 passed, 1 skipped, no regressions after the same already-documented
+transient `businesstype` enum-cache flake on the first run, resolved on retry as before).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 4 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---
