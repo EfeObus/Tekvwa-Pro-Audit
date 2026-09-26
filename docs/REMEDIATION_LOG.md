@@ -2882,6 +2882,45 @@ delegation to an already-correct service method, or — for `set_entity` — no 
 an `httponly` cookie). None of these were touched during this phase's migration work; this suite
 exists to prove that claim mechanically rather than leave it as an unverified docstring assertion.
 
+## Phase 2 Completion Gate: the repo-wide sweep, 620 handlers, 0 unresolved (2026-09-26)
+
+Beyond Section 2.1's own gate, the roadmap's "Phase 2 Completion Gate specifics" separately demands
+re-running "the audit's own AST-based sweep script (or an equivalent)... against the post-fix
+codebase, and confirm it now returns zero unresolved candidates." The original audit
+(`docs/PRODUCTION_AUDIT_2026.md` §3.2) never committed this sweep as a script — it was a one-time, ad
+hoc analysis, described narratively rather than left as a reusable tool.
+
+Built `scripts/check_entity_access_sweep.py` as that equivalent, to the audit's own stated standard:
+walk every route handler in `app/routers/` (not just the 17 files Phase 2.1 touched) that takes a raw
+`entity_id` parameter, and check it against every access-check pattern this codebase genuinely uses —
+not just `require_entity_access` (Phase 2.1's new dependency), but also `require_group_access`,
+`get_current_entity_id`, the older `verify_entity_access`, `EntityService.get_entity_by_id`,
+`DashboardService._get_entity_if_accessible`, and `resolve_and_verify_entity_id`
+(`year_end.py`/`report_export.py`'s optional-parameter wrapper). A small, individually-justified
+allowlist (`KNOWN_EXCEPTIONS`) covers the confirmed-safe non-standard patterns already documented
+elsewhere in this log: unimplemented stubs, `user_id`-scoped notification queries, and two GET
+wrapper endpoints in `ml_ai.py` that delegate directly to an already-guarded function (the sweep only
+inspects a handler's own body, not what it calls, so these needed an explicit note rather than being
+silently missed).
+
+**Result: 620 route handlers examined across the entire app, 0 unresolved.** This is a substantially
+larger scope than the original audit's 188 candidates, since it isn't pre-filtered to routers the
+initial structural sweep happened to flag — it's every router file that exists today.
+
+Sanity-checked the tool isn't vacuously passing: planted a deliberately unguarded `entity_id`-taking
+endpoint in a scratch router file outside the repo and confirmed the sweep correctly flagged it before
+re-running against the real codebase.
+
+Wrapped as `tests/test_phase2_completion_gate_sweep.py` — a permanent regression, not a one-off script
+run. It needs no database (pure AST analysis) and runs in well under a second, so it can run on every
+CI build going forward: any future change that removes an access check, or adds a new unguarded
+entity-scoped endpoint anywhere in the app, fails this test immediately rather than waiting for the
+next manual audit.
+
+This closes the last outstanding item of Phase 2's own Completion Gate specifics. Combined with
+Section 2.1's completion (previous entry) and Section 2.2 being the only remaining, explicitly-blocked
+item, Phase 2 as a whole is now complete except for that one blocked migration.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed

@@ -776,6 +776,22 @@ originally found the 188 candidate endpoints, against the post-fix codebase, and
 returns zero unresolved candidates — the same proof standard the audit itself used to declare Finding
 18 "final."
 
+- [x] **Done 2026-09-26.** The original audit never committed its sweep as a reusable script (it was
+      run once, ad hoc, described narratively in §3.2) — built the equivalent at
+      `scripts/check_entity_access_sweep.py`, to the same stated methodology: every route handler
+      across **all** of `app/routers/` (not just the 17 migrated files) taking a raw `entity_id`
+      parameter, checked against every access-check pattern this codebase actually uses
+      (`require_entity_access`, `require_group_access`, `get_current_entity_id`,
+      `verify_entity_access`, `EntityService.get_entity_by_id`, `_get_entity_if_accessible`,
+      `resolve_and_verify_entity_id`), plus a small, individually-justified allowlist for the
+      confirmed-safe non-standard patterns (unimplemented stubs, `user_id`-scoped queries,
+      delegating wrappers). **Result: 620 route handlers examined, 0 unresolved.** Sanity-checked the
+      tool isn't vacuously passing by confirming it correctly flags a deliberately-planted unguarded
+      endpoint in a scratch file outside the repo. Wrapped as a permanent regression test,
+      `tests/test_phase2_completion_gate_sweep.py` (runs in well under a second, no database needed)
+      — a future change that removes an access check or adds a new unguarded entity-scoped endpoint
+      anywhere in the app fails this test immediately.
+
 ---
 
 ## 7. Phase 3 — Enum and Data-Model Normalization
