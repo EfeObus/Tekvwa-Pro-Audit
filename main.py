@@ -688,7 +688,11 @@ app.include_router(sales.router, prefix="/api/v1/entities", tags=["Sales Recordi
 app.include_router(tax.router, prefix="/api/v1/tax", tags=["Tax Management"])
 
 # 2026 Tax Reform APIs
-app.include_router(tax_2026.router, prefix="/api/v1/tax-2026", tags=["2026 Tax Reform"])
+# tax_2026.router already declares its own full prefix ("/api/v1/tax-2026") internally, matching
+# accounting.py/budget.py/fx.py's pattern -- passing prefix= here too silently doubled every one of
+# this router's ~40 endpoints to /api/v1/tax-2026/api/v1/tax-2026/..., making them all unreachable at
+# their documented/expected URLs. Fixed 2026-09-26, see docs/REMEDIATION_LOG.md.
+app.include_router(tax_2026.router, tags=["2026 Tax Reform"])
 
 # Fixed Asset Register (2026)
 app.include_router(fixed_assets.router, tags=["Fixed Assets"])

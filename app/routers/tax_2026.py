@@ -19,9 +19,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.database import get_async_session
-from app.dependencies import get_current_active_user, require_feature
+from app.dependencies import get_current_active_user, require_feature, require_entity_access
 from app.models.user import User
-from app.models.entity import BusinessType
+from app.models.entity import BusinessType, BusinessEntity
 from app.models.invoice import BuyerStatus
 from app.models.tax_2026 import VATRecoveryType, ReliefType, ReliefStatus, CreditNoteStatus
 from app.models.sku import Feature
@@ -380,8 +380,8 @@ async def verify_entity_access(
 ):
     """Verify user has access to entity."""
     entity_service = EntityService(db)
-    entity = await entity_service.get_entity_by_id(entity_id)
-    
+    entity = await entity_service.get_entity_by_id(entity_id, current_user)
+
     if not entity:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -3300,6 +3300,7 @@ async def get_self_assessment_info() -> SelfAssessmentInfoResponse:
 async def generate_cit_self_assessment(
     entity_id: UUID,
     fiscal_year: int = Path(..., ge=2020, le=2100),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ) -> CITAssessmentResponse:
@@ -3366,6 +3367,7 @@ async def generate_vat_self_assessment(
     entity_id: UUID,
     year: int = Path(..., ge=2020, le=2100),
     month: int = Path(..., ge=1, le=12),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ) -> VATAssessmentResponse:
@@ -3422,6 +3424,7 @@ async def generate_vat_self_assessment(
 async def generate_annual_returns(
     entity_id: UUID,
     fiscal_year: int = Path(..., ge=2020, le=2100),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ) -> AnnualReturnsResponse:
@@ -3464,6 +3467,7 @@ async def generate_annual_returns(
 async def export_for_taxpro_max(
     entity_id: UUID,
     request: TaxProExportRequest,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_active_user),
 ) -> TaxProExportResponse:
