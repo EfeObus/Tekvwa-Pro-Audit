@@ -43,6 +43,7 @@ MIGRATED_ROUTER_FILES = [
     "budget.py",
     "consolidation.py",
     "fixed_assets.py",
+    "forensic_audit.py",
 ]
 
 

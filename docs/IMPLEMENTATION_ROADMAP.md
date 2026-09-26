@@ -558,7 +558,14 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       2-test service-level suite (`tests/test_fixed_assets.py`) passing unchanged, not an HTTP
       smoke test (which would 403 on the SKU gate before ever reaching the access check, as already
       confirmed for `budget.py`).
-- [ ] `forensic_audit.py` — 15 + 1 write (`sync_journal_entries_to_ledger`) — 16 total
+- [x] `forensic_audit.py` — 15 + 1 write (`sync_journal_entries_to_ledger`) — 16 total. **Done
+      2026-09-26.** All 16 bare `entity_id: uuid.UUID` params (this router's prefix is
+      `/{entity_id}/forensic-audit`, mounted under `/api/v1/entities` externally in `main.py`, same
+      style as `audit.py`) given `Depends(require_entity_access)`. This router also carries a
+      router-level `require_feature([Feature.BENFORDS_LAW])` gate (Intelligence add-on tier), same
+      as `budget.py`/`fixed_assets.py`, so verification relied on the AST sweep and a clean import
+      check rather than an HTTP smoke test (would 403 on the SKU gate before reaching the access
+      check). No pre-existing test file covers this router's endpoints.
 - [ ] `fx.py` — 10, including the 2 confirmed writes
 - [ ] `ml_ai.py` — 1 (dashboard) + 2 confirmed vulnerable (`forecast_cash_flow`, `predict_growth` —
       remove their misleading `# Verify entity access` comments along with the fix, since the comment
@@ -1595,7 +1602,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` migrated (82/164 endpoints per the original tally, 2026-09-26). 11 files / 82 endpoints remain. `consolidation.py` also got a same-root-cause `group_id` fix (17 endpoints via new `require_group_access`) beyond the original 3-endpoint count — see its roadmap entry and REMEDIATION_LOG.md. |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` migrated (98/164 endpoints per the original tally, 2026-09-26). 10 files / 66 endpoints remain. `consolidation.py` also got a same-root-cause `group_id` fix (17 endpoints via new `require_group_access`) beyond the original 3-endpoint count — see its roadmap entry and REMEDIATION_LOG.md. |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

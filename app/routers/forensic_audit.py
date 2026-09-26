@@ -24,8 +24,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.database import get_db
-from app.dependencies import get_current_user, require_feature
+from app.dependencies import get_current_user, require_feature, require_entity_access
 from app.models.user import User
+from app.models.entity import BusinessEntity
 from app.models.sku import Feature
 from app.services.forensic_audit_service import (
     ForensicAuditService,
@@ -136,6 +137,7 @@ async def analyze_benfords_law(
     fiscal_year: int = Query(..., ge=2020, le=2030, description="Fiscal year to analyze"),
     transaction_type: Optional[str] = Query(None, description="Filter by transaction type"),
     analysis_type: str = Query("first_digit", description="'first_digit' or 'second_digit'"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -295,6 +297,7 @@ async def analyze_benfords_law(
 async def analyze_benfords_law_custom(
     entity_id: uuid.UUID,
     request: BenfordsAnalysisRequest,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -328,6 +331,7 @@ async def detect_anomalies(
     fiscal_year: int = Query(..., ge=2020, le=2030),
     group_by: Optional[str] = Query(None, description="Group analysis by field (category, vendor, source)"),
     threshold: float = Query(2.5, ge=1.5, le=5.0, description="Z-score threshold"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -506,6 +510,7 @@ async def detect_anomalies(
 async def detect_anomalies_custom(
     entity_id: uuid.UUID,
     request: AnomalyDetectionRequest,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -533,6 +538,7 @@ async def analyze_nrs_gaps(
     start_date: date = Query(..., description="Analysis period start"),
     end_date: date = Query(..., description="Analysis period end"),
     include_b2c: bool = Query(True, description="Include B2C high-value analysis"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -562,6 +568,7 @@ async def analyze_nrs_gaps_by_year(
     entity_id: uuid.UUID,
     fiscal_year: int,
     include_b2c: bool = Query(True),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -585,6 +592,7 @@ async def analyze_nrs_gaps_by_year(
 async def verify_data_integrity(
     entity_id: uuid.UUID,
     fiscal_year: Optional[int] = Query(None, description="Optional fiscal year filter"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -613,6 +621,7 @@ async def get_ledger_integrity_report(
     entity_id: uuid.UUID,
     start_sequence: Optional[int] = Query(None, description="Start sequence number"),
     end_sequence: Optional[int] = Query(None, description="End sequence number"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -659,6 +668,7 @@ async def get_three_way_matching_summary(
     entity_id: uuid.UUID,
     start_date: date = Query(...),
     end_date: date = Query(...),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -704,6 +714,7 @@ async def get_three_way_matching_summary(
 async def get_matching_exceptions(
     entity_id: uuid.UUID,
     status_filter: Optional[str] = Query(None, description="Filter by status: discrepancy, pending_review"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -772,6 +783,7 @@ async def get_matching_exceptions(
 async def run_full_forensic_audit(
     entity_id: uuid.UUID,
     request: ForensicAuditRequest,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -804,6 +816,7 @@ async def run_full_forensic_audit(
 async def get_audit_summary(
     entity_id: uuid.UUID,
     fiscal_year: int,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -862,6 +875,7 @@ async def get_audit_summary(
 @router.get("/worm-storage/status")
 async def get_worm_storage_status(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -904,6 +918,7 @@ async def verify_worm_document(
     document_type: str,
     document_id: str,
     expected_hash: Optional[str] = Query(None, description="Expected SHA-256 hash"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -925,6 +940,7 @@ async def verify_worm_document(
 async def sync_journal_entries_to_ledger(
     entity_id: uuid.UUID,
     fiscal_year: int = Query(..., ge=2020, le=2030, description="Fiscal year to sync"),
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -1030,6 +1046,7 @@ async def sync_journal_entries_to_ledger(
 @router.get("/ledger-stats")
 async def get_ledger_statistics(
     entity_id: uuid.UUID,
+    _entity_access: BusinessEntity = Depends(require_entity_access),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
