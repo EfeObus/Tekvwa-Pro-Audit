@@ -171,10 +171,10 @@ Executed per table, in the same individually-verified style as the rest of Findi
 `employee_variance_logs`, `ctc_snapshots`, `what_if_simulations`, `ghost_worker_detections`,
 `upsell_opportunities`, `upsell_activities`, `payment_transactions`, `ml_jobs`, `ml_models`,
 `risk_signals`, `risk_signal_comments`, `payslips`, `sku_pricing`, `payroll_runs`,
-`employee_loans`, `loan_repayments`, `payslip_items` — done, verified (check
-`docs/REMEDIATION_LOG.md` for current deploy status of the most recent one). 7 of the 66 tables in
-the original scope remain (see the tier tables above for the full list; done tables are no longer
-individually re-listed here). `ledger_entries`, `budgets`, and
+`employee_loans`, `loan_repayments`, `payslip_items`, `legal_holds`, `legal_hold_notifications` —
+done, verified (check `docs/REMEDIATION_LOG.md` for current deploy status of the most recent one).
+5 of the 66 tables in the original scope remain (see the tier tables above for the full list; done
+tables are no longer individually re-listed here). `ledger_entries`, `budgets`, and
 `account_balances` were fixed via
 option (A) — migrating the database to match the model — rather than (B); see those log entries
 for why. `recurring_journal_entries` is the first table found to be genuinely dead code (no real

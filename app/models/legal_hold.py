@@ -19,7 +19,7 @@ from sqlalchemy import Boolean, DateTime, Date, ForeignKey, String, Text, Intege
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import BaseModel, AuditMixin
+from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.organization import Organization
@@ -56,7 +56,7 @@ class DataScope(str, Enum):
     SPECIFIC_ENTITIES = "specific_entities"  # Specific business entities only
 
 
-class LegalHold(BaseModel, AuditMixin):
+class LegalHold(BaseModel):
     """
     Legal hold to preserve data for legal or compliance requirements.
     
@@ -100,22 +100,23 @@ class LegalHold(BaseModel, AuditMixin):
         index=True,
     )
     
-    # Hold details
+    # Hold details -- plain String, not native Postgres enums. Same "converted for
+    # flexibility" pattern already documented in app/models/sku.py.
     hold_type: Mapped[LegalHoldType] = mapped_column(
-        SQLEnum(LegalHoldType),
+        String(50),
         nullable=False,
         default=LegalHoldType.TAX_INVESTIGATION,
     )
-    
+
     status: Mapped[LegalHoldStatus] = mapped_column(
-        SQLEnum(LegalHoldStatus),
+        String(50),
         nullable=False,
         default=LegalHoldStatus.ACTIVE,
         index=True,
     )
-    
+
     data_scope: Mapped[DataScope] = mapped_column(
-        SQLEnum(DataScope),
+        String(50),
         nullable=False,
         default=DataScope.ALL_DATA,
     )
@@ -225,7 +226,7 @@ class LegalHold(BaseModel, AuditMixin):
     )
     
     def __repr__(self) -> str:
-        return f"<LegalHold {self.hold_number}: {self.matter_name} ({self.status.value})>"
+        return f"<LegalHold {self.hold_number}: {self.matter_name} ({self.status})>"
     
     @property
     def is_active(self) -> bool:
@@ -258,29 +259,37 @@ class LegalHoldNotification(BaseModel):
         nullable=False,
         index=True,
     )
-    
-    recipient_user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id"),
+
+    recipient_email: Mapped[str] = mapped_column(
+        String(255),
         nullable=False,
     )
-    
+
+    recipient_name: Mapped[Optional[str]] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     notification_type: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
         comment="Type: hold_initiated, reminder, release_pending, released"
     )
-    
-    sent_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-    )
-    
-    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True),
+
+    sent_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
         nullable=True,
     )
-    
+
+    acknowledged: Mapped[Optional[bool]] = mapped_column(
+        Boolean,
+        nullable=True,
+    )
+
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
     # Relationships
     legal_hold: Mapped["LegalHold"] = relationship(lazy="selectin")
-    recipient: Mapped["User"] = relationship(lazy="selectin")

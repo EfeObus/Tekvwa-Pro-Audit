@@ -1830,7 +1830,36 @@ existing-finding note in the previous log entry.
 `tests/test_payslips.py`, `tests/test_payroll_runs.py`, `tests/test_employee_loans.py`,
 `tests/test_payroll_advanced.py` (15 passed, no regressions after the transient retry).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 7 of the
+**Status:** ✅ Fixed, tested, committed (`ff2eaf5`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 7 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — legal_holds and legal_hold_notifications, closing 2 more (2026-09-25)
+
+- **`LegalHold`** inherited `AuditMixin` for zero reason: `app/services/legal_hold_service.py`'s
+  real construction site never sets the mixin's plain `created_by_id`/`updated_by_id` (it uses
+  its own, differently-named `created_by_staff_id`/`released_by_staff_id` instead), and the live
+  table has no `created_by_id`/`updated_by_id` columns at all — both were dead weight that would
+  only ever bite if someone touched them directly. Dropped `AuditMixin` entirely — zero migration,
+  since there was nothing to remove from the DB. `hold_type`/`status`/`data_scope` were also
+  native SQLAlchemy enums against plain `VARCHAR` live columns — same pattern already fixed in
+  `ml_jobs`/`risk_signals` earlier today; fixed to plain `String`, requiring 5 `.value` accesses
+  removed across `app/routers/legal_holds.py` and `dashboard_service.py`'s `legal_holds_list`.
+- **`LegalHoldNotification`** had a completely non-overlapping field set from the live table
+  (`recipient_user_id` vs. the real `recipient_email`/`recipient_name`/`acknowledged`) and —
+  confirmed via a codebase-wide grep — was **never constructed anywhere**, genuinely dead code.
+  Rewritten to match the live table exactly, same reasoning as `recurring_journal_entries` earlier
+  this session.
+
+**Verified via:** a new permanent regression test (`tests/test_legal_holds.py`, exercising the
+real `create_legal_hold()` service method and a direct `LegalHoldNotification` insert matching the
+live schema), plus the existing regression suite (`tests/test_legal_holds.py`,
+`tests/test_risk_signals.py`, `tests/test_ml_jobs.py`, `tests/test_api.py` — 33 passed, 1 skipped,
+no regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 5 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---
