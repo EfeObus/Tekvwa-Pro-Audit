@@ -964,7 +964,7 @@ class PayslipItem(BaseModel):
     )
     
     item_type: Mapped[str] = mapped_column(
-        String(50),
+        String(30),
         nullable=False,
     )
     category: Mapped[str] = mapped_column(

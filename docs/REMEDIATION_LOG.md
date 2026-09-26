@@ -1803,7 +1803,34 @@ broader payroll regression suite (`tests/test_employee_loans.py`, `tests/test_pa
 `tests/test_payslips.py`, `tests/test_payroll_advanced.py`, `tests/test_api.py` — 36 passed, 1
 skipped, no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 8 of the
+**Status:** ✅ Fixed, tested, committed (`8f95b49`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 8 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — payslip_items, same missing-updated_at pattern (2026-09-25)
+
+Same class of bug as `loan_repayments`: `PayslipItem` inherits `BaseModel`, which always adds a
+`NOT NULL` `updated_at` with a server default, but the live table only had `created_at` — every
+payslip item creation has always failed. Migration `553f1e5fc3cc` adds it. Also narrows
+`item_type` from `String(50)` to the live column's real `String(30)` (real values top out at
+`"employer_contribution"`, 22 chars — never an actual truncation risk, just closed while already
+here).
+
+**Also reproduced again, same transient cause as the previous entry:** `test_entity` failed once
+with the identical `businesstype` enum error immediately after this session's latest
+`alembic stamp base` + `alembic upgrade head` reset, then passed cleanly on retry with zero code
+changes — confirms this is a local asyncpg statement/type-cache staleness artifact of repeatedly
+dropping and recreating enum types against a live connection pool during this session's own
+verification workflow, not a real or new bug. Not investigated further; already covered by the
+existing-finding note in the previous log entry.
+
+**Verified via:** a new permanent regression test (`tests/test_payslip_items.py`), plus
+`tests/test_payslips.py`, `tests/test_payroll_runs.py`, `tests/test_employee_loans.py`,
+`tests/test_payroll_advanced.py` (15 passed, no regressions after the transient retry).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 7 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---
