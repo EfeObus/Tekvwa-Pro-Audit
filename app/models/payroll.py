@@ -671,7 +671,12 @@ class PayrollRun(BaseModel, AuditMixin):
     paid_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
-    
+
+    is_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    locked_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+
     # Relationships
     entity: Mapped["BusinessEntity"] = relationship(
         "BusinessEntity",

@@ -1745,7 +1745,23 @@ the NGN-conversion fallback, plus the existing billing regression suite
 (`tests/test_sku_pricing.py`, `tests/test_payment_transactions.py`, `tests/test_api.py` — 26
 passed, 1 skipped, no regressions).
 
-**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 11 of the
+**Status:** ✅ Fixed, tested, committed (`e6db930`), and pushed to `origin/main`. Deploy still
+blocked by the closed billing account — not attempted. 11 of the original 66 Finding-50 tables
+remained after this one; see the next entry for the current count.
+
+---
+
+## Finding 50 progress — payroll_runs, is_locked/locked_at unmapped (2026-09-25)
+
+Same pattern as `payslips`/`sku_pricing`: not a crash, just two real columns
+(`is_locked`/`locked_at`) the live table has that the model never mapped, with zero current
+callers. Added both — zero migration needed.
+
+**Verified via:** a new permanent regression test (`tests/test_payroll_runs.py`) round-tripping
+both fields, plus `tests/test_payslips.py`/`tests/test_payroll_advanced.py` (13 passed, no
+regressions).
+
+**Status:** ✅ Fixed and tested locally, not yet committed (next step, same session). 10 of the
 original 66 Finding-50 tables remain once this deploys.
 
 ---
