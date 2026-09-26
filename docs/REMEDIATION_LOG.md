@@ -2712,6 +2712,69 @@ exception-handling bug) alongside direct-call tests.
 traceability row updated to 162/164 against the original tally. Only `entities.py` (1 endpoint,
 `restore_entity`) remains in §2.1 proper.
 
+## Phase 2.1 §2.1 file list complete — entities.py migrated, all 17 files / 164 endpoints done (2026-09-26)
+
+**`entities.py::restore_entity`** — the final endpoint of Phase 2.1's file list. Matched the roadmap's
+description exactly ("add an organization-match check, not just a role check": the endpoint fetched
+the entity by ID alone, then checked only that `current_user.role == UserRole.OWNER`, so any
+organization's owner could restore any *other* organization's soft-deleted entity). Also, uncounted:
+its lookup query used `from app.models.entity import Entity` — no class named `Entity` exists
+anywhere in that module, only `BusinessEntity` — so this endpoint raised `ImportError` on every single
+call, crashing before the missing organization check ever mattered. Fixed both at once with
+`Depends(require_entity_access)`. Confirmed `EntityService.get_entity_by_id` doesn't filter by
+`is_active` (necessary here, since restoring a soft-deleted entity requires finding it while inactive).
+Verified via new `tests/test_entities_restore_access.py` (3 HTTP tests: rejects a foreign entity before
+the role check runs, successfully restores the caller's own soft-deleted entity, rejects a
+nonexistent one). This router has no prior test file at all.
+
+**Section 2.1's file list is now fully checked off: all 17 files, 164 endpoints (per the original
+audit's tally) migrated to `require_entity_access`.** Along the way, several files needed fixes beyond
+their originally-counted scope, and — more significantly — investigating each file closely enough to
+scope its actual Finding-18 work correctly surfaced a number of severe, unrelated, pre-existing
+production bugs that had nothing to do with cross-tenant access control:
+
+- `consolidation.py`: every one of 17 `group_id`-keyed endpoints had zero organization scoping (new
+  `require_group_access` dependency).
+- `ml_ai.py`: `detect_anomalies` had no access check of any kind.
+- `report_template.py`: `clone_template`'s `target_entity_id` (an optional, unvalidated second
+  entity_id in the request body) allowed cloning a template directly into another organization.
+- `reports.py`: `subscribe_to_compliance_alerts` (a stub with nothing to leak, but protected anyway).
+- `tax_2026.py`: a `TypeError` crash affecting ~35 endpoints (a missing `user` argument to
+  `EntityService.get_entity_by_id`), and a router double-prefix in `main.py` making the entire file
+  unreachable at its documented URL.
+- `year_end.py` / `report_export.py`: a shared `except Exception` bug across 17 endpoints silently
+  converting `require_entity_access`'s 404s into 500s, plus `year_end.py::reopen_fiscal_year` never
+  using its own `entity_id` parameter at all.
+- `entities.py`: `restore_entity`'s `ImportError` crash from a nonexistent `Entity` class.
+
+Two things were found, precisely quantified, and **deliberately left unfixed**, each flagged as its
+own follow-up rather than bundled into this section:
+
+- A separate, pre-existing routing collision in `report_template.py` (`entities.py`'s `GET
+  /{entity_id}` shadows `GET /api/v1/entities/report-templates` due to router registration order in
+  `main.py`) — reordering router registration risks colliding with other `entities.py` sub-paths and
+  needs its own dedicated investigation.
+- A deeper, systemic gap in `YearEndClosingService`: several service methods look up
+  `FiscalYear`/`Period` by ID alone, never cross-validating against the (now-verified) `entity_id` —
+  the same root-cause pattern as `consolidation.py`'s `group_id` gap, but spread across an entire
+  service rather than isolated to one or two call sites, and large enough to need its own dedicated
+  pass with its own tests.
+
+**What's left before Section 2.1 is fully closed, per its own stated test/completion-gate steps (not
+yet started):**
+
+1. The single comprehensive parameterized "Org A vs Org B" test suite across all 164 endpoints the
+   roadmap explicitly calls for (§2.1's own words: "one parameterized test that hits every
+   entity-scoped route with a foreign entity ID and asserts rejection") — today's work verified each
+   file as it was migrated, but the roadmap wants one consolidated suite as the final regression net.
+2. Re-verifying the "24 confirmed safe" bucket from the original audit (`dashboard.py`'s other 4,
+   `notifications.py`'s 2, `reports.py`'s 1, `auth.py`'s 1, `views.py::set_entity`) still passes.
+3. Section 2.2: the `UserEntityAccess` index/unique-constraint migration — blocked on a production
+   data-integrity check for duplicate `(user_id, entity_id)` rows that this session cannot perform
+   (see [[feedback_session_guardrails]]); must be flagged to the user, not attempted or worked around.
+4. The "Document" step: updating `docs/DATA_MODEL_ERD.md`/`docs/TECHNICAL_ARCHITECTURE.md`/
+   `CONTRIBUTING.md` with `require_entity_access` as the documented standard pattern.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed

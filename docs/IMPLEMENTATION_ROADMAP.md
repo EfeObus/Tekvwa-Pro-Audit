@@ -698,7 +698,17 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       the same pattern in `year_end.py` too). `grep`-confirmed `resolve_entity_id` no longer exists
       anywhere in this file. This router has no SKU feature gate, so `tests/test_report_export_entity_access.py`
       includes both a direct-call suite and one real HTTP round trip proving the fixed 404.
-- [ ] `entities.py` — 1 (`restore_entity` — add an organization-match check, not just a role check)
+- [x] `entities.py` — 1 (`restore_entity` — add an organization-match check, not just a role check).
+      **Done 2026-09-26 — the final endpoint of Phase 2.1's 164-endpoint list, plus a crash found
+      alongside it:** the endpoint's own entity lookup was `from app.models.entity import Entity` —
+      no such class exists (only `BusinessEntity`) — so this endpoint raised `ImportError` on every
+      single call, before ever reaching the missing organization check the roadmap called out. Fixed
+      both at once with `Depends(require_entity_access)`; confirmed
+      `EntityService.get_entity_by_id` doesn't filter by `is_active`, so a soft-deleted entity in the
+      caller's own organization still resolves correctly (needed, since restoring is the whole point
+      of this endpoint). Verified via new `tests/test_entities_restore_access.py` (3 HTTP-level
+      tests: rejects a foreign entity before the role check even runs, successfully restores the
+      caller's own soft-deleted entity, rejects a nonexistent entity).
 
 That is 34+17+23+3+1+4+16+10+3+6+21+4+12+8+1 = **164**, matching the audit's final confirmed count
 exactly. Track each file as its own commit so a review can verify the count lines up file-by-file
@@ -1720,7 +1730,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` + `report_template.py` + `reports.py` + `tax_2026.py` + `year_end.py` + `report_export.py` migrated (162/164 endpoints per the original tally, 2026-09-26). 1 file / 1 endpoint remains (`entities.py`). Multiple files got same-root-cause fixes beyond their original tallies — `consolidation.py` (`group_id`), `ml_ai.py` (`detect_anomalies`), `report_template.py` (`clone_template`'s `target_entity_id`), `reports.py` (`subscribe_to_compliance_alerts`), `tax_2026.py` (a crash affecting ~35 endpoints + a router double-prefix), and `year_end.py`/`report_export.py` (a shared `except Exception` bug silently converting 404s into 500s across 17 endpoints) — see their roadmap entries and REMEDIATION_LOG.md. A separate, unrelated routing-collision bug was also found in `report_template.py` (documented, not fixed). |
+| 18 | P0 | 2 | 2.1 | ✅ All 17 files / 164 endpoints migrated to `require_entity_access` (2026-09-26). Several files got same-root-cause fixes beyond their original per-file tallies, and 3 severe, unrelated, pre-existing bugs were found and fixed along the way — `consolidation.py` (`group_id`, 17 endpoints via new `require_group_access`), `ml_ai.py` (`detect_anomalies`, uncounted), `report_template.py` (`clone_template`'s `target_entity_id`, uncounted), `reports.py` (`subscribe_to_compliance_alerts`, uncounted), `tax_2026.py` (a `TypeError` crash affecting ~35 endpoints + a router double-prefix making the whole file unreachable at its documented URL), `year_end.py`/`report_export.py` (a shared `except Exception` bug silently converting 404s into 500s across 17 endpoints, plus `reopen_fiscal_year`'s missing entity check), and `entities.py` (`restore_entity`'s `ImportError` crash from a nonexistent `Entity` class). A separate, unrelated routing-collision bug in `report_template.py`, and a deeper systemic gap in `YearEndClosingService` (fiscal_year_id/period_id never cross-validated against entity_id), were found, quantified, and documented but deliberately **not** fixed here — see each file's roadmap entry and REMEDIATION_LOG.md for full writeups. Remaining before §2.1 is fully closed per its own completion gate: the single comprehensive parameterized Org-A-vs-Org-B test suite across all 164 endpoints the roadmap calls for (§2.1's own stated test step), plus §2.2 (the `UserEntityAccess` index/unique-constraint migration, blocked on a production data-integrity check). |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

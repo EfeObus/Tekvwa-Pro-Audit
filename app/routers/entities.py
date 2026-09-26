@@ -10,8 +10,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_async_session
-from app.dependencies import get_current_active_user, require_role, record_usage_event, require_within_usage_limit
+from app.dependencies import get_current_active_user, require_role, record_usage_event, require_within_usage_limit, require_entity_access
 from app.models.user import User, UserRole
+from app.models.entity import BusinessEntity
 from app.models.sku import UsageMetricType
 from app.schemas.entity import (
     EntityCreateRequest,
@@ -793,24 +794,16 @@ async def restore_entity(
     entity_id: UUID,
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_async_session),
+    entity: BusinessEntity = Depends(require_entity_access),
 ):
     """Restore a deleted entity."""
-    entity_service = EntityService(db)
-    
-    from sqlalchemy import select
-    from app.models.entity import Entity
-    
-    result = await db.execute(
-        select(Entity).where(Entity.id == entity_id)
-    )
-    entity = result.scalar_one_or_none()
-    
-    if not entity:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Entity not found",
-        )
-    
+    # Previously: looked up `from app.models.entity import Entity` (no such class exists -- only
+    # BusinessEntity -- so this endpoint raised ImportError on every call) via a raw, org-unscoped
+    # `select(Entity).where(Entity.id == entity_id)` query (Finding 18, docs/IMPLEMENTATION_ROADMAP.md
+    # Phase 2 Section 2.1 -- "add an organization-match check, not just a role check"). Now resolved
+    # by Depends(require_entity_access), the same as every other migrated endpoint;
+    # EntityService.get_entity_by_id doesn't filter by is_active, so a soft-deleted entity in the
+    # caller's own organization still resolves correctly here.
     if entity.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
