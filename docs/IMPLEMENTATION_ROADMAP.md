@@ -571,9 +571,23 @@ unfixed) rather than relying on each of 164 hand-edits being individually correc
       as `accounting.py`. Router-level `require_feature([Feature.MULTI_CURRENCY])` gate (Professional
       tier), so verification relied on the AST sweep plus the existing 34-test
       `test_fx_conversion.py` suite passing unchanged.
-- [ ] `ml_ai.py` — 1 (dashboard) + 2 confirmed vulnerable (`forecast_cash_flow`, `predict_growth` —
+- [x] `ml_ai.py` — 1 (dashboard) + 2 confirmed vulnerable (`forecast_cash_flow`, `predict_growth` —
       remove their misleading `# Verify entity access` comments along with the fix, since the comment
-      itself was evidence of the bug) — 3 total
+      itself was evidence of the bug) — 3 total. **Done 2026-09-26, plus a 4th endpoint found and
+      fixed in the same pass:** `detect_anomalies` (`POST /anomaly/detect`) had **no access check at
+      all** — not even the misleading `db.get()` existence check the other two had — and wasn't
+      counted in this file's "3 total". `forecast_cash_flow`/`predict_growth`/`detect_anomalies` all
+      take `entity_id` nested inside their POST body (not a raw path/query param), so the fix is an
+      inline `await require_entity_access(entity_id=request.entity_id, ...)` call rather than
+      `Depends()`; `get_ml_dashboard` (bare `entity_id: UUID` path param) uses `Depends()` normally.
+      Fixing `get_ml_dashboard` surfaced a real bug this same edit introduced and a new test caught:
+      removing the old inline entity check without preserving a variable named `entity` broke the
+      dashboard's own later use of `entity.name` with a guaranteed `NameError` — fixed by having the
+      new `Depends(require_entity_access)` populate `entity` directly. New
+      `tests/test_ml_ai_entity_access.py` covers all 4 endpoints via direct function calls (this
+      router's Intelligence-add-on feature gate makes HTTP-level testing impractical, and 3 of the 4
+      endpoints' `entity_id` isn't visible to the AST sweep at all since it's body-nested, not a
+      function parameter — deliberately not added to `MIGRATED_ROUTER_FILES` for that reason).
 - [ ] `report_template.py` — 2 + 4 confirmed (`list_templates`, `create_template`,
       `get_default_template`, `clone_template`) — **for this file specifically, do not just add
       `require_entity_access`; also fix the underlying service method's `OR organization_id =
@@ -1606,7 +1620,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | 13 | P3 | 12 | 12.4 | ⬜ |
 | 15 | Potential Risk | 14 | 14.3 (verification only) | ⬜ |
 | 16 | P2 | 13 | 13.2 | 🟧 Blocked (domain) |
-| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` migrated (108/164 endpoints per the original tally, 2026-09-26). 9 files / 56 endpoints remain. `consolidation.py` also got a same-root-cause `group_id` fix (17 endpoints via new `require_group_access`) beyond the original 3-endpoint count — see its roadmap entry and REMEDIATION_LOG.md. |
+| 18 | P0 | 2 | 2.1 | 🟨 In progress — `require_entity_access` built, `accounting.py` + `audit.py` + `budget.py` + `consolidation.py` + `dashboard.py` + `fixed_assets.py` + `forensic_audit.py` + `fx.py` + `ml_ai.py` migrated (111/164 endpoints per the original tally, 2026-09-26). 8 files / 53 endpoints remain. `consolidation.py` got a same-root-cause `group_id` fix (17 endpoints) and `ml_ai.py` a 4th undercounted endpoint (`detect_anomalies`) beyond their original tallies — see their roadmap entries and REMEDIATION_LOG.md. |
 | 19 | P2 | 1 | 1.4 | ✅ Closed — payroll_advanced.py's 11 models registered in `Base.metadata` |
 | 20 | P2 | 9 | 9.4 | ⬜ |
 | 21 | P2 | 9 | 9.5 | ⬜ |

@@ -2398,6 +2398,73 @@ suite passed unchanged.
 17-endpoint `group_id` fix noted separately since it wasn't part of that original count. 13 files / ~87
 endpoints remain in §2.1 proper.
 
+## Phase 2.1 continued — fixed_assets.py, forensic_audit.py, fx.py, ml_ai.py migrated (2026-09-26)
+
+**`fixed_assets.py` (4 endpoints)**, **`forensic_audit.py` (16 endpoints)**, and **`fx.py` (10
+endpoints)** were all straightforward migrations, each following an already-established pattern:
+`accounting.py`/`fx.py`-style `entity_id: uuid.UUID = Path(...)` for `fixed_assets.py`/`fx.py`, and
+`audit.py`-style bare `entity_id: uuid.UUID` (path resolved implicitly from the route template) for
+`forensic_audit.py`. All three carry a router-level SKU feature gate
+(`require_feature([Feature...])`, Professional or Intelligence-add-on tier), so — as already
+established with `budget.py` — an HTTP-level smoke test would 403 on the tier gate before ever
+reaching the access check, making it not a useful verification here. Relied on the AST structural
+sweep plus each file's existing service-level regression suite passing unchanged
+(`test_fixed_assets.py`: 2 tests, `test_fx_conversion.py`: 34 tests; no pre-existing suite for
+`forensic_audit.py`).
+
+**`ml_ai.py` — the file where this section's scope grew a second time** (after `consolidation.py`'s
+`group_id` discovery). The roadmap counted 3 endpoints: `get_ml_dashboard` plus two flagged as having
+a "misleading `# Verify entity access` comment" — `forecast_cash_flow` and `predict_growth`. Both
+had exactly this shape:
+
+```python
+# Verify entity access
+entity = await db.get(BusinessEntity, request.entity_id)
+if not entity:
+    raise HTTPException(status_code=404, detail="Entity not found")
+```
+
+This checks the entity *exists*, not that it belongs to the caller's organization — the comment
+claims a check that isn't actually there, which is exactly why the roadmap called it out as
+"misleading." While fixing these two, found a **third, uncounted instance of the same class of bug**,
+worse than the first two: `detect_anomalies` (`POST /anomaly/detect`) queries
+`Transaction.entity_id == request.entity_id` directly with **no check of any kind**, not even the
+misleading existence check. Not part of this file's "3 total." Fixed as a same-root-cause extension,
+same reasoning as `consolidation.py`'s `group_id` gap.
+
+All three of these endpoints take `entity_id` nested inside a POST request body
+(`CashFlowForecastRequest.entity_id`, etc.), not as a bare function parameter, so `Depends
+(require_entity_access)` can't be used directly — fixed with an inline
+`await require_entity_access(entity_id=request.entity_id, current_user=current_user, db=db)` call in
+each body, replacing the misleading check (or, for `detect_anomalies`, adding the first check it ever
+had). `get_ml_dashboard` is a normal bare-path-param endpoint, so it got the usual
+`Depends(require_entity_access)`.
+
+**A real regression, caught by writing the test rather than avoided by writing it:** fixing
+`get_ml_dashboard`, the removed inline check's `entity` variable was never reassigned, but the
+function's own response body further down still referenced `entity.name` — meaning the endpoint would
+crash with `NameError` on every single call, for any entity, immediately after this edit, before any
+test had run against it. Caught by the new `tests/test_ml_ai_entity_access.py` (written to verify the
+access-control fix, not looking for this) failing with the `NameError` instead of the expected
+behavior. Fixed by having the new `Depends(require_entity_access)` populate a parameter literally
+named `entity` instead of `_entity_access`, so the existing `entity.name` reference resolves correctly
+again.
+
+**Verification:** the AST structural sweep can only see `get_ml_dashboard` here — `forecast_cash_flow`,
+`predict_growth`, and `detect_anomalies`'s `entity_id` lives inside a Pydantic body model, invisible to
+an AST walk over function parameters. Adding `ml_ai.py` to `MIGRATED_ROUTER_FILES` would have silently
+skipped verifying 3 of 4 endpoints (no `entity_id` parameter to flag, not a false pass but not a real
+check either) — deliberately left out, with a comment explaining why, rather than claim coverage the
+sweep can't actually provide. Real verification is the new `tests/test_ml_ai_entity_access.py` (6
+tests, calling all four route handlers directly since this router's Intelligence-add-on feature gate
+makes HTTP-level testing impractical, same as `budget.py`/`fixed_assets.py`/`fx.py`).
+
+**Roadmap:** all four files checked off in §2.1's file list; Finding 18's traceability row updated to
+111/164 against the original tally. `consolidation.py`'s `group_id` fix and `ml_ai.py`'s
+`detect_anomalies` fix are both noted as beyond their files' original counts. 8 files / ~53 endpoints
+remain in §2.1 proper: `report_template.py`, `reports.py`, `tax_2026.py`, `year_end.py`,
+`report_export.py`, `entities.py`.
+
 ---
 
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed

@@ -27,7 +27,7 @@ from sqlalchemy import select, func, and_, extract, case
 from pydantic import BaseModel, Field
 
 from app.database import get_async_session
-from app.dependencies import get_current_active_user, require_feature
+from app.dependencies import get_current_active_user, require_feature, require_entity_access
 from app.models.user import User
 from app.models.transaction import Transaction
 from app.models.entity import BusinessEntity
@@ -221,11 +221,8 @@ async def forecast_cash_flow(
     - ARIMA
     - LSTM Neural Networks
     """
-    # Verify entity access
-    entity = await db.get(BusinessEntity, request.entity_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    
+    _entity_access = await require_entity_access(entity_id=request.entity_id, current_user=current_user, db=db)
+
     # Get historical transaction data (last 24 months)
     end_date = date.today()
     start_date = end_date - timedelta(days=730)  # ~2 years
@@ -326,11 +323,8 @@ async def predict_growth(
     - Polynomial Regression
     - Neural Network Regression
     """
-    # Verify entity access
-    entity = await db.get(BusinessEntity, request.entity_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    
+    _entity_access = await require_entity_access(entity_id=request.entity_id, current_user=current_user, db=db)
+
     # Get historical data based on metric
     end_date = date.today()
     start_date = end_date - timedelta(days=365 * 2)
@@ -804,9 +798,11 @@ async def detect_anomalies(
 ):
     """
     Detect anomalies in entity data using ML methods.
-    
+
     Uses Z-score analysis with configurable sensitivity.
     """
+    _entity_access = await require_entity_access(entity_id=request.entity_id, current_user=current_user, db=db)
+
     # Get transaction data
     end_date = date.today()
     start_date = end_date - timedelta(days=365)
@@ -871,20 +867,16 @@ async def detect_anomalies(
 async def get_ml_dashboard(
     entity_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
+    entity: BusinessEntity = Depends(require_entity_access),
 ):
     """
     Get comprehensive ML insights dashboard for an entity.
-    
+
     Combines forecasting, growth prediction, and anomaly detection.
     """
     import random
-    
-    # Verify entity
-    entity = await db.get(BusinessEntity, entity_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    
+
     # Get transaction summary
     end_date = date.today()
     start_date = end_date - timedelta(days=365)

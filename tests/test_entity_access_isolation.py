@@ -45,6 +45,11 @@ MIGRATED_ROUTER_FILES = [
     "fixed_assets.py",
     "forensic_audit.py",
     "fx.py",
+    # ml_ai.py is NOT added here: 3 of its 4 in-scope endpoints (forecast_cash_flow, predict_growth,
+    # detect_anomalies) take entity_id nested inside a POST request body, not as a function parameter
+    # this AST sweep can see -- adding it would silently skip verifying them (no entity_id param means
+    # nothing gets flagged), not genuinely prove they're fixed. See tests/test_ml_ai_entity_access.py
+    # for that file's real coverage, and docs/REMEDIATION_LOG.md's Phase 2 entry for the full writeup.
 ]
 
 
