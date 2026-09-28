@@ -1733,7 +1733,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 
 | Finding | Sev | Phase | Section | Status |
 |---|---|---|---|---|
-| 1 (+1b, 1c) | P1 | 3 | 3.1-3.3 | ⬜ |
+| 1 (+1b, 1c) | P1 | 3 | 3.1-3.3 | 🟡 §3.1 done: 18/18 pure-casing columns fixed (13 commits), permanent CI gate added (`scripts/check_enum_value_casing.py`, hard-blocking in CI). §3.2 (6 columns)/§3.3 (`journalentrytype`) blocked on a product/business decision + a production data check this session cannot perform — see `docs/REMEDIATION_LOG.md`'s Phase 3 entry. |
 | 2 | P2 | 3 | 3.4 | ⬜ Now precisely quantified: `scripts/check_enum_type_drift.py` (added 2026-09-25) found 28 remaining "native Enum declared, live column is VARCHAR" mismatches — `audit_runs`, `credit_notes`, `audit_findings`, `auditor_action_logs`, `audit_evidence`, `bank_accounts`, `pit_relief_documents`, `support_tickets` (4 columns), and the bank-reconciliation/expense-claims families. Run the script for the exact current list before starting this section. |
 | 3 | P3 | 12 | 12.1 | ⬜ |
 | 4 | P3 | 12 | 12.2 | ⬜ |

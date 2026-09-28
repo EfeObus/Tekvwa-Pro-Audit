@@ -2923,6 +2923,136 @@ item, Phase 2 as a whole is now complete except for that one blocked migration.
 
 ---
 
+## Phase 3 — Enum and Data-Model Normalization
+
+**Started:** 2026-09-27
+
+### 3.1 Finding 1 (enum value-casing) — reconciliation against the audit's original 30-column claim
+
+Before writing any fix, per this roadmap's own rule against trusting an unverified prior finding,
+re-derived Finding 1 from scratch against the current live schema rather than assuming the audit's
+"30 confirmed" list is still accurate. Rebuilt the local dev database from empty via a real
+`alembic upgrade head` replay (it had drifted to a stale revision, `20260806_2230`, many migrations
+behind head `5845b65e3876`) so the check would run against an accurate, fully-migrated schema, not
+whatever `Base.metadata.create_all()` would produce.
+
+Built `scripts/check_enum_value_casing.py`: loads `Base.metadata`, and for every `SQLEnum` column
+whose live Postgres column is a genuine native enum type (`information_schema.columns.data_type =
+'USER-DEFINED'` — skipping anything that's `check_enum_type_drift.py`'s concern instead, i.e. Finding
+2), diffs the exact values SQLAlchemy would bind (`column.type.enums`) against the live type's actual
+labels (`pg_enum`/`pg_type`). Result: **47 native-enum columns checked, 24 mismatches** (not 30) —
+committed alongside a follow-up classification pass splitting those 24 into pure-casing vs.
+genuine-value-set-divergence (see below).
+
+**Reconciling the gap between the audit's 30 and this run's 24 + corrections:**
+
+- **10 columns** from the audit's list (`bank_statements.source`, `bank_statement_imports.source`,
+  `bank_statement_transactions.detected_charge_type`/`match_type`/`match_confidence_level`,
+  `bank_reconciliations.status`, `reconciliation_adjustments.adjustment_type`,
+  `unmatched_items.item_type`, `bank_charge_rules.charge_type`/`detection_method`) are no longer native
+  Postgres enum types at all on the live DB — confirmed via direct `psql \d` on each table, they're
+  now plain `VARCHAR`. This isn't a fix that needs to happen under Finding 1; it's already happened
+  (at some point before this session, likely alongside the bank-reconciliation Finding-49/50 work),
+  and it correctly reclassifies these 10 as Finding 2's concern instead — confirmed all 10 already
+  appear by name in `check_enum_type_drift.py`'s own output (28 total mismatches there, a superset).
+- **1 column**, `recurring_journal_entries.entry_type`, doesn't exist on the live table or the current
+  model at all — the `RecurringJournalEntry` model's own docstring (`app/models/accounting.py:775`)
+  documents that this field was deliberately removed under a prior Finding 50 pass ("dead in current
+  usage... entry_type/.../ removed (none exist on the live table)"). The audit's row for this column is
+  stale; already resolved, nothing to do.
+- That leaves the audit's 30 minus these 11 = 19, but the real check found 24 — the audit undercounted
+  by 5, because 5 of its own rows were filed under a separate "Likely (Finding 2 name mismatch)" bucket
+  (`accounting_dimensions.dimension_type`, `three_way_matches.status`, `wht_credit_notes.status`,
+  `approval_requests.status`, `budgets.period_type`) rather than the confirmed-30 list, even though
+  once the type-name resolves correctly they show the identical casing bug. All 5 are now confirmed
+  (their Finding-2 name mismatch was independently already fixed by a prior migration,
+  `20260925_1740_add_dimension_type_enum_values.py`, so they resolve to their intended native-enum
+  type and the casing bug is directly checkable).
+
+**Splitting the 24 into "safe to auto-fix" vs. "needs a product decision":** wrote a second, one-off
+classification pass (not committed — throwaway, reused the same live-DB introspection) comparing each
+mismatch's full value SET case-insensitively, not just whether *some* values differ. Result:
+
+- **18 columns are pure casing only** (identical value set once lowercased — safe, mechanical
+  `values_callable=lambda e: [m.value for m in e]` fix, no data or business-logic implications):
+  `usage_events.metric_type`, `business_entities.business_type`, `vat_recovery_records.recovery_type`,
+  `pit_relief_documents.relief_type`, `fixed_assets.category`/`status`/`depreciation_method`/
+  `disposal_type`, `depreciation_entries.depreciation_method`, `accounting_dimensions.dimension_type`,
+  `three_way_matches.status`, `budgets.period_type`, `approval_requests.status`,
+  `platform_api_keys.key_type`/`environment`, `emergency_controls.action_type`,
+  `fx_revaluations.revaluation_type`/`fx_account_type`.
+- **6 columns have genuine value-set divergence** (some model value has no live label under ANY
+  casing, or vice versa) — these need a product/business decision before any fix, per Finding 1b/1c,
+  **not** just a `values_callable` patch:
+  - `invoices.buyer_status` — model's `AUTO_ACCEPTED` has no live label at all (audit's original
+    Finding 1b claim, still accurate).
+  - `feature_access_logs.feature` — model has `BUDGET_MANAGEMENT`/`BUDGET_VARIANCE`/`MULTI_CURRENCY`
+    with no live label at all. **Correction to the audit**: this was listed in the original 30 as a
+    plain casing case; it is not — it's value-set divergent like Finding 1b's other columns.
+  - `wht_credit_notes.status` — model's `DISPUTED` has no live label; live has `rejected` instead,
+    which the model's enum doesn't have. **Correction to the audit**: this was one of the 5 "Likely"
+    columns claimed to be "all-lowercase" (pure casing); it is not.
+  - `fiscal_periods.status` — model's `PENDING_CLOSE` vs. live's `YEAR_END`, both already correctly
+    identified by the audit's own row narrative even though not counted among its formal "4 columns"
+    for Finding 1b.
+  - `journal_entries.status` — model's `PENDING` vs. live's `PENDING_APPROVAL`, same as above (audit
+    flagged it narratively but didn't count it in the formal Finding-1b list either).
+  - `journal_entries.entry_type` — Finding 1c, already known to be far more extensively divergent
+    (mixed 17-uppercase/3-lowercase live type, model values matching neither casing's full set).
+
+  Net effect: the audit's formal "4 columns" for Finding 1b is corrected to **6**, with 3 of its
+  original 4 (`bank_reconciliations.status`, `unmatched_items.item_type`,
+  `bank_charge_rules.detection_method`) now moot (converted to VARCHAR, see above) and 2 new ones
+  found (`feature_access_logs.feature`, `wht_credit_notes.status`) that the audit had mischaracterized.
+
+**Decision, per this roadmap's rule that Finding 1b/1c need a product/business decision before fixing:**
+the 6 value-set-divergent columns (including `journal_entries.entry_type`/Finding 1c) are flagged to
+the user as blocked, same as Phase 2 §2.2 — not attempted or worked around. Only the 18 pure-casing
+columns are being fixed under this section.
+
+**Implementation:** all 18 columns fixed, one commit per table (13 commits) — `usage_events`,
+`business_entities`, `vat_recovery_records`, `pit_relief_documents`, `fixed_assets` (4 columns),
+`depreciation_entries`, `platform_api_keys` (2 columns), `emergency_controls`, `fx_revaluations`
+(2 columns), `accounting_dimensions`, `three_way_matches`, `budgets`, `approval_requests`. The last
+four also needed §3.4's `name=` fix pulled forward (confirming the real live type name via
+`information_schema` and passing it explicitly), since it's the same edit site as the casing fix and
+leaving it split would mean an intermediate, confusingly-half-fixed state; `wht_credit_notes.status`
+(the 5th of the original "5 Likely" columns) is excluded, since it's one of the 6 blocked
+value-set-divergent columns, not just a name mismatch.
+
+**Test:** added `tests/test_phase3_enum_value_casing_roundtrip.py` (18/18 passing) — one round-trip
+per column, over every enum member. Its own docstring documents an important limitation surfaced
+while building it: it runs against `conftest.py`'s `db_session` fixture, which is
+`Base.metadata.create_all()` against an ephemeral database, so it can never itself catch casing
+drift (the type it creates and the values it writes always agree with each other by construction).
+Real protection against this specific bug class is `scripts/check_enum_value_casing.py`, now wired
+into CI (`.github/workflows/ci.yml`, `test` job) as a **hard-blocking** step — deliberately not
+`|| true` like the broader pytest step (Finding 15.6, not yet a gate) — running against the database
+CI's own migration step populates via a real `alembic upgrade head` (confirmed:
+`scripts/create_railway_tables.py`, the script that step tries first, no longer exists in the repo,
+so it always falls through to real Alembic). The script's own `KNOWN_VALUE_SET_DIVERGENCES` allowlist
+excludes the 6 blocked columns from failing the build, so it gates on any *new* drift without
+blocking on already-known, deliberately-deferred findings.
+
+**Incidental discovery, not fixed (out of this section's scope):** while re-verifying the local
+scratch database used for this section's checks, found that `tests/conftest.py`'s
+`TEST_DATABASE_URL = settings.database_url_async.replace(settings.postgres_db, ...)` silently
+no-ops if `settings.postgres_db` (a separately-configured value, defaulting to `"tekvwa_pro_audit"`)
+doesn't literally appear as a substring of whatever `DATABASE_URL_ASYNC` is actually set to at
+runtime — in that case `TEST_DATABASE_URL` ends up identical to the real configured database, and
+the fixture's `Base.metadata.create_all()`/`drop_all()` teardown runs directly against it instead of
+an isolated test database. Reproduced live this session: running pytest locally with manually
+exported `DATABASE_URL_ASYNC` pointed at this session's own local scratch dev database (whose name
+didn't match `postgres_db`'s default) silently wiped that database down to just `alembic_version`
+after the test run's teardown. No production or shared data was at risk here (a personal, disposable
+local scratch DB, rebuilt via the established Alembic-replay pattern immediately after), but the
+underlying bug is a real footgun: the same silent no-op would just as easily point pytest's
+destructive teardown at a shared dev/staging database if a developer's local env vars don't exactly
+match `postgres_db`. Flagged to the user rather than fixed here, since it's a test-infrastructure
+safety issue orthogonal to Phase 3's enum-normalization scope — worth a dedicated fix (e.g., deriving
+`TEST_DATABASE_URL` from a value guaranteed distinct from the real one, or refusing to run if they'd
+collide) in whichever phase/section covers test-harness safety.
+
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
 straightforward — the original audit's own instruction against skipping "simple" work applies equally
 here.)*
