@@ -107,7 +107,7 @@ class BusinessEntity(BaseModel):
     
     # 2026 Tax Reform - Business Type (PIT vs CIT)
     business_type: Mapped[BusinessType] = mapped_column(
-        SQLEnum(BusinessType),
+        SQLEnum(BusinessType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=BusinessType.LIMITED_COMPANY,
         nullable=False,
         comment="Business Name (PIT) or Limited Company (CIT)",
