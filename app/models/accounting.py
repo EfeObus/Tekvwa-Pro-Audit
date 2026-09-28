@@ -950,7 +950,7 @@ class FXRevaluation(BaseModel):
     # Revaluation identification
     revaluation_date: Mapped[date] = mapped_column(Date, nullable=False)
     revaluation_type: Mapped[FXRevaluationType] = mapped_column(
-        SQLEnum(FXRevaluationType),
+        SQLEnum(FXRevaluationType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
     
@@ -961,7 +961,7 @@ class FXRevaluation(BaseModel):
         nullable=False,
     )
     fx_account_type: Mapped[FXAccountType] = mapped_column(
-        SQLEnum(FXAccountType),
+        SQLEnum(FXAccountType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
     
