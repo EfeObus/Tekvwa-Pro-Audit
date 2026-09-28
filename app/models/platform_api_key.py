@@ -47,14 +47,20 @@ class PlatformApiKey(BaseModel):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     key_type: Mapped[ApiKeyType] = mapped_column(
-        SQLEnum(ApiKeyType, name="apikeytype", create_type=False),
+        SQLEnum(
+            ApiKeyType, name="apikeytype", create_type=False,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
         nullable=False,
         default=ApiKeyType.CUSTOM
     )
-    
+
     # Environment
     environment: Mapped[ApiKeyEnvironment] = mapped_column(
-        SQLEnum(ApiKeyEnvironment, name="apikeyenvironment", create_type=False),
+        SQLEnum(
+            ApiKeyEnvironment, name="apikeyenvironment", create_type=False,
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
         nullable=False,
         default=ApiKeyEnvironment.SANDBOX
     )
