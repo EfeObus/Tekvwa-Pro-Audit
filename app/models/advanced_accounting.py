@@ -312,7 +312,14 @@ class ThreeWayMatch(BaseModel):
     grn_id = Column(UUID(as_uuid=True), ForeignKey("goods_received_notes.id"), nullable=True)
     invoice_id = Column(UUID(as_uuid=True), ForeignKey("invoices.id"), nullable=False)
 
-    status = Column(SQLEnum(MatchingStatus), default=MatchingStatus.PENDING, nullable=False)
+    status = Column(
+        SQLEnum(
+            MatchingStatus, name="matching_status",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        default=MatchingStatus.PENDING,
+        nullable=False,
+    )
 
     # Matching details
     po_amount = Column(Numeric(20, 2), nullable=False)
