@@ -820,21 +820,24 @@ correct on 3 reference columns earlier in this project (`platform_role`, `organi
 `verification_status`).
 
 **Implement, one commit per table to keep blast radius reviewable:**
-- [ ] For each of the 30 columns listed in the audit's §1.2 table, add
+- [x] For each of the 30 columns listed in the audit's §1.2 table, add
       `values_callable=lambda enum_cls: [e.value for e in enum_cls]` to the `SQLEnum(...)` declaration
-- [ ] Do **not** touch the 5 "Likely" columns in this section — they have a second bug (type-name
-      mismatch, Finding 2) that must be resolved first, see §3.4
+      — re-verified against the live schema first: true count is 18, not 30 (10 converted to VARCHAR
+      since, 1 stale/removed column, 2 reclassified as value-set divergences to §3.2). All 18 fixed,
+      13 commits. See `docs/REMEDIATION_LOG.md`'s Phase 3 entry for the full reconciliation.
+- [x] Do **not** touch the 5 "Likely" columns in this section — done: 4 of 5 had their name mismatch
+      (Finding 2) and casing fix applied together at the same edit site; the 5th is a value-set
+      divergence, moved to §3.2.
 
 **Test:**
-- [ ] For each of the 30 columns: write (or extend an existing) round-trip test — create a row setting
-      that column to each of its enum's members, commit, re-fetch, assert the value matches. This is
-      the exact failure mode the audit found (`invalid input value for enum`), so the test must
-      actually hit the database, not mock it.
-- [ ] Add a permanent CI check (this is the audit's own Recommendation 4 for Finding 1): a script that
-      loads `Base.metadata`, resolves every `SQLEnum` column's Postgres type name and the values
-      SQLAlchemy would send, and diffs that against a live `pg_enum`/`pg_type` query — fail CI if any
-      column is out of sync. This check is what makes Finding 1's *class* of bug structurally
-      impossible to reintroduce, not just this instance of it.
+- [x] For each of the 18 confirmed columns: round-trip test added
+      (`tests/test_phase3_enum_value_casing_roundtrip.py`, 18/18 passing). Its docstring documents a
+      limitation: it runs against the ephemeral `create_all()` test DB, which can't itself reproduce
+      casing drift — that protection is the CI check below, against a really-migrated database.
+- [x] Add a permanent CI check — done: `scripts/check_enum_value_casing.py`, wired into
+      `.github/workflows/ci.yml`'s `test` job as a hard-blocking step, running against the database
+      that job's migration step populates via real `alembic upgrade head`. Allowlists the 6 known
+      Finding 1b/1c divergences so it gates on new drift without blocking on deferred findings.
 
 **Deploy:** Purely additive at the ORM layer (`values_callable` doesn't change the database, only how
 SQLAlchemy talks to it) — safe to deploy without a preceding data migration.
