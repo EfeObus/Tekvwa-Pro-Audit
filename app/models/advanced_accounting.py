@@ -736,7 +736,14 @@ class ApprovalRequest(BaseModel):
     resource_id = Column(UUID(as_uuid=True), nullable=False)
     amount = Column(Numeric(20, 2), nullable=True)
 
-    status = Column(SQLEnum(ApprovalStatus), default=ApprovalStatus.PENDING, nullable=False)
+    status = Column(
+        SQLEnum(
+            ApprovalStatus, name="approval_status",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        default=ApprovalStatus.PENDING,
+        nullable=False,
+    )
     submitted_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     context = Column(JSON, nullable=True)  # Snapshot of resource at request time
 
