@@ -159,7 +159,22 @@ jobs:
         run: |
           # Use direct table creation to avoid alembic enum conflicts
           python scripts/create_railway_tables.py || alembic upgrade head || echo "Migration skipped - tables may already exist"
-      
+
+      - name: Check enum value-casing drift (Finding 1, docs/IMPLEMENTATION_ROADMAP.md §3.1)
+        env:
+          DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
+          DATABASE_URL_ASYNC: postgresql+asyncpg://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
+          SECRET_KEY: test-secret-key-for-ci
+          JWT_SECRET_KEY: test-jwt-secret-key-for-ci-testing-only
+        run: |
+          # Deliberately NOT `|| true`: unlike the broader pytest suite (Finding 15.6, not yet a
+          # gate), this check is cheap, structural, and has no known-flaky failure mode, so it gates
+          # the build the way the audit's own Recommendation 4 for Finding 1 intended. It must run
+          # against this real migrated database, not a Base.metadata.create_all() one - create_all()
+          # always derives each enum type's labels from the same model being checked against it, so
+          # it can never show the casing-drift bug this check exists to catch.
+          python scripts/check_enum_value_casing.py --verbose
+
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}

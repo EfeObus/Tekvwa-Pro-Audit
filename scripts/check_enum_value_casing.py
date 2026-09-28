@@ -47,6 +47,20 @@ ENUM_LABELS_SQL = """
     ORDER BY e.enumsortorder
 """
 
+# Columns with a genuine value-set divergence (not just casing) between the model's Python enum
+# and the live Postgres type -- Finding 1b/1c (docs/IMPLEMENTATION_ROADMAP.md §3.2/§3.3,
+# docs/REMEDIATION_LOG.md's Phase 3 entry). These are blocked on a product/business decision, not
+# a mechanical values_callable fix, so this script must not fail CI on them. Any NEW mismatch this
+# script finds that isn't in this set still fails the build.
+KNOWN_VALUE_SET_DIVERGENCES = {
+    ("feature_access_logs", "feature"),
+    ("invoices", "buyer_status"),
+    ("wht_credit_notes", "status"),
+    ("fiscal_periods", "status"),
+    ("journal_entries", "entry_type"),
+    ("journal_entries", "status"),
+}
+
 
 async def main() -> int:
     verbose = "--verbose" in sys.argv
@@ -57,6 +71,7 @@ async def main() -> int:
 
     engine = create_async_engine(db_url)
     mismatches = []
+    known_divergences_seen = []
     checked = 0
     skipped_not_native = 0
 
@@ -95,11 +110,15 @@ async def main() -> int:
 
                 missing = would_send - live_labels
                 if missing:
-                    mismatches.append(
+                    entry = (
                         f"{table.name}.{column.name} (Postgres type {live_type_name}) -> "
                         f"would send {sorted(missing)}, not present in live labels "
                         f"{sorted(live_labels)}"
                     )
+                    if (table.name, column.name) in KNOWN_VALUE_SET_DIVERGENCES:
+                        known_divergences_seen.append(entry)
+                    else:
+                        mismatches.append(entry)
                 elif verbose:
                     print(f"OK: {table.name}.{column.name} -> {live_type_name} ({sorted(would_send)})")
 
@@ -108,7 +127,11 @@ async def main() -> int:
     print(f"\nNative-enum columns checked for value-casing drift: {checked}")
     print(f"(skipped {skipped_not_native} columns that aren't real native enum types on the live DB "
           f"-- see check_enum_type_drift.py for those)")
-    print(f"Mismatches (would send a value the live enum type doesn't have): {len(mismatches)}\n")
+    print(f"Known, deliberately-unfixed value-set divergences (Finding 1b/1c, blocked on a product "
+          f"decision - see docs/REMEDIATION_LOG.md): {len(known_divergences_seen)}")
+    for m in known_divergences_seen:
+        print(f"  (known, not failing CI) {m}")
+    print(f"New/unexpected mismatches (fails CI): {len(mismatches)}\n")
     for m in mismatches:
         print(f"  {m}")
 
