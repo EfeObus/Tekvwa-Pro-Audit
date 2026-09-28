@@ -132,12 +132,12 @@ class FixedAsset(BaseModel):
     
     # Classification
     category: Mapped[AssetCategory] = mapped_column(
-        SQLEnum(AssetCategory),
+        SQLEnum(AssetCategory, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
         index=True,
     )
     status: Mapped[AssetStatus] = mapped_column(
-        SQLEnum(AssetStatus),
+        SQLEnum(AssetStatus, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=AssetStatus.ACTIVE,
         nullable=False,
     )
@@ -177,7 +177,7 @@ class FixedAsset(BaseModel):
     
     # Depreciation Settings
     depreciation_method: Mapped[DepreciationMethod] = mapped_column(
-        SQLEnum(DepreciationMethod),
+        SQLEnum(DepreciationMethod, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         default=DepreciationMethod.REDUCING_BALANCE,
         nullable=False,
     )
@@ -210,7 +210,7 @@ class FixedAsset(BaseModel):
     # Disposal Details (for capital gains calculation)
     disposal_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     disposal_type: Mapped[Optional[DisposalType]] = mapped_column(
-        SQLEnum(DisposalType),
+        SQLEnum(DisposalType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=True,
     )
     disposal_amount: Mapped[Optional[Decimal]] = mapped_column(
