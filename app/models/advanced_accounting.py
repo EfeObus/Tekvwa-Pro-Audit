@@ -102,7 +102,13 @@ class AccountingDimension(BaseModel):
     
     entity_id = Column(UUID(as_uuid=True), ForeignKey("business_entities.id"), nullable=False, index=True)
     
-    dimension_type = Column(SQLEnum(DimensionType, name="dimension_type"), nullable=False)
+    dimension_type = Column(
+        SQLEnum(
+            DimensionType, name="dimension_type",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        nullable=False,
+    )
     code = Column(String(50), nullable=False)
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
