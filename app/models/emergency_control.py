@@ -85,7 +85,10 @@ class EmergencyControl(BaseModel):
     
     # Action identification
     action_type: Mapped[EmergencyActionType] = mapped_column(
-        SQLEnum(EmergencyActionType, name="emergency_action_type"),
+        SQLEnum(
+            EmergencyActionType, name="emergency_action_type",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
         nullable=False,
         index=True,
     )
