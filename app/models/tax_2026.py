@@ -102,7 +102,7 @@ class VATRecoveryRecord(BaseModel):
         nullable=False,
     )
     recovery_type: Mapped[VATRecoveryType] = mapped_column(
-        SQLEnum(VATRecoveryType),
+        SQLEnum(VATRecoveryType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
     is_recoverable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
