@@ -361,7 +361,7 @@ class DepreciationEntry(BaseModel):
     
     # Method used
     depreciation_method: Mapped[DepreciationMethod] = mapped_column(
-        SQLEnum(DepreciationMethod),
+        SQLEnum(DepreciationMethod, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
     depreciation_rate: Mapped[Decimal] = mapped_column(
