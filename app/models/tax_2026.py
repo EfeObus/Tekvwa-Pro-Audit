@@ -249,7 +249,7 @@ class PITReliefDocument(BaseModel):
     
     # Relief Details
     relief_type: Mapped[ReliefType] = mapped_column(
-        SQLEnum(ReliefType),
+        SQLEnum(ReliefType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
     fiscal_year: Mapped[int] = mapped_column(Integer, nullable=False)
