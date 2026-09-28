@@ -430,7 +430,7 @@ class UsageEvent(BaseModel):
     )
     
     metric_type: Mapped[UsageMetricType] = mapped_column(
-        SQLEnum(UsageMetricType),
+        SQLEnum(UsageMetricType, values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
         index=True,
     )
