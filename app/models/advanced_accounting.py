@@ -431,7 +431,13 @@ class Budget(BaseModel):
     name = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
     fiscal_year = Column(Integer, nullable=False)
-    period_type = Column(SQLEnum(BudgetPeriodType), default=BudgetPeriodType.MONTHLY)
+    period_type = Column(
+        SQLEnum(
+            BudgetPeriodType, name="budget_period_type",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        default=BudgetPeriodType.MONTHLY,
+    )
     
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
