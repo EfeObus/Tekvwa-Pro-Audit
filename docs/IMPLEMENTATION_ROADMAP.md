@@ -933,7 +933,13 @@ now correctly matches rows written by the ORM with `values_callable` applied").
 Beyond the standard PCG: re-run the CI enum-compatibility check built in §3.1 against the fully
 migrated schema and confirm zero mismatches remain across **all** `SQLEnum` columns in the codebase,
 not just the ones explicitly named in the audit — this check's value is in catching anything the
-audit's manual/scripted sweep might have missed.
+audit's manual/scripted sweep might have missed. — **this specific requirement is already satisfied**:
+`scripts/check_enum_value_casing.py` iterates `Base.metadata.tables.values()` directly (every table
+registered on the ORM's metadata), not a hardcoded list, so its 47-checked/0-new-mismatches result
+already covers every native-enum `SQLEnum` column in the codebase, and it's running as a hard-blocking
+CI step on every push. **Phase 3 as a whole is not yet ✅** per the standard PCG's own rule ("apply
+after every phase's sections are all ✅") — §3.2 and §3.3 remain blocked on a product/business decision
+and a production data check this session cannot perform, same status as Phase 2's §2.2.
 
 ---
 
