@@ -166,6 +166,7 @@ jobs:
           DATABASE_URL_ASYNC: postgresql+asyncpg://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:5432/${{ env.POSTGRES_DB }}
           SECRET_KEY: test-secret-key-for-ci
           JWT_SECRET_KEY: test-jwt-secret-key-for-ci-testing-only
+          PYTHONPATH: .
         run: |
           # Deliberately NOT `|| true`: unlike the broader pytest suite (Finding 15.6, not yet a
           # gate), this check is cheap, structural, and has no known-flaky failure mode, so it gates
