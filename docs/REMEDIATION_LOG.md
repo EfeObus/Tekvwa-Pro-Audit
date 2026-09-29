@@ -3053,6 +3053,65 @@ safety issue orthogonal to Phase 3's enum-normalization scope — worth a dedica
 `TEST_DATABASE_URL` from a value guaranteed distinct from the real one, or refusing to run if they'd
 collide) in whichever phase/section covers test-harness safety.
 
+## Phase 3.4 — Finding 2's VARCHAR-enum columns: verification found zero live bugs, one adjacent one (2026-09-29)
+
+Continued directly from §3.1's work into §3.4's own two checklist items.
+
+**First item — the 5 "Likely" name-mismatch columns:** already done as part of §3.1 (same edit site —
+see that entry). `accounting_dimensions.dimension_type` already had the correct `name=`; `three_way_
+matches.status`/`budgets.period_type`/`approval_requests.status` got both the `name=` fix and
+`values_callable` together; `wht_credit_notes.status` (the 5th) is excluded, since it's a genuine
+value-set divergence (§3.2), not just a name mismatch.
+
+**Second item — the "33 further candidates":** per this roadmap's own rule ("write a verification
+script first... only columns where a real read-path mismatch is confirmed get a code fix"), built
+`scripts/check_finding2_cross_read_mismatches.py`. It reuses `check_enum_type_drift.py`'s own
+column-discovery (native `Enum` declared, live column is plain VARCHAR) and, for each of the columns
+found, greps `app/` for any comparison of that column against one of its enum's lowercase values —
+the exact failure mode the audit worried about (raw SQL or a different service expecting a casing the
+ORM doesn't produce by default).
+
+**First surprise:** the audit's own named examples for this bucket — `ml_jobs.status`,
+`risk_signals.severity`, `legal_holds.status`, `upsell_opportunities.status` — aren't in today's
+34-live-column list from `check_enum_type_drift.py` at all (28 mismatches currently, not the audit's
+"33"). These columns are no longer native `Enum` columns declared in their models (already converted
+to plain `String`/`Mapped[str]` at some point since the audit, presumably during earlier Finding-49/50
+cleanup work this project). Re-verified rather than assumed — matches this roadmap's own repeated
+lesson this phase about not trusting a stale finding's exact column list.
+
+**Result: 0 of 28 columns have a confirmed cross-read mismatch.** Manually read through every
+relevant service/router file for all 28 (not just trusting the script's grep) — `audit_consolidated.py`'s
+5 columns, `tax_2026.py`'s 2, `bank_reconciliation.py`'s 14, `support_ticket.py`'s 4, `expense_claims.py`'s
+3 — confirmed every real business-logic read path either goes through the ORM's own `Enum` type
+(round-trips correctly since both write and read sides use the same default `.name` casing, even
+though there's no DB-level constraint enforcing it) or through a derived boolean flag column set
+independently (e.g. `is_emtl`/`is_vat_charge`/`is_wht_deduction` on `bank_statement_transactions`,
+bypassing the raw `detected_charge_type` string for any actual decision-making). All 28 move to Phase
+12 §12.6 as Code Smell entries (type declaration doesn't match live reality, but nothing is actually
+broken) rather than an active bug fix in this section — a new §12.6 written into the roadmap for this.
+
+**One adjacent, narrower bug found along the way, deliberately NOT fixed here:**
+`bank_reconciliation_service.py`'s `_detect_nigerian_charge()` uses a `NIGERIAN_CHARGE_PATTERNS` dict
+with keys `'vat'`, `'wht'`, `'pos_fee'`, `'transfer_fee'` that get written directly into
+`bank_statement_transactions.detected_charge_type` (`txn.detected_charge_type =
+charge_info.get("charge_type")` — a raw string assignment, bypassing the Python enum entirely). None
+of these 4 keys match `AdjustmentType`'s actual declared values (`vat_on_charges`, `wht_deduction`,
+`pos_settlement`, `nip_charge` respectively) — confirmed by reading `AdjustmentType`'s full member list
+in `app/models/bank_reconciliation.py`. This means `detected_charge_type` (and `bank_charge_rules.
+charge_type`, same `AdjustmentType`) gets populated with values that don't correspond to any real enum
+member at all when auto-detected. **Not a Finding-2 cross-read bug itself** — confirmed the actual
+business decisions (`is_emtl`, `is_stamp_duty`, `is_vat_charge`, `is_wht_deduction` flags, read at
+`bank_reconciliation_service.py:1702-1708` and `:2104-2106`) are separate boolean columns set correctly
+by the *same* detection function, independent of the mismatched string — so nothing currently breaks.
+But the stored `detected_charge_type`/`charge_type` string value is still semantically wrong, and
+`app/schemas/bank_reconciliation.py:240` exposes it raw (`Optional[str]`) to any API consumer, which
+could matter if a frontend or report ever keys off that exact string. **Deliberately not fixed in this
+section**: it's a distinct bug from what §3.4 asked about, and fixing it means changing both the dict
+keys AND every place that compares against them (the `is_vat`/`is_wht` local-variable checks at
+`bank_reconciliation_service.py:639-642`) consistently, in code that runs during real bank-statement
+import — that's exactly the kind of change that needs its own dedicated test, not a fix bundled
+into an unrelated verification pass. Flagged here for a future targeted session.
+
 *(Continue this log per-section as Phases 1–14 proceed. Do not skip an entry because a section seemed
 straightforward — the original audit's own instruction against skipping "simple" work applies equally
 here.)*

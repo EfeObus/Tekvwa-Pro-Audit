@@ -900,18 +900,29 @@ first task for each column is confirmation, per this roadmap's own rule about no
 Likely/Potential findings without verification.
 
 **Implement, per column:**
-- [ ] For the 5 already-identified (`accounting_dimensions.dimension_type`, `three_way_matches.status`,
+- [x] For the 5 already-identified (`accounting_dimensions.dimension_type`, `three_way_matches.status`,
       `wht_credit_notes.status`, `approval_requests.status`, `budgets.period_type`): confirm the real
       DB type name via `information_schema`, add an explicit `name=` argument to `SQLEnum(...)` matching
-      it, then apply §3.1
-- [ ] For the further 33 candidates (VARCHAR columns with no real DB enum constraint at all —
+      it, then apply §3.1 — done as part of §3.1's work (same edit site): 4 of 5 fixed
+      (`accounting_dimensions.dimension_type` already had the correct `name=`; `three_way_matches.
+      status`/`budgets.period_type`/`approval_requests.status` got both fixes together). The 5th,
+      `wht_credit_notes.status`, is excluded here — it's a genuine value-set divergence (Finding 1b),
+      not just a name mismatch, so it's blocked in §3.2 instead.
+- [x] For the further 33 candidates (VARCHAR columns with no real DB enum constraint at all —
       `support_tickets.status`, `ml_jobs.status`, `risk_signals.severity`, `expense_claims.status`,
       `audit_runs.status`, `legal_holds.status`, `upsell_opportunities.status`, and the remainder not
       individually named in the audit): **write a verification script first** — for each column, check
       whether any other code path reads it via raw SQL or a different service expecting lowercase
       values. Only columns where a real read-path mismatch is confirmed get a code fix in this section;
       columns where nothing currently reads the mismatched value get logged as a Code Smell in Phase 12
-      instead of an active bug fix here, per this roadmap's rule against promoting unconfirmed findings.
+      instead of an active bug fix here, per this roadmap's rule against promoting unconfirmed
+      findings. — **done**: `scripts/check_finding2_cross_read_mismatches.py` checked all 28 columns
+      `check_enum_type_drift.py` currently flags (the audit's named examples like `ml_jobs.status`/
+      `risk_signals.severity`/`legal_holds.status`/`upsell_opportunities.status` are no longer native
+      `Enum` columns in the model at all, so aren't in today's 28 — re-verified, not assumed). Result:
+      **0 of 28 have a confirmed cross-read mismatch** — all 28 move to Phase 12 §12.6 as Code Smell,
+      not an active bug fix. One adjacent, narrower bug found and deliberately NOT fixed here (out of
+      scope, needs its own dedicated test) — see `docs/REMEDIATION_LOG.md`'s Phase 3 entry.
 
 **Test:** For each confirmed-mismatched column, the specific cross-read failure the verification script
 found, turned into a regression test (e.g., "a raw-SQL report query filtering on lowercase 'active'
@@ -1557,8 +1568,10 @@ scattered drive-by changes riding on unrelated PRs (which the audit itself warns
 
 **Findings closed:** 3 (P3), 4 (P3), 5 (P3), 13 (P3), 7/8's duplicate-dependency cleanup (already done
 in Phase 6, cross-referenced here), the deferred full 388-site commit-ownership retrofit (Finding 44's
-remainder beyond the `AuditService`-specific fix in Phase 1), and the 33 Finding-2 candidates that
-§3.4's verification found to be genuinely unreachable (logged as Code Smell, not fixed as bugs).
+remainder beyond the `AuditService`-specific fix in Phase 1), and the 28 Finding-2 candidates (§12.6)
+that §3.4's verification found to be genuinely unreachable (logged as Code Smell, not fixed as bugs —
+the audit's original estimate was 33, but 5 of its named examples turned out to no longer be native
+`Enum` columns in the model at all when re-verified against the live schema).
 
 ### 12.1 Section: Delete the dead `audit_consolidated.py` router (Finding 3)
 
@@ -1606,6 +1619,37 @@ individual changes are simple.
 
 **Test, per service:** The same "simulate a downstream failure, assert atomic rollback" pattern used
 in Phase 1.1, applied to at least one write path per converted service.
+
+### 12.6 Section: Log Finding 2's confirmed-unreachable VARCHAR-enum columns as Code Smell
+
+**Understand:** §3.4's verification (`scripts/check_finding2_cross_read_mismatches.py`) confirmed all
+28 columns `check_enum_type_drift.py` currently flags (a model declares a native SQLAlchemy `Enum`,
+but the live column is plain VARCHAR with no DB-level enum constraint) have **zero** confirmed
+cross-read mismatches — every reader goes through the same ORM `Enum` type or a derived boolean flag,
+never a raw string comparison expecting a different casing. This is genuinely a code smell (the type
+declaration doesn't match reality, and `Base.metadata.create_all()`/`checkfirst` DDL generation would
+diverge from the live schema), not a live bug.
+
+**The 28 columns:** `audit_runs.run_type`/`status`, `audit_findings.category`/`risk_level`,
+`audit_evidence.evidence_type`, `auditor_action_logs.action`, `pit_relief_documents.status`,
+`credit_notes.status`, `bank_accounts.account_type`, `bank_statements.source`,
+`bank_statement_imports.source`, `bank_statement_transactions.detected_charge_type`/
+`charge_detection_method`/`match_status`/`match_type`/`match_confidence_level`,
+`bank_reconciliations.status`, `reconciliation_adjustments.adjustment_type`,
+`unmatched_items.item_type`, `bank_charge_rules.charge_type`/`detection_method`,
+`expense_claims.status`/`payment_method`, `expense_claim_items.category`,
+`support_tickets.category`/`priority`/`status`/`source`.
+
+**Implement:** either add an explicit `name=`+`values_callable` (aligning the model with a real native
+type, requiring a migration to actually create that type) or drop the `Enum(...)` wrapper in favor of a
+plain `String`/`Mapped[str]` column (matching what's actually in the database today, no migration
+needed) — a per-column product/maintainer call on which direction is preferred; no urgency since
+nothing is broken today.
+
+**Note:** re-verify against the live schema before acting — §3.1's own reconciliation found the
+audit's original candidate list for this exact bucket already stale (some named columns like
+`ml_jobs.status`/`risk_signals.severity`/`legal_holds.status`/`upsell_opportunities.status` are no
+longer native `Enum` columns in the model at all).
 
 ### Phase 12 Completion Gate specifics
 
@@ -1737,7 +1781,7 @@ that it's a Recommendation being deliberately deferred post-launch — nothing s
 | Finding | Sev | Phase | Section | Status |
 |---|---|---|---|---|
 | 1 (+1b, 1c) | P1 | 3 | 3.1-3.3 | 🟡 §3.1 done: 18/18 pure-casing columns fixed (13 commits), permanent CI gate added (`scripts/check_enum_value_casing.py`, hard-blocking in CI). §3.2 (6 columns)/§3.3 (`journalentrytype`) blocked on a product/business decision + a production data check this session cannot perform — see `docs/REMEDIATION_LOG.md`'s Phase 3 entry. |
-| 2 | P2 | 3 | 3.4 | ⬜ Now precisely quantified: `scripts/check_enum_type_drift.py` (added 2026-09-25) found 28 remaining "native Enum declared, live column is VARCHAR" mismatches — `audit_runs`, `credit_notes`, `audit_findings`, `auditor_action_logs`, `audit_evidence`, `bank_accounts`, `pit_relief_documents`, `support_tickets` (4 columns), and the bank-reconciliation/expense-claims families. Run the script for the exact current list before starting this section. |
+| 2 | P2 | 3 | 3.4 | 🟡 5 "Likely" name-mismatch columns fixed as part of §3.1 (4 of 5 — `wht_credit_notes.status` excluded, it's a §3.2 value-set divergence). Remaining 28 VARCHAR-enum columns verified via `scripts/check_finding2_cross_read_mismatches.py`: 0 have a confirmed cross-read mismatch, all logged as Code Smell in §12.6 (not a launch-blocking fix) — `audit_runs`, `credit_notes`, `audit_findings`, `auditor_action_logs`, `audit_evidence`, `bank_accounts`, `pit_relief_documents`, `support_tickets` (4 columns), and the bank-reconciliation/expense-claims families. One adjacent bug found but not fixed (out of scope, needs its own test) — `bank_reconciliation_service.py`'s `NIGERIAN_CHARGE_PATTERNS` keys don't match `AdjustmentType`'s real values — see `docs/REMEDIATION_LOG.md`. |
 | 3 | P3 | 12 | 12.1 | ⬜ |
 | 4 | P3 | 12 | 12.2 | ⬜ |
 | 5 | P3 | 12 | 12.3 | ⬜ |
