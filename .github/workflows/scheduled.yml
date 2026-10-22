@@ -69,7 +69,7 @@ jobs:
           fi
       
       - name: Upload security reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-reports-${{ github.run_number }}
           path: |
@@ -170,7 +170,7 @@ jobs:
           " >> $GITHUB_STEP_SUMMARY
       
       - name: Upload outdated packages report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-report-${{ github.run_number }}
           path: outdated.json
